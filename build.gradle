@@ -1,0 +1,86 @@
+buildscript {
+    ext {
+        kotlin_version = "1.8.10"
+        hilt_version = '2.44'
+        compose_ui_version = '1.4.0-beta01'
+    }
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.3.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+allprojects {
+    apply plugin: 'com.android.library'
+    apply plugin: 'kotlin-android'
+    apply plugin: 'kotlin-kapt'
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    android {
+        compileSdkVersion 33
+        buildToolsVersion "30.0.3"
+
+        defaultConfig {
+            minSdkVersion 26
+            targetSdkVersion 33
+
+            group = 'org.maplibre.gl'
+            versionCode 1
+            versionName "1.0"
+        }
+
+        buildTypes {
+            release {
+                minifyEnabled false
+            }
+        }
+        compileOptions {
+            sourceCompatibility JavaVersion.VERSION_11
+            targetCompatibility JavaVersion.VERSION_11
+        }
+        kotlinOptions {
+            jvmTarget = '11'
+        }
+        buildFeatures {
+            compose true
+        }
+        composeOptions {
+            kotlinCompilerExtensionVersion "1.4.2"
+        }
+
+        testOptions {
+            unitTests.all {
+                testLogging {
+                    outputs.upToDateWhen { false }
+                    events "passed", "failed", "skipped", "standardError"
+                    showCauses true
+                    showExceptions true
+                }
+            }
+        }
+    }
+
+    dependencies {
+        implementation "androidx.compose.foundation:foundation:$compose_ui_version"
+        implementation "androidx.compose.material:material:$compose_ui_version"
+        implementation "androidx.compose.ui:ui:$compose_ui_version"
+        implementation 'androidx.core:core-ktx:1.9.0'
+        implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+        implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
+
+        implementation 'org.maplibre.gl:android-sdk:10.0.2'
+        implementation 'org.maplibre.gl:android-plugin-annotation-v9:1.0.0'
+
+        testImplementation 'junit:junit:4.13.2'
+    }
+}
+

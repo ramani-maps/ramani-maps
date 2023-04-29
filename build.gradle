@@ -77,8 +77,8 @@ allprojects {
         implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
         implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
 
-        implementation 'org.maplibre.gl:android-sdk:10.0.2'
-        implementation 'org.maplibre.gl:android-plugin-annotation-v9:1.0.0'
+        api 'org.maplibre.gl:android-sdk:10.0.2'
+        api 'org.maplibre.gl:android-plugin-annotation-v9:1.0.0'
 
         testImplementation 'junit:junit:4.13.2'
     }

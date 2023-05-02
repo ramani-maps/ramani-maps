@@ -10,6 +10,12 @@ import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.plugins.annotation.Circle
 import com.mapbox.mapboxsdk.plugins.annotation.CircleManager
+import com.mapbox.mapboxsdk.plugins.annotation.Fill
+import com.mapbox.mapboxsdk.plugins.annotation.FillManager
+import com.mapbox.mapboxsdk.plugins.annotation.Line
+import com.mapbox.mapboxsdk.plugins.annotation.LineManager
+import com.mapbox.mapboxsdk.plugins.annotation.Symbol
+import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
 import kotlinx.coroutines.awaitCancellation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -92,5 +98,31 @@ internal class CircleNode(
     var onCircleClick: (Circle) -> Unit
 ) : MapNode {
     override fun onRemoved() {
+    }
+}
+internal class SymbolNode(
+    val symbolManager: SymbolManager,
+    val symbol: Symbol,
+    var onSymbolClicked: (Symbol) -> Unit
+) : MapNode {
+    override fun onRemoved() {
+    }
+}
+internal class PolyLineNode(
+    val lineManager: LineManager,
+    val polyLine: Line,
+    var onLineClicked: (Line) -> Unit
+) : MapNode {
+    override fun onRemoved() {
+    }
+}
+
+internal class FillNode(
+    val fillManager : FillManager,
+    val fill: Fill,
+    onFillClicked: (Fill) -> Unit
+) : MapNode {
+    override fun onRemoved() {
+
     }
 }

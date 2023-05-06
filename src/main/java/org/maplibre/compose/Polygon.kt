@@ -9,7 +9,7 @@ import androidx.core.graphics.plus
 import com.mapbox.mapboxsdk.geometry.LatLng
 
 @Composable
-fun VerticeDragger(
+private fun VerticeDragger(
     draggedCenter: LatLng,
     points: MutableList<LatLng>,
     onCenterAndVerticesChanged: (LatLng, MutableList<LatLng>) -> Unit

@@ -1,39 +1,104 @@
 package org.maplibre.compose
 
+import android.graphics.PointF
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ComposeNode
 import androidx.compose.runtime.currentComposer
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.core.graphics.plus
 import com.mapbox.mapboxsdk.geometry.LatLng
-import com.mapbox.mapboxsdk.plugins.annotation.FillManager
-import com.mapbox.mapboxsdk.plugins.annotation.FillOptions
-import com.mapbox.mapboxsdk.plugins.annotation.Line
-import com.mapbox.mapboxsdk.plugins.annotation.LineManager
-import com.mapbox.mapboxsdk.plugins.annotation.LineOptions
-import com.mapbox.mapboxsdk.plugins.annotation.OnLineDragListener
 
 @Composable
+fun VerticeDragger(
+    draggedCenter: LatLng,
+    points: MutableList<LatLng>,
+    onCenterAndVerticesChanged: (LatLng, MutableList<LatLng>) -> Unit
+) {
+
+    if (points.size <= 0) {
+        return
+    }
+
+    var mapApplier = currentComposer.applier as? MapApplier
+    val projection = mapApplier?.map!!.projection
+
+    val currentCenter = PointF()
+
+    for (coord in points) {
+        currentCenter.x += projection.toScreenLocation(coord).x
+        currentCenter.y += projection.toScreenLocation(coord).y
+    }
+
+    currentCenter.x = currentCenter.x / points.size
+    currentCenter.y = currentCenter.y / points.size
+
+    val newCenter = projection.toScreenLocation(draggedCenter)
+
+    val draggedPixels: PointF = PointF(newCenter.x - currentCenter.x, newCenter.y - currentCenter.y)
+
+    val draggedVertices = mutableListOf<LatLng>()
+
+    for (coord in points) {
+        val currentLoc = projection.toScreenLocation(coord)
+        draggedVertices.add(projection.fromScreenLocation(currentLoc + draggedPixels))
+    }
+
+    onCenterAndVerticesChanged(projection.fromScreenLocation(currentCenter), draggedVertices)
+}
+
 @MapLibreComposable
-fun Fill(points : MutableList<MutableList<LatLng>>, fillColor: String = "Transparent", opacity: Float = 1.0f, draggable: Boolean = false) {
+@Composable
+fun Polygon(
+    vertices: MutableList<MutableList<LatLng>>,
+    fillColor: String = "Transparent",
+    opacity: Float = 1.0f,
+    draggable: Boolean = false,
+    onPointsChanged: (MutableList<MutableList<LatLng>>) -> Unit,
+) {
 
-    val mapApplier = currentComposer.applier as? MapApplier
+    val polygonDragHandleCoord = remember {
+        mutableStateOf(LatLng())
+    }
 
-    ComposeNode<FillNode, MapApplier>(factory = {
+    val inputDragCoord = remember {
+        mutableStateOf(LatLng())
+    }
 
-        val fillManager = FillManager(mapApplier?.mapView!!, mapApplier?.map!!, mapApplier?.style!!)
+    val dragActive = remember {
+        mutableStateOf(false)
+    }
 
-        val fillOptions = FillOptions().withLatLngs(points).withFillColor(fillColor).withFillOpacity(opacity)
-        val fill = fillManager.create(fillOptions)
-        FillNode(fillManager, fill) {
 
-        }
-    }, update = {
-        set(points) {
-            fill.latLngs = points
-            fillManager.update(fill)
-        }
-        set(fillColor) {
-            fill.fillColor = fillColor
-            fillManager.update(fill)
-        }
-    })
+    if (draggable) {
+        VerticeDragger(
+            draggedCenter = inputDragCoord.value,
+            points = vertices.first(),
+            onCenterAndVerticesChanged = { center, vertices ->
+                polygonDragHandleCoord.value = center
+                if (dragActive.value) {
+                    onPointsChanged(mutableListOf(vertices))
+                }
+            })
+
+        Circle(
+            center = polygonDragHandleCoord.value,
+            radius = 30.0f,
+            draggable = true,
+            color = "Transparent",
+            onCenterDragged = {
+                dragActive.value = true
+                inputDragCoord.value = it
+            },
+            onDragFinished = {
+                dragActive.value = false
+            })
+    }
+
+    Fill(
+        points = vertices,
+        fillColor = fillColor,
+        opacity = opacity,
+        draggable = false,
+        onPointsChanged = onPointsChanged
+    )
 }

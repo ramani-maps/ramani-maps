@@ -100,6 +100,7 @@ internal class CircleNode(
     override fun onRemoved() {
     }
 }
+
 internal class SymbolNode(
     val symbolManager: SymbolManager,
     val symbol: Symbol,
@@ -108,6 +109,7 @@ internal class SymbolNode(
     override fun onRemoved() {
     }
 }
+
 internal class PolyLineNode(
     val lineManager: LineManager,
     val polyLine: Line,
@@ -118,7 +120,7 @@ internal class PolyLineNode(
 }
 
 internal class FillNode(
-    val fillManager : FillManager,
+    val fillManager: FillManager,
     val fill: Fill,
     onFillClicked: (Fill) -> Unit
 ) : MapNode {

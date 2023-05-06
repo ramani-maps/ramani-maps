@@ -16,7 +16,7 @@ import com.mapbox.mapboxsdk.utils.BitmapUtils
 
 @Composable
 @MapLibreComposable
-fun Symbol(center : LatLng, color : String, draggable : Boolean, imageId: Int) {
+fun Symbol(center : LatLng, size: Float, color : String, draggable : Boolean, imageId: Int) {
 
     val mapApplier = currentComposer.applier as? MapApplier
 
@@ -31,7 +31,7 @@ fun Symbol(center : LatLng, color : String, draggable : Boolean, imageId: Int) {
             SymbolManager(mapApplier?.mapView!!, mapApplier?.map!!, mapApplier?.style!!)
 
         val symbolOptions =
-            SymbolOptions().withDraggable(draggable).withLatLng(center).withIconImage("symbol").withIconColor(color)
+            SymbolOptions().withDraggable(draggable).withLatLng(center).withIconImage("symbol").withIconColor(color).withIconSize(size)
         val symbol = symbolManager.create(symbolOptions)
         SymbolNode(symbolManager, symbol) {
 

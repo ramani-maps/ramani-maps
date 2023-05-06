@@ -4,27 +4,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import androidx.compose.runtime.currentComposer
 import com.mapbox.mapboxsdk.geometry.LatLng
-import com.mapbox.mapboxsdk.plugins.annotation.Annotation
-import com.mapbox.mapboxsdk.plugins.annotation.AnnotationManager
 import com.mapbox.mapboxsdk.plugins.annotation.Circle
 import com.mapbox.mapboxsdk.plugins.annotation.CircleManager
 import com.mapbox.mapboxsdk.plugins.annotation.CircleOptions
-import com.mapbox.mapboxsdk.plugins.annotation.LineManager
-import com.mapbox.mapboxsdk.plugins.annotation.LineOptions
-import com.mapbox.mapboxsdk.plugins.annotation.OnAnnotationDragListener
 import com.mapbox.mapboxsdk.plugins.annotation.OnCircleDragListener
 
 @Composable
 @MapLibreComposable
-fun Circle(center: LatLng,
-           radius: Float,
-           draggable: Boolean,
-           color: String,
-           borderColor: String = "Black",
-           borderWidth: Float = 0.0f,
-           onCenterDragged: (LatLng) -> Unit,
-           onDragFinished: (LatLng) -> Unit = {}
-           ) {
+fun Circle(
+    center: LatLng,
+    radius: Float,
+    draggable: Boolean,
+    color: String,
+    borderColor: String = "Black",
+    borderWidth: Float = 0.0f,
+    onCenterDragged: (LatLng) -> Unit,
+    onDragFinished: (LatLng) -> Unit = {}
+) {
     val mapApplier = currentComposer.applier as? MapApplier
 
     ComposeNode<CircleNode, MapApplier>(factory = {
@@ -33,7 +29,8 @@ fun Circle(center: LatLng,
 
         val circleOptions =
             CircleOptions().withCircleRadius(radius)
-                .withLatLng(center).withDraggable(draggable).withCircleStrokeColor(borderColor).withCircleStrokeWidth(borderWidth)
+                .withLatLng(center).withDraggable(draggable).withCircleStrokeColor(borderColor)
+                .withCircleStrokeWidth(borderWidth)
 
         val circle = circleManager.create(circleOptions)
         circleManager.addDragListener(object : OnCircleDragListener {
@@ -51,7 +48,6 @@ fun Circle(center: LatLng,
 
         })
         CircleNode(circleManager, circle) {
-
         }
     }, update = {
         set(center) {
@@ -62,5 +58,6 @@ fun Circle(center: LatLng,
             circle.circleColor = color
             circleManager.update(circle)
         }
-    })
+    }) {
+    }
 }

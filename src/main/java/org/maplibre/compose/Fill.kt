@@ -16,7 +16,7 @@ fun Fill(
     fillColor: String = "Transparent",
     opacity: Float = 1.0f,
     draggable: Boolean = false,
-    onPointsChanged: (MutableList<MutableList<LatLng>>) -> Unit,
+    onVericesChanged: (MutableList<MutableList<LatLng>>) -> Unit,
 ) {
 
     val mapApplier = currentComposer.applier as? MapApplier
@@ -43,7 +43,7 @@ fun Fill(
                 }
 
 
-                onPointsChanged(annotation?.latLngs!!)
+                onVericesChanged(annotation?.latLngs!!)
             }
 
             override fun onAnnotationDragFinished(annotation: Fill?) {

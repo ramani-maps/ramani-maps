@@ -46,14 +46,10 @@ private fun VerticeDragger(
     onCenterAndVerticesChanged(projection.fromScreenLocation(currentCenter), draggedVertices)
 }
 
-@MapLibreComposable
 @Composable
-fun Polygon(
-    vertices: MutableList<MutableList<LatLng>>,
-    fillColor: String = "Transparent",
-    opacity: Float = 1.0f,
-    draggable: Boolean = false,
-    onPointsChanged: (MutableList<MutableList<LatLng>>) -> Unit,
+private fun PolygonDragHandle(
+    vertices: MutableList<LatLng>,
+    onVerticesChanged: (MutableList<LatLng>) -> Unit
 ) {
 
     val polygonDragHandleCoord = remember {
@@ -69,29 +65,43 @@ fun Polygon(
     }
 
 
-    if (draggable) {
-        VerticeDragger(
-            draggedCenter = inputDragCoord.value,
-            points = vertices.first(),
-            onCenterAndVerticesChanged = { center, vertices ->
-                polygonDragHandleCoord.value = center
-                if (dragActive.value) {
-                    onPointsChanged(mutableListOf(vertices))
-                }
-            })
+    VerticeDragger(
+        draggedCenter = inputDragCoord.value,
+        points = vertices,
+        onCenterAndVerticesChanged = { center, vertices ->
+            polygonDragHandleCoord.value = center
+            if (dragActive.value) {
+                onVerticesChanged(vertices)
+            }
+        })
 
-        Circle(
-            center = polygonDragHandleCoord.value,
-            radius = 30.0f,
-            draggable = true,
-            color = "Transparent",
-            onCenterDragged = {
-                dragActive.value = true
-                inputDragCoord.value = it
-            },
-            onDragFinished = {
-                dragActive.value = false
-            })
+    Circle(
+        center = polygonDragHandleCoord.value,
+        radius = 30.0f,
+        draggable = true,
+        color = "Transparent",
+        onCenterDragged = {
+            dragActive.value = true
+            inputDragCoord.value = it
+        },
+        onDragFinished = {
+            dragActive.value = false
+        })
+}
+
+@MapLibreComposable
+@Composable
+fun Polygon(
+    vertices: MutableList<MutableList<LatLng>>,
+    fillColor: String = "Transparent",
+    opacity: Float = 1.0f,
+    draggable: Boolean = false,
+    onVerticesChanged: (MutableList<MutableList<LatLng>>) -> Unit,
+) {
+    if (draggable) {
+        PolygonDragHandle(
+            vertices = vertices.first(),
+            onVerticesChanged = { onVerticesChanged(mutableListOf(it)) })
     }
 
     Fill(
@@ -99,6 +109,6 @@ fun Polygon(
         fillColor = fillColor,
         opacity = opacity,
         draggable = false,
-        onPointsChanged = onPointsChanged
+        onVericesChanged = onVerticesChanged
     )
 }

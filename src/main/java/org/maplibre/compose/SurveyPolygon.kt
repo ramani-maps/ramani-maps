@@ -37,7 +37,7 @@ fun SurveyPolygon() {
         fillColor = "Green",
         opacity = 0.3f,
         draggable = true,
-        onPointsChanged = {
+        onVerticesChanged = {
             vertice1.value = it.first().get(0)
             vertice2.value = it.first().get(1)
             vertice3.value = it.first().get(2)

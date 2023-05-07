@@ -16,8 +16,8 @@ data class Vertice(
 @Composable
 fun SurveyPolygon(
     vertices: MutableList<Vertice>,
-    onVerticesChanged: (MutableList<LatLng>) -> Unit,
-    onVerticeAtIndexChanged: (Int, LatLng) -> Unit
+    onVerticesChanged: (MutableList<Vertice>) -> Unit,
+    onVerticeAtIndexChanged: (Int, Vertice) -> Unit
 ) {
 
     val pointsForPolyline: MutableList<LatLng> = vertices.map { it.location }.toMutableList()
@@ -31,7 +31,9 @@ fun SurveyPolygon(
         opacity = 0.3f,
         draggable = true,
         onVerticesChanged = {
-            onVerticesChanged(it.first())
+            onVerticesChanged(it.first().mapIndexed { index, latLng ->
+                vertices[index].copy(location = latLng)
+            }.toMutableList())
         })
     PolyLine(
         points = pointsForPolyline,
@@ -46,7 +48,7 @@ fun SurveyPolygon(
             draggable = vertice.draggable,
             color = vertice.color,
             onCenterChanged = { latLng ->
-                onVerticeAtIndexChanged(index, latLng)
+                onVerticeAtIndexChanged(index, vertice.copy(location = latLng))
             }
         )
     }

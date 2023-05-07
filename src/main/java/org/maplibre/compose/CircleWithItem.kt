@@ -62,7 +62,7 @@ fun CircleWithItem(
             color = "Black",
             draggable = false,
             imageId = imageId,
-            size = 0.0f,
+            size = imageSize,
             text = null,
         )
     }

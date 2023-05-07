@@ -1,90 +1,53 @@
 package org.maplibre.compose
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import com.mapbox.mapboxsdk.geometry.LatLng
+
+
+data class Vertice(
+    val location: LatLng,
+    val radius: Float,
+    val draggable: Boolean = false,
+    val color: String = "Black"
+)
+
 
 @MapLibreComposable
 @Composable
-fun SurveyPolygon() {
+fun SurveyPolygon(
+    vertices: MutableList<Vertice>,
+    onVerticesChanged: (MutableList<LatLng>) -> Unit,
+    onVerticeAtIndexChanged: (Int, LatLng) -> Unit
+) {
 
-    val vertice1 = remember {
-        mutableStateOf(LatLng(4.91, 46.1))
-    }
-
-    val vertice2 = remember {
-        mutableStateOf(LatLng(4.91, 47.0))
-    }
-
-    val vertice3 = remember {
-        mutableStateOf(LatLng(4.63, 47.0))
-    }
-
-    val vertice4 = remember {
-        mutableStateOf(LatLng(4.63, 46.1))
-    }
+    val pointsForPolyline: MutableList<LatLng> = vertices.map { it.location }.toMutableList()
+    pointsForPolyline.add(vertices.first().location)
 
     Polygon(
         vertices = mutableListOf(
-            mutableListOf(
-                vertice1.value,
-                vertice2.value,
-                vertice3.value,
-                vertice4.value
-            )
+            vertices.map { it.location }.toMutableList()
         ),
         fillColor = "Green",
         opacity = 0.3f,
         draggable = true,
         onVerticesChanged = {
-            vertice1.value = it.first().get(0)
-            vertice2.value = it.first().get(1)
-            vertice3.value = it.first().get(2)
-            vertice4.value = it.first().get(3)
+            onVerticesChanged(it.first())
         })
     PolyLine(
-        points = mutableListOf(
-            vertice1.value,
-            vertice2.value,
-            vertice3.value,
-            vertice4.value,
-            vertice1.value
-        ), color = "Red", lineWidth = 2.0f
+        points = pointsForPolyline,
+        color = "Black",
+        lineWidth = 2.0f
     )
-    CircleWithItem(
-        vertice1.value,
-        radius = 8.0f,
-        draggable = true,
-        color = "Gray",
-        borderWidth = 2.0f,
-        borderColor = "Black",
-        onCenterChanged = { vertice1.value = it })
-    CircleWithItem(
-        vertice2.value,
-        radius = 8.0f,
-        draggable = true,
-        color = "Gray",
-        borderWidth = 2.0f,
-        borderColor = "Black",
-        onCenterChanged = { vertice2.value = it })
-    CircleWithItem(
-        vertice3.value,
-        radius = 8.0f,
-        draggable = true,
-        color = "Gray",
-        borderWidth = 2.0f,
-        borderColor = "Black",
-        onCenterChanged = { vertice3.value = it })
-    CircleWithItem(
-        vertice4.value,
-        radius = 8.0f,
-        draggable = true,
-        color = "Gray",
-        borderWidth = 2.0f,
-        borderColor = "Black",
-        imageSize = 0.7f,
-        onCenterChanged = {
-            vertice4.value = it
-        })
+
+    vertices.forEachIndexed { index, vertice ->
+        CircleWithItem(
+            center = vertice.location,
+            radius = vertice.radius,
+            draggable = vertice.draggable,
+            color = vertice.color,
+            onCenterChanged = { latLng ->
+                onVerticeAtIndexChanged(index, latLng)
+            }
+        )
+    }
 }

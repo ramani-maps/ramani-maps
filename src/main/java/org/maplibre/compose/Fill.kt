@@ -31,6 +31,7 @@ fun Fill(
         val fill = fillManager.create(fillOptions)
 
 
+
         fillManager.addDragListener(object : OnFillDragListener {
             override fun onAnnotationDragStarted(annotation: Fill?) {
             }

@@ -18,8 +18,9 @@ fun CircleWithItem(
     color: String,
     borderColor: String = "Black",
     borderWidth: Float = 0.0f,
-    imageId: Int = -1,
+    imageId: Int? = null,
     imageSize: Float = 0.0f,
+    text: String? = null,
     onCenterChanged: (LatLng) -> Unit = {}
 ) {
 
@@ -55,13 +56,14 @@ fun CircleWithItem(
         }
     )
 
-    if (imageId >= 0) {
+    if (imageId != null || text != null) {
         Symbol(
             center = center,
             color = "Black",
             draggable = false,
             imageId = imageId,
-            size = imageSize
+            size = 0.0f,
+            text = null,
         )
     }
 }

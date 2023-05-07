@@ -5,43 +5,39 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.core.graphics.minus
 import androidx.core.graphics.plus
 import com.mapbox.mapboxsdk.geometry.LatLng
 
 @Composable
 private fun VerticeDragger(
     draggedCenter: LatLng,
-    points: MutableList<LatLng>,
+    vertices: MutableList<LatLng>,
     onCenterAndVerticesChanged: (LatLng, MutableList<LatLng>) -> Unit
 ) {
 
-    if (points.size <= 0) {
+    if (vertices.size <= 0) {
         return
     }
 
     var mapApplier = currentComposer.applier as? MapApplier
     val projection = mapApplier?.map!!.projection
 
-    val currentCenter = PointF()
+    var currentCenter = PointF()
 
-    for (coord in points) {
-        currentCenter.x += projection.toScreenLocation(coord).x
-        currentCenter.y += projection.toScreenLocation(coord).y
+    for (coord in vertices) {
+        currentCenter += projection.toScreenLocation(coord)
     }
 
-    currentCenter.x = currentCenter.x / points.size
-    currentCenter.y = currentCenter.y / points.size
+    currentCenter.x = currentCenter.x / vertices.size
+    currentCenter.y = currentCenter.y / vertices.size
 
     val newCenter = projection.toScreenLocation(draggedCenter)
+    val draggedPixels: PointF = newCenter - currentCenter
 
-    val draggedPixels: PointF = PointF(newCenter.x - currentCenter.x, newCenter.y - currentCenter.y)
-
-    val draggedVertices = mutableListOf<LatLng>()
-
-    for (coord in points) {
-        val currentLoc = projection.toScreenLocation(coord)
-        draggedVertices.add(projection.fromScreenLocation(currentLoc + draggedPixels))
-    }
+    val draggedVertices = vertices.map { latlng ->
+        projection.fromScreenLocation(projection.toScreenLocation(latlng) + draggedPixels)
+    }.toMutableList()
 
     onCenterAndVerticesChanged(projection.fromScreenLocation(currentCenter), draggedVertices)
 }
@@ -49,7 +45,8 @@ private fun VerticeDragger(
 @Composable
 private fun PolygonDragHandle(
     vertices: MutableList<LatLng>,
-    onVerticesChanged: (MutableList<LatLng>) -> Unit
+    onCenterChanged: (LatLng) -> Unit = {},
+    onVerticesChanged: (MutableList<LatLng>) -> Unit = {}
 ) {
 
     val polygonDragHandleCoord = remember {
@@ -64,15 +61,15 @@ private fun PolygonDragHandle(
         mutableStateOf(false)
     }
 
-
     VerticeDragger(
         draggedCenter = inputDragCoord.value,
-        points = vertices,
+        vertices = vertices,
         onCenterAndVerticesChanged = { center, vertices ->
             polygonDragHandleCoord.value = center
             if (dragActive.value) {
                 onVerticesChanged(vertices)
             }
+            onCenterChanged(center)
         })
 
     Circle(
@@ -98,11 +95,6 @@ fun Polygon(
     draggable: Boolean = false,
     onVerticesChanged: (MutableList<MutableList<LatLng>>) -> Unit,
 ) {
-    if (draggable) {
-        PolygonDragHandle(
-            vertices = vertices.first(),
-            onVerticesChanged = { onVerticesChanged(mutableListOf(it)) })
-    }
 
     Fill(
         points = vertices,
@@ -111,4 +103,11 @@ fun Polygon(
         draggable = false,
         onVericesChanged = onVerticesChanged
     )
+    if (draggable) {
+        PolygonDragHandle(
+            vertices = vertices.first(),
+            onVerticesChanged = {
+                onVerticesChanged(mutableListOf(it))
+            })
+    }
 }

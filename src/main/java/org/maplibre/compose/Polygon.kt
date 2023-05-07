@@ -16,7 +16,7 @@ private fun VerticeDragger(
     onCenterAndVerticesChanged: (LatLng, MutableList<LatLng>) -> Unit
 ) {
 
-    if (vertices.size <= 0) {
+    if (vertices.isEmpty()) {
         return
     }
 
@@ -75,7 +75,7 @@ private fun PolygonDragHandle(
     Circle(
         center = polygonDragHandleCoord.value,
         radius = 30.0f,
-        draggable = true,
+        isDraggable = true,
         color = "Transparent",
         onCenterDragged = {
             dragActive.value = true
@@ -92,7 +92,7 @@ fun Polygon(
     vertices: MutableList<MutableList<LatLng>>,
     fillColor: String = "Transparent",
     opacity: Float = 1.0f,
-    draggable: Boolean = false,
+    isDraggable: Boolean = false,
     onVerticesChanged: (MutableList<MutableList<LatLng>>) -> Unit,
 ) {
 
@@ -100,10 +100,10 @@ fun Polygon(
         points = vertices,
         fillColor = fillColor,
         opacity = opacity,
-        draggable = false,
+        isDraggable = false,
         onVericesChanged = onVerticesChanged
     )
-    if (draggable) {
+    if (isDraggable) {
         PolygonDragHandle(
             vertices = vertices.first(),
             onVerticesChanged = {

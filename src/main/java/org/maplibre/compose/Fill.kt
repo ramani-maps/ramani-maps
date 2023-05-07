@@ -15,7 +15,7 @@ fun Fill(
     points: MutableList<MutableList<LatLng>>,
     fillColor: String = "Transparent",
     opacity: Float = 1.0f,
-    draggable: Boolean = false,
+    isDraggable: Boolean = false,
     onVericesChanged: (MutableList<MutableList<LatLng>>) -> Unit,
 ) {
 
@@ -27,7 +27,7 @@ fun Fill(
 
         val fillOptions =
             FillOptions().withLatLngs(points).withFillColor(fillColor).withFillOpacity(opacity)
-                .withDraggable(draggable)
+                .withDraggable(isDraggable)
         val fill = fillManager.create(fillOptions)
 
 

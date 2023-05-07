@@ -14,7 +14,7 @@ import com.mapbox.mapboxsdk.plugins.annotation.OnCircleDragListener
 fun Circle(
     center: LatLng,
     radius: Float,
-    draggable: Boolean,
+    isDraggable: Boolean,
     color: String,
     borderColor: String = "Black",
     borderWidth: Float = 0.0f,
@@ -29,7 +29,7 @@ fun Circle(
 
         val circleOptions =
             CircleOptions().withCircleRadius(radius)
-                .withLatLng(center).withDraggable(draggable).withCircleStrokeColor(borderColor)
+                .withLatLng(center).withDraggable(isDraggable).withCircleStrokeColor(borderColor)
                 .withCircleStrokeWidth(borderWidth)
 
         val circle = circleManager.create(circleOptions)

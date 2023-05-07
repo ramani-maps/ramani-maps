@@ -18,7 +18,7 @@ fun Symbol(
     center: LatLng,
     size: Float,
     color: String,
-    draggable: Boolean,
+    isDraggable: Boolean,
     imageId: Int? = null,
     text: String? = null
 ) {
@@ -37,7 +37,7 @@ fun Symbol(
             SymbolManager(mapApplier?.mapView!!, mapApplier?.map!!, mapApplier?.style!!)
 
         var symbolOptions =
-            SymbolOptions().withDraggable(draggable).withLatLng(center)
+            SymbolOptions().withDraggable(isDraggable).withLatLng(center)
 
 
         if (imageId != null) {

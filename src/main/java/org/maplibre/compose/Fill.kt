@@ -64,5 +64,10 @@ fun Fill(
             fill.fillColor = fillColor
             fillManager.update(fill)
         }
+
+        set(opacity) {
+            fill.fillOpacity = opacity
+            fillManager.update(fill)
+        }
     })
 }

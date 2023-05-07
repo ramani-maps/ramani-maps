@@ -40,10 +40,12 @@ fun Symbol(
             SymbolOptions().withDraggable(isDraggable).withLatLng(center)
 
 
-        if (imageId != null) {
+        imageId?.let {
             symbolOptions =
                 symbolOptions.withIconImage("symbol").withIconColor(color).withIconSize(size)
-        } else if (text != null) {
+        }
+
+        text?.let {
             symbolOptions =
                 symbolOptions.withTextField(text).withTextColor(color).withTextSize(size)
                     .withTextJustify(TEXT_JUSTIFY_CENTER).withTextAnchor(

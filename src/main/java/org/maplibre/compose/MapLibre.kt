@@ -80,14 +80,15 @@ internal class MapApplier(
     }
 
     override fun move(from: Int, to: Int, count: Int) {
-        TODO("Not yet implemented")
+        decorations.move(from, to, count)
     }
 
     override fun onClear() {
+        TODO("Not yet implemented")
     }
 
     override fun remove(index: Int, count: Int) {
-        TODO("Not yet implemented")
+        decorations.remove(index, count)
     }
 
 }
@@ -98,6 +99,10 @@ internal class CircleNode(
     var onCircleClick: (Circle) -> Unit
 ) : MapNode {
     override fun onRemoved() {
+    }
+
+    override fun onAttached() {
+        println("attached circle " + circle.id)
     }
 }
 

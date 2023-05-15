@@ -23,6 +23,7 @@ fun Circle(
 ) {
     val mapApplier = currentComposer.applier as? MapApplier
 
+
     ComposeNode<CircleNode, MapApplier>(factory = {
         val circleManager =
             CircleManager(mapApplier?.mapView!!, mapApplier?.map!!, mapApplier?.style!!)
@@ -35,7 +36,6 @@ fun Circle(
         val circle = circleManager.create(circleOptions)
         circleManager.addDragListener(object : OnCircleDragListener {
             override fun onAnnotationDragStarted(annotation: Circle?) {
-
             }
 
             override fun onAnnotationDrag(annotation: Circle?) {

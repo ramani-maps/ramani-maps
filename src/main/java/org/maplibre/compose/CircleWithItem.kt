@@ -18,10 +18,12 @@ fun CircleWithItem(
     color: String,
     borderColor: String = "Black",
     borderWidth: Float = 0.0f,
+    opacity: Float = 1.0f,
     imageId: Int? = null,
     itemSize: Float = 0.0f,
     text: String? = null,
-    onCenterChanged: (LatLng) -> Unit = {}
+    onCenterChanged: (LatLng) -> Unit = {},
+    onDragStopped: () -> Unit = {},
 ) {
 
     var draggableCenterState = remember {
@@ -41,6 +43,7 @@ fun CircleWithItem(
             onCenterChanged(it)
         }, onDragFinished = {
             draggableCenterState.value = center
+            onDragStopped()
         }
     )
 
@@ -49,6 +52,7 @@ fun CircleWithItem(
         radius = radius,
         isDraggable = false,
         color = color,
+        opacity = opacity,
         borderColor = borderColor,
         borderWidth = borderWidth,
         onCenterDragged = {

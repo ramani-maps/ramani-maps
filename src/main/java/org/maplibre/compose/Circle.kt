@@ -16,6 +16,7 @@ fun Circle(
     radius: Float,
     isDraggable: Boolean,
     color: String,
+    opacity: Float = 1.0f,
     borderColor: String = "Black",
     borderWidth: Float = 0.0f,
     onCenterDragged: (LatLng) -> Unit,
@@ -31,7 +32,7 @@ fun Circle(
         val circleOptions =
             CircleOptions().withCircleRadius(radius)
                 .withLatLng(center).withDraggable(isDraggable).withCircleStrokeColor(borderColor)
-                .withCircleStrokeWidth(borderWidth)
+                .withCircleStrokeWidth(borderWidth).withCircleOpacity(opacity)
 
         val circle = circleManager.create(circleOptions)
         circleManager.addDragListener(object : OnCircleDragListener {

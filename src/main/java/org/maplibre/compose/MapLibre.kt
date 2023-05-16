@@ -84,10 +84,16 @@ internal class MapApplier(
     }
 
     override fun onClear() {
-        TODO("Not yet implemented")
+        repeat(decorations.size) {
+            decorations[it].onCleared()
+        }
+        decorations.clear()
     }
 
     override fun remove(index: Int, count: Int) {
+        repeat(count) {
+            decorations[index + it].onRemoved()
+        }
         decorations.remove(index, count)
     }
 
@@ -99,10 +105,11 @@ internal class CircleNode(
     var onCircleClick: (Circle) -> Unit
 ) : MapNode {
     override fun onRemoved() {
+        circleManager.delete(circle)
     }
 
-    override fun onAttached() {
-        println("attached circle " + circle.id)
+    override fun onCleared() {
+        circleManager.delete(circle)
     }
 }
 
@@ -112,6 +119,11 @@ internal class SymbolNode(
     var onSymbolClicked: (Symbol) -> Unit
 ) : MapNode {
     override fun onRemoved() {
+        symbolManager.delete(symbol)
+    }
+
+    override fun onCleared() {
+        symbolManager.delete(symbol)
     }
 }
 
@@ -121,6 +133,11 @@ internal class PolyLineNode(
     var onLineClicked: (Line) -> Unit
 ) : MapNode {
     override fun onRemoved() {
+        lineManager.delete(polyLine)
+    }
+
+    override fun onCleared() {
+        lineManager.delete(polyLine)
     }
 }
 
@@ -130,6 +147,10 @@ internal class FillNode(
     onFillClicked: (Fill) -> Unit
 ) : MapNode {
     override fun onRemoved() {
+        fillManager.delete(fill)
+    }
 
+    override fun onCleared() {
+        fillManager.delete(fill)
     }
 }

@@ -66,5 +66,5 @@ fun Symbol(
             symbol.textField = text
             symbolManager.update(symbol)
         }
-    }) {}
+    })
 }

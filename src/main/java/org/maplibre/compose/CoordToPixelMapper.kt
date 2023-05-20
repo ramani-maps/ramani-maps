@@ -16,3 +16,21 @@ fun CoordToPixelMaper(coordinates: MutableList<LatLng>, onChange: (List<PointF>)
     })
 
 }
+
+@Composable
+fun PixelFromCoord(coord: LatLng): PointF {
+
+    val mapApplier = currentComposer.applier as? MapApplier
+    val projection = mapApplier?.map?.projection!!
+
+    return projection.toScreenLocation(coord)
+}
+
+@Composable
+fun CoordFromPixel(point: PointF): LatLng {
+
+    val mapApplier = currentComposer.applier as? MapApplier
+    val projection = mapApplier?.map?.projection!!
+
+    return projection.fromScreenLocation(point)
+}

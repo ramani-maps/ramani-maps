@@ -59,6 +59,11 @@ fun Circle(
             circle.circleColor = color
             circleManager.update(circle)
         }
+
+        set(radius) {
+            circle.circleRadius = radius
+            circleManager.update(circle)
+        }
     }) {
     }
 }

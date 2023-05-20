@@ -88,12 +88,16 @@ internal class MapApplier(
             decorations[it].onCleared()
         }
         decorations.clear()
+
     }
 
     override fun remove(index: Int, count: Int) {
+
+        println("removing at index $index and count $count")
         repeat(count) {
             decorations[index + it].onRemoved()
         }
+
         decorations.remove(index, count)
     }
 
@@ -105,7 +109,9 @@ internal class CircleNode(
     var onCircleClick: (Circle) -> Unit
 ) : MapNode {
     override fun onRemoved() {
+
         circleManager.delete(circle)
+
     }
 
     override fun onCleared() {

@@ -20,30 +20,30 @@ fun Circle(
     onCenterDragged: (LatLng) -> Unit,
     onDragFinished: (LatLng) -> Unit = {}
 ) {
-    val mapApplier = currentComposer.applier as? MapApplier
-
+    val mapApplier = currentComposer.applier as MapApplier
 
     ComposeNode<CircleNode, MapApplier>(factory = {
-        val circleManager = mapApplier?.circleManager!!
+        val circleManager = mapApplier.circleManager
 
-        val circleOptions =
-            CircleOptions().withCircleRadius(radius)
-                .withLatLng(center).withDraggable(isDraggable).withCircleStrokeColor(borderColor)
-                .withCircleStrokeWidth(borderWidth).withCircleOpacity(opacity)
+        val circleOptions = CircleOptions()
+            .withCircleRadius(radius)
+            .withLatLng(center)
+            .withDraggable(isDraggable)
+            .withCircleStrokeColor(borderColor)
+            .withCircleStrokeWidth(borderWidth)
+            .withCircleOpacity(opacity)
 
         val circle =
-            if (zIndex > 0) mapApplier.topCircleManager.create(circleOptions) else circleManager.create(
-                circleOptions
-            )
+            if (zIndex > 0) mapApplier.topCircleManager.create(circleOptions)
+            else circleManager.create(circleOptions)
 
         CircleNode(
             circleManager,
             circle,
             onCircleDragged = { onCenterDragged(it.latLng) },
-            onCircleClick = {},
-            onCircleDragStopped = { onDragFinished(it.latLng) })
+            onCircleDragStopped = { onDragFinished(it.latLng) },
+        )
     }, update = {
-
         update(onCenterDragged) {
             this.onCircleDragged = { onCenterDragged(it.latLng) }
         }
@@ -56,6 +56,7 @@ fun Circle(
             circle.latLng = center
             circleManager.update(circle)
         }
+
         set(color) {
             circle.circleColor = color
             circleManager.update(circle)
@@ -65,6 +66,5 @@ fun Circle(
             circle.circleRadius = radius
             circleManager.update(circle)
         }
-    }) {
-    }
+    })
 }

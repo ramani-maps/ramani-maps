@@ -13,28 +13,24 @@ fun Fill(
     fillColor: String = "Transparent",
     opacity: Float = 1.0f,
     isDraggable: Boolean = false,
-    onVericesChanged: (MutableList<MutableList<LatLng>>) -> Unit,
 ) {
-
-    val mapApplier = currentComposer.applier as? MapApplier
+    val mapApplier = currentComposer.applier as MapApplier
 
     ComposeNode<FillNode, MapApplier>(factory = {
+        val fillOptions = FillOptions()
+            .withLatLngs(points)
+            .withFillColor(fillColor)
+            .withFillOpacity(opacity)
+            .withDraggable(isDraggable)
+        val fill = mapApplier.fillManager.create(fillOptions)
 
-
-        val fillOptions =
-            FillOptions().withLatLngs(points).withFillColor(fillColor).withFillOpacity(opacity)
-                .withDraggable(isDraggable)
-        val fill = mapApplier?.fillManager!!.create(fillOptions)
-
-
-        FillNode(mapApplier?.fillManager!!, fill) {
-
-        }
+        FillNode(mapApplier.fillManager, fill)
     }, update = {
         set(points) {
             fill.latLngs = points
             fillManager.update(fill)
         }
+
         set(fillColor) {
             fill.fillColor = fillColor
             fillManager.update(fill)

@@ -1,6 +1,5 @@
 package org.maplibre.compose
 
-
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -21,11 +20,9 @@ import kotlin.coroutines.suspendCoroutine
 fun rememberMapViewWithLifecycle(): MapView {
     val context = LocalContext.current
     Mapbox.getInstance(context)
-    val mapView = remember {
-        MapView(context)
-    }
-
+    val mapView = remember { MapView(context) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
+
     DisposableEffect(lifecycle, mapView) {
         val lifecycleObserver = getMapLifecycleObserver(mapView)
         lifecycle.addObserver(lifecycleObserver)
@@ -33,6 +30,7 @@ fun rememberMapViewWithLifecycle(): MapView {
             lifecycle.removeObserver(lifecycleObserver)
         }
     }
+
     return mapView
 }
 

@@ -10,24 +10,21 @@ import androidx.core.graphics.plus
 import com.mapbox.mapboxsdk.geometry.LatLng
 
 @Composable
-private fun VerticeDragger(
+private fun VertexDragger(
     draggedCenter: LatLng,
     vertices: MutableList<LatLng>,
     onCenterAndVerticesChanged: (LatLng, MutableList<LatLng>) -> Unit
 ) {
-
     if (vertices.isEmpty()) {
         return
     }
 
-    var mapApplier = currentComposer.applier as? MapApplier
-    val projection = mapApplier?.map!!.projection
+    val mapApplier = currentComposer.applier as MapApplier
+    val projection = mapApplier.map.projection
 
     var currentCenter = PointF()
 
-    for (coord in vertices) {
-        currentCenter += projection.toScreenLocation(coord)
-    }
+    vertices.forEach { currentCenter += projection.toScreenLocation(it) }
 
     currentCenter.x = currentCenter.x / vertices.size
     currentCenter.y = currentCenter.y / vertices.size
@@ -35,8 +32,8 @@ private fun VerticeDragger(
     val newCenter = projection.toScreenLocation(draggedCenter)
     val draggedPixels: PointF = newCenter - currentCenter
 
-    val draggedVertices = vertices.map { latlng ->
-        projection.fromScreenLocation(projection.toScreenLocation(latlng) + draggedPixels)
+    val draggedVertices = vertices.map { vertex ->
+        projection.fromScreenLocation(projection.toScreenLocation(vertex) + draggedPixels)
     }.toMutableList()
 
     onCenterAndVerticesChanged(projection.fromScreenLocation(currentCenter), draggedVertices)
@@ -48,7 +45,6 @@ private fun PolygonDragHandle(
     onCenterChanged: (LatLng) -> Unit = {},
     onVerticesChanged: (MutableList<LatLng>) -> Unit = {}
 ) {
-
     val polygonDragHandleCoord = remember {
         mutableStateOf(LatLng())
     }
@@ -61,7 +57,7 @@ private fun PolygonDragHandle(
         mutableStateOf(false)
     }
 
-    VerticeDragger(
+    VertexDragger(
         draggedCenter = inputDragCoord.value,
         vertices = vertices,
         onCenterAndVerticesChanged = { center, vertices ->
@@ -96,13 +92,12 @@ fun Polygon(
     isDraggable: Boolean = false,
     onVerticesChanged: (MutableList<MutableList<LatLng>>) -> Unit,
 ) {
-
     Fill(
         points = vertices,
         fillColor = fillColor,
         opacity = opacity,
         isDraggable = false,
-        onVericesChanged = onVerticesChanged
+        //onVerticesChanged = onVerticesChanged
     )
     if (isDraggable) {
         /*PolygonDragHandle(

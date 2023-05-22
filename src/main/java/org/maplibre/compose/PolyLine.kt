@@ -14,25 +14,23 @@ fun PolyLine(
     lineWidth: Float,
     isDraggable: Boolean = false
 ) {
-
-    val mapApplier = currentComposer.applier as? MapApplier
+    val mapApplier = currentComposer.applier as MapApplier
 
     ComposeNode<PolyLineNode, MapApplier>(factory = {
+        val lineOptions = LineOptions()
+            .withLatLngs(points)
+            .withLineColor(color)
+            .withLineWidth(lineWidth)
+            .withDraggable(isDraggable)
+        val polyLine = mapApplier.lineManager.create(lineOptions)
 
-
-        val lineOptions =
-            LineOptions().withLatLngs(points).withLineColor(color).withLineWidth(lineWidth)
-                .withDraggable(isDraggable)
-
-        val polyLine = mapApplier?.lineManager!!.create(lineOptions)
-        PolyLineNode(mapApplier?.lineManager!!, polyLine) {
-
-        }
+        PolyLineNode(mapApplier.lineManager, polyLine)
     }, update = {
         set(points) {
             polyLine.latLngs = points
             lineManager.update(polyLine)
         }
+
         set(color) {
             polyLine.lineColor = color
             lineManager.update(polyLine)

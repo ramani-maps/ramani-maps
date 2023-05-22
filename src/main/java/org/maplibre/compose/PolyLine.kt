@@ -4,10 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import androidx.compose.runtime.currentComposer
 import com.mapbox.mapboxsdk.geometry.LatLng
-import com.mapbox.mapboxsdk.plugins.annotation.Line
-import com.mapbox.mapboxsdk.plugins.annotation.LineManager
 import com.mapbox.mapboxsdk.plugins.annotation.LineOptions
-import com.mapbox.mapboxsdk.plugins.annotation.OnLineDragListener
 
 @Composable
 @MapLibreComposable
@@ -22,25 +19,13 @@ fun PolyLine(
 
     ComposeNode<PolyLineNode, MapApplier>(factory = {
 
-        val lineManager = LineManager(mapApplier?.mapView!!, mapApplier?.map!!, mapApplier?.style!!)
 
         val lineOptions =
             LineOptions().withLatLngs(points).withLineColor(color).withLineWidth(lineWidth)
                 .withDraggable(isDraggable)
 
-        val polyLine = lineManager.create(lineOptions)
-        lineManager.addDragListener(object : OnLineDragListener {
-            override fun onAnnotationDragStarted(annotation: Line?) {
-            }
-
-            override fun onAnnotationDrag(annotation: Line?) {
-            }
-
-            override fun onAnnotationDragFinished(annotation: Line?) {
-            }
-
-        })
-        PolyLineNode(lineManager, polyLine) {
+        val polyLine = mapApplier?.lineManager!!.create(lineOptions)
+        PolyLineNode(mapApplier?.lineManager!!, polyLine) {
 
         }
     }, update = {

@@ -14,6 +14,7 @@ import com.mapbox.mapboxsdk.plugins.annotation.Fill
 import com.mapbox.mapboxsdk.plugins.annotation.FillManager
 import com.mapbox.mapboxsdk.plugins.annotation.Line
 import com.mapbox.mapboxsdk.plugins.annotation.LineManager
+import com.mapbox.mapboxsdk.plugins.annotation.OnCircleDragListener
 import com.mapbox.mapboxsdk.plugins.annotation.Symbol
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
 import kotlinx.coroutines.awaitCancellation
@@ -69,6 +70,72 @@ internal class MapApplier(
 ) : AbstractApplier<MapNode>(MapNodeRoot) {
 
     private val decorations = mutableListOf<MapNode>()
+
+
+    val topCircleManager: CircleManager = CircleManager(mapView, map, style)
+    val circleManager: CircleManager =
+        CircleManager(mapView, map, style, topCircleManager.layerId)
+
+    val lineManager = LineManager(mapView, map, style, circleManager.layerId)
+    val fillManager = FillManager(mapView, map, style, circleManager.layerId)
+    val symbolManager =
+        SymbolManager(mapView, map, style, circleManager.layerId)
+
+    init {
+        attachCircleDragListeners()
+    }
+
+    internal fun attachCircleDragListeners() {
+        circleManager.addDragListener(object : OnCircleDragListener {
+            override fun onAnnotationDragStarted(annotation: Circle?) {
+                decorations.findInputCallback<CircleNode, Circle, Unit>(
+                    nodeMatchPredicate = { it.circle.id == annotation?.id },
+                    nodeInputCallback = { onCircleDragged }
+
+                )?.invoke(annotation!!)
+            }
+
+            override fun onAnnotationDrag(annotation: Circle?) {
+                decorations.findInputCallback<CircleNode, Circle, Unit>(
+                    nodeMatchPredicate = { it.circle.id == annotation?.id },
+                    nodeInputCallback = { onCircleDragged }
+
+                )?.invoke(annotation!!)
+            }
+
+            override fun onAnnotationDragFinished(annotation: Circle?) {
+                decorations.findInputCallback<CircleNode, Circle, Unit>(
+                    nodeMatchPredicate = { it.circle.id == annotation?.id },
+                    nodeInputCallback = { onCircleDragStopped }
+
+                )?.invoke(annotation!!)
+            }
+
+        })
+        topCircleManager.addDragListener(object : OnCircleDragListener {
+            override fun onAnnotationDragStarted(annotation: Circle?) {
+            }
+
+            override fun onAnnotationDrag(annotation: Circle?) {
+                decorations.findInputCallback<CircleNode, Circle, Unit>(
+                    nodeMatchPredicate = { it.circle.id == annotation?.id },
+                    nodeInputCallback = { onCircleDragged }
+
+                )?.invoke(annotation!!)
+            }
+
+            override fun onAnnotationDragFinished(annotation: Circle?) {
+                decorations.findInputCallback<CircleNode, Circle, Unit>(
+                    nodeMatchPredicate = { it.circle.id == annotation?.id },
+                    nodeInputCallback = { onCircleDragStopped }
+
+                )?.invoke(annotation!!)
+            }
+
+        })
+    }
+
+
     override fun insertBottomUp(index: Int, instance: MapNode) {
         decorations.add(index, instance)
         instance.onAttached()
@@ -93,7 +160,6 @@ internal class MapApplier(
 
     override fun remove(index: Int, count: Int) {
 
-        println("removing at index $index and count $count")
         repeat(count) {
             decorations[index + it].onRemoved()
         }
@@ -106,7 +172,9 @@ internal class MapApplier(
 internal class CircleNode(
     val circleManager: CircleManager,
     val circle: Circle,
-    var onCircleClick: (Circle) -> Unit
+    var onCircleClick: (Circle) -> Unit,
+    var onCircleDragged: (Circle) -> Unit,
+    var onCircleDragStopped: (Circle) -> Unit
 ) : MapNode {
     override fun onRemoved() {
 
@@ -159,4 +227,19 @@ internal class FillNode(
     override fun onCleared() {
         fillManager.delete(fill)
     }
+}
+
+
+private inline fun <reified NodeT : MapNode, I, O> Iterable<MapNode>.findInputCallback(
+    nodeMatchPredicate: (NodeT) -> Boolean,
+    nodeInputCallback: NodeT.() -> ((I) -> O)?,
+): ((I) -> O)? {
+    var callback: ((I) -> O)? = null
+    for (item in this) {
+        if (item is NodeT && nodeMatchPredicate(item)) {
+            // Found a matching node
+            return nodeInputCallback(item)
+        }
+    }
+    return callback
 }

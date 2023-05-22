@@ -76,7 +76,8 @@ private fun PolygonDragHandle(
         center = polygonDragHandleCoord.value,
         radius = 30.0f,
         isDraggable = true,
-        color = "Transparent",
+        color = "Red",
+        zIndex = 1,
         onCenterDragged = {
             dragActive.value = true
             inputDragCoord.value = it
@@ -104,10 +105,10 @@ fun Polygon(
         onVericesChanged = onVerticesChanged
     )
     if (isDraggable) {
-        PolygonDragHandle(
+        /*PolygonDragHandle(
             vertices = vertices.first(),
             onVerticesChanged = {
                 onVerticesChanged(mutableListOf(it))
-            })
+            })*/
     }
 }

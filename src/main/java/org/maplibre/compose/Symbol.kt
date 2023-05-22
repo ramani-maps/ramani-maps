@@ -7,7 +7,6 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.res.imageResource
 import com.mapbox.mapboxsdk.geometry.LatLng
-import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
 import com.mapbox.mapboxsdk.style.layers.Property.TEXT_ANCHOR_CENTER
 import com.mapbox.mapboxsdk.style.layers.Property.TEXT_JUSTIFY_CENTER
@@ -33,8 +32,6 @@ fun Symbol(
         )
     }
     ComposeNode<SymbolNode, MapApplier>(factory = {
-        val symbolManager =
-            SymbolManager(mapApplier?.mapView!!, mapApplier?.map!!, mapApplier?.style!!)
 
         var symbolOptions =
             SymbolOptions().withDraggable(isDraggable).withLatLng(center)
@@ -53,8 +50,8 @@ fun Symbol(
                     )
         }
 
-        val symbol = symbolManager.create(symbolOptions)
-        SymbolNode(symbolManager, symbol) {
+        val symbol = mapApplier?.symbolManager!!.create(symbolOptions)
+        SymbolNode(mapApplier?.symbolManager!!, symbol) {
 
         }
     }, update = {

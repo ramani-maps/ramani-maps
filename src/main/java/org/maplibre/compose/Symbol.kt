@@ -18,6 +18,7 @@ fun Symbol(
     size: Float,
     color: String,
     isDraggable: Boolean,
+    zIndex: Int = 0,
     imageId: Int? = null,
     text: String? = null
 ) {
@@ -31,6 +32,7 @@ fun Symbol(
     }
 
     ComposeNode<SymbolNode, MapApplier>(factory = {
+        val symbolManager = mapApplier.getSymoblManagerForZIndex(zIndex)
         var symbolOptions = SymbolOptions()
             .withDraggable(isDraggable)
             .withLatLng(center)
@@ -51,8 +53,8 @@ fun Symbol(
                 .withTextAnchor(TEXT_ANCHOR_CENTER)
         }
 
-        val symbol = mapApplier.symbolManager.create(symbolOptions)
-        SymbolNode(mapApplier.symbolManager, symbol)
+        val symbol = symbolManager.create(symbolOptions)
+        SymbolNode(symbolManager, symbol)
     }, update = {
         set(center) {
             symbol.latLng = center
@@ -62,6 +64,10 @@ fun Symbol(
         set(text) {
             symbol.textField = text
             symbolManager.update(symbol)
+        }
+
+        set(color) {
+            symbol.iconColor = color
         }
     })
 }

@@ -17,6 +17,7 @@ import com.mapbox.mapboxsdk.plugins.annotation.OnCircleDragListener
 import com.mapbox.mapboxsdk.plugins.annotation.Symbol
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
 import kotlinx.coroutines.awaitCancellation
+import java.time.ZoneId
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -61,68 +62,72 @@ private object MapNodeRoot : MapNode
 
 internal class MapApplier(
     val map: MapboxMap,
-    mapView: MapView,
+    val mapView: MapView,
     val style: Style
 ) : AbstractApplier<MapNode>(MapNodeRoot) {
     private val decorations = mutableListOf<MapNode>()
 
-    val topCircleManager: CircleManager = CircleManager(mapView, map, style)
-    val circleManager: CircleManager = CircleManager(mapView, map, style, topCircleManager.layerId)
+    private val circleManagerMap = mutableMapOf<Int, CircleManager>()
+    private val fillManagerMap = mutableMapOf<Int, FillManager>()
+    private val symbolManagerMap = mutableMapOf<Int, SymbolManager>()
+    private val lineManagerMap = mutableMapOf<Int, LineManager>()
 
-    val lineManager = LineManager(mapView, map, style, circleManager.layerId)
-    val fillManager = FillManager(mapView, map, style, circleManager.layerId)
-    val symbolManager = SymbolManager(mapView, map, style, circleManager.layerId)
+    fun getCircleManagerForZIndex(zIndex : Int) : CircleManager{
+        if (!circleManagerMap.containsKey(zIndex)) {
+            val circleManager = CircleManager(mapView, map, style)
+            circleManagerMap.putIfAbsent(zIndex, circleManager)
 
-    init {
-        attachCircleDragListeners()
+            circleManager.addDragListener(object : OnCircleDragListener {
+                override fun onAnnotationDragStarted(annotation: Circle?) {
+                    decorations.findInputCallback<CircleNode, Circle, Unit>(
+                        nodeMatchPredicate = { it.circle.id == annotation?.id && it.circleManager.layerId == circleManager.layerId },
+                        nodeInputCallback = { onCircleDragged }
+                    )?.invoke(annotation!!)
+                }
+
+                override fun onAnnotationDrag(annotation: Circle?) {
+                    decorations.findInputCallback<CircleNode, Circle, Unit>(
+                        nodeMatchPredicate = { it.circle.id == annotation?.id && it.circleManager.layerId == circleManager.layerId },
+                        nodeInputCallback = { onCircleDragged }
+                    )?.invoke(annotation!!)
+                }
+
+                override fun onAnnotationDragFinished(annotation: Circle?) {
+                    decorations.findInputCallback<CircleNode, Circle, Unit>(
+                        nodeMatchPredicate = { it.circle.id == annotation?.id && it.circleManager.layerId == circleManager.layerId },
+                        nodeInputCallback = { onCircleDragStopped }
+                    )?.invoke(annotation!!)
+                }
+            })
+
+        }
+
+        return circleManagerMap[zIndex]!!
     }
 
-    private fun attachCircleDragListeners() {
-        circleManager.addDragListener(object : OnCircleDragListener {
-            override fun onAnnotationDragStarted(annotation: Circle?) {
-                decorations.findInputCallback<CircleNode, Circle, Unit>(
-                    nodeMatchPredicate = { it.circle.id == annotation?.id },
-                    nodeInputCallback = { onCircleDragged }
-                )?.invoke(annotation!!)
-            }
+    fun getSymoblManagerForZIndex(zIndex : Int) : SymbolManager {
+        if (!symbolManagerMap.containsKey(zIndex)) {
+            val symbolManager = SymbolManager(mapView, map, style)
+            symbolManagerMap.putIfAbsent(zIndex, symbolManager)
+        }
 
-            override fun onAnnotationDrag(annotation: Circle?) {
-                decorations.findInputCallback<CircleNode, Circle, Unit>(
-                    nodeMatchPredicate = { it.circle.id == annotation?.id },
-                    nodeInputCallback = { onCircleDragged }
-                )?.invoke(annotation!!)
-            }
+        return symbolManagerMap[zIndex]!!
+    }
+    fun getFillManagerForZIndex(zIndex : Int) : FillManager {
+        if (!fillManagerMap.containsKey(zIndex)) {
+            val fillManager = FillManager(mapView, map, style)
+            fillManagerMap.putIfAbsent(zIndex, fillManager)
+        }
 
-            override fun onAnnotationDragFinished(annotation: Circle?) {
-                decorations.findInputCallback<CircleNode, Circle, Unit>(
-                    nodeMatchPredicate = { it.circle.id == annotation?.id },
-                    nodeInputCallback = { onCircleDragStopped }
-                )?.invoke(annotation!!)
-            }
-        })
+        return fillManagerMap[zIndex]!!
+    }
+    fun getLineManagerForZIndex(zIndex : Int) : LineManager {
+        if (!lineManagerMap.containsKey(zIndex)) {
+            val lineManager = LineManager(mapView, map, style)
+            lineManagerMap.putIfAbsent(zIndex, lineManager)
+        }
 
-        topCircleManager.addDragListener(object : OnCircleDragListener {
-            override fun onAnnotationDragStarted(annotation: Circle?) {
-                decorations.findInputCallback<CircleNode, Circle, Unit>(
-                    nodeMatchPredicate = { it.circle.id == annotation?.id },
-                    nodeInputCallback = { onCircleDragged }
-                )?.invoke(annotation!!)
-            }
-
-            override fun onAnnotationDrag(annotation: Circle?) {
-                decorations.findInputCallback<CircleNode, Circle, Unit>(
-                    nodeMatchPredicate = { it.circle.id == annotation?.id },
-                    nodeInputCallback = { onCircleDragged }
-                )?.invoke(annotation!!)
-            }
-
-            override fun onAnnotationDragFinished(annotation: Circle?) {
-                decorations.findInputCallback<CircleNode, Circle, Unit>(
-                    nodeMatchPredicate = { it.circle.id == annotation?.id },
-                    nodeInputCallback = { onCircleDragStopped }
-                )?.invoke(annotation!!)
-            }
-        })
+        return lineManagerMap[zIndex]!!
     }
 
     override fun insertBottomUp(index: Int, instance: MapNode) {

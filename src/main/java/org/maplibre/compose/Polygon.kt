@@ -100,10 +100,10 @@ fun Polygon(
         //onVerticesChanged = onVerticesChanged
     )
     if (isDraggable) {
-        /*PolygonDragHandle(
+        PolygonDragHandle(
             vertices = vertices.first(),
             onVerticesChanged = {
                 onVerticesChanged(mutableListOf(it))
-            })*/
+            })
     }
 }

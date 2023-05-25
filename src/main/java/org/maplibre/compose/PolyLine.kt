@@ -12,19 +12,21 @@ fun PolyLine(
     points: MutableList<LatLng>,
     color: String,
     lineWidth: Float,
+    zIndex: Int = 0,
     isDraggable: Boolean = false
 ) {
     val mapApplier = currentComposer.applier as MapApplier
 
     ComposeNode<PolyLineNode, MapApplier>(factory = {
+        val lineManager = mapApplier.getLineManagerForZIndex(zIndex)
         val lineOptions = LineOptions()
             .withLatLngs(points)
             .withLineColor(color)
             .withLineWidth(lineWidth)
             .withDraggable(isDraggable)
-        val polyLine = mapApplier.lineManager.create(lineOptions)
+        val polyLine = lineManager.create(lineOptions)
 
-        PolyLineNode(mapApplier.lineManager, polyLine)
+        PolyLineNode(lineManager, polyLine)
     }, update = {
         set(points) {
             polyLine.latLngs = points
@@ -34,6 +36,10 @@ fun PolyLine(
         set(color) {
             polyLine.lineColor = color
             lineManager.update(polyLine)
+        }
+
+        set(lineWidth) {
+            polyLine.lineWidth = lineWidth
         }
     })
 }

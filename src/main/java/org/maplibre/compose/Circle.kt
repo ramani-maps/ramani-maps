@@ -23,7 +23,7 @@ fun Circle(
     val mapApplier = currentComposer.applier as MapApplier
 
     ComposeNode<CircleNode, MapApplier>(factory = {
-        val circleManager = mapApplier.circleManager
+        val circleManager = mapApplier.getCircleManagerForZIndex(zIndex)
 
         val circleOptions = CircleOptions()
             .withCircleRadius(radius)
@@ -33,9 +33,7 @@ fun Circle(
             .withCircleStrokeWidth(borderWidth)
             .withCircleOpacity(opacity)
 
-        val circle =
-            if (zIndex > 0) mapApplier.topCircleManager.create(circleOptions)
-            else circleManager.create(circleOptions)
+        val circle = circleManager.create(circleOptions)
 
         CircleNode(
             circleManager,

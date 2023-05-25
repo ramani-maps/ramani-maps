@@ -131,8 +131,7 @@ internal class MapApplier(
     }
 
     override fun insertBottomUp(index: Int, instance: MapNode) {
-        decorations.add(index, instance)
-        instance.onAttached()
+        // TODO: implement properly
     }
 
     override fun insertTopDown(index: Int, instance: MapNode) {

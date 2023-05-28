@@ -9,7 +9,7 @@ import com.mapbox.mapboxsdk.plugins.annotation.FillOptions
 @Composable
 @MapLibreComposable
 fun Fill(
-    points: MutableList<MutableList<LatLng>>,
+    points: MutableList<LatLng>,
     fillColor: String = "Transparent",
     opacity: Float = 1.0f,
     zIndex: Int = 0,
@@ -20,7 +20,7 @@ fun Fill(
     ComposeNode<FillNode, MapApplier>(factory = {
         val fillManager = mapApplier.getFillManagerForZIndex(zIndex)
         val fillOptions = FillOptions()
-            .withLatLngs(points)
+            .withLatLngs(mutableListOf(points))
             .withFillColor(fillColor)
             .withFillOpacity(opacity)
             .withDraggable(isDraggable)
@@ -29,7 +29,7 @@ fun Fill(
         FillNode(fillManager, fill)
     }, update = {
         set(points) {
-            fill.latLngs = points
+            fill.latLngs = mutableListOf(points)
             fillManager.update(fill)
         }
 

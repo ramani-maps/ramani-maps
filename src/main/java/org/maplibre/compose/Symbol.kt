@@ -25,10 +25,13 @@ fun Symbol(
     val mapApplier = currentComposer.applier as MapApplier
 
     imageId?.let {
-        mapApplier.style.addImage(
-            "symbol",
-            ImageBitmap.imageResource(id = it).asAndroidBitmap()
-        )
+
+        if (mapApplier.style.getImage(imageId.toString()) == null) {
+            mapApplier.style.addImage(
+                imageId.toString(),
+                ImageBitmap.imageResource(id = it).asAndroidBitmap()
+            )
+        }
     }
 
     ComposeNode<SymbolNode, MapApplier>(factory = {
@@ -39,7 +42,7 @@ fun Symbol(
 
         imageId?.let {
             symbolOptions = symbolOptions
-                .withIconImage("symbol")
+                .withIconImage(imageId.toString())
                 .withIconColor(color)
                 .withIconSize(size)
         }

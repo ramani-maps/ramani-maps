@@ -4,8 +4,12 @@ import androidx.compose.runtime.AbstractApplier
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Composition
 import androidx.compose.runtime.CompositionContext
+import com.mapbox.android.gestures.MoveGestureDetector
+import com.mapbox.android.gestures.StandardScaleGestureDetector
 import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.MapboxMap
+import com.mapbox.mapboxsdk.maps.MapboxMap.OnMoveListener
+import com.mapbox.mapboxsdk.maps.MapboxMap.OnScaleListener
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.plugins.annotation.Circle
 import com.mapbox.mapboxsdk.plugins.annotation.CircleManager
@@ -17,7 +21,6 @@ import com.mapbox.mapboxsdk.plugins.annotation.OnCircleDragListener
 import com.mapbox.mapboxsdk.plugins.annotation.Symbol
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
 import kotlinx.coroutines.awaitCancellation
-import java.time.ZoneId
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -72,7 +75,59 @@ internal class MapApplier(
     private val symbolManagerMap = mutableMapOf<Int, SymbolManager>()
     private val lineManagerMap = mutableMapOf<Int, LineManager>()
 
-    fun getCircleManagerForZIndex(zIndex : Int) : CircleManager{
+
+    init {
+        attachMapListeners()
+    }
+
+    private fun attachMapListeners() {
+
+        map.addOnScaleListener(object : OnScaleListener {
+            override fun onScaleBegin(detector: StandardScaleGestureDetector) {
+            }
+
+            override fun onScale(detector: StandardScaleGestureDetector) {
+                decorations.forEach {
+                    if (it is MapObserverNode) {
+                        it.onMapScaled.invoke()
+                    }
+                }
+            }
+
+            override fun onScaleEnd(detector: StandardScaleGestureDetector) {
+            }
+
+        })
+
+
+        map.addOnMoveListener(
+            object : OnMoveListener {
+
+                override fun onMoveBegin(detector: MoveGestureDetector) {
+                    decorations.forEach {
+                        if (it is MapObserverNode) {
+                            it.onMapMoved.invoke()
+                        }
+                    }
+                }
+
+                override fun onMove(detector: MoveGestureDetector) {
+                    decorations.forEach {
+                        if (it is MapObserverNode) {
+                            it.onMapMoved.invoke()
+                        }
+                    }
+                }
+
+                override fun onMoveEnd(detector: MoveGestureDetector) {
+                }
+
+            })
+    }
+
+    fun getCircleManagerForZIndex(zIndex: Int): CircleManager {
+
+
         if (!circleManagerMap.containsKey(zIndex)) {
             val circleManager = CircleManager(mapView, map, style)
             circleManagerMap.putIfAbsent(zIndex, circleManager)
@@ -105,7 +160,7 @@ internal class MapApplier(
         return circleManagerMap[zIndex]!!
     }
 
-    fun getSymoblManagerForZIndex(zIndex : Int) : SymbolManager {
+    fun getSymoblManagerForZIndex(zIndex: Int): SymbolManager {
         if (!symbolManagerMap.containsKey(zIndex)) {
             val symbolManager = SymbolManager(mapView, map, style)
             symbolManagerMap.putIfAbsent(zIndex, symbolManager)
@@ -113,7 +168,8 @@ internal class MapApplier(
 
         return symbolManagerMap[zIndex]!!
     }
-    fun getFillManagerForZIndex(zIndex : Int) : FillManager {
+
+    fun getFillManagerForZIndex(zIndex: Int): FillManager {
         if (!fillManagerMap.containsKey(zIndex)) {
             val fillManager = FillManager(mapView, map, style)
             fillManagerMap.putIfAbsent(zIndex, fillManager)
@@ -121,7 +177,8 @@ internal class MapApplier(
 
         return fillManagerMap[zIndex]!!
     }
-    fun getLineManagerForZIndex(zIndex : Int) : LineManager {
+
+    fun getLineManagerForZIndex(zIndex: Int): LineManager {
         if (!lineManagerMap.containsKey(zIndex)) {
             val lineManager = LineManager(mapView, map, style)
             lineManagerMap.putIfAbsent(zIndex, lineManager)
@@ -140,7 +197,6 @@ internal class MapApplier(
     }
 
     override fun move(from: Int, to: Int, count: Int) {
-        decorations.move(from, to, count)
     }
 
     override fun onClear() {
@@ -206,6 +262,14 @@ internal class FillNode(
 
     override fun onCleared() {
         fillManager.delete(fill)
+    }
+}
+
+internal class MapObserverNode(
+    var onMapMoved: () -> Unit,
+    var onMapScaled: () -> Unit,
+) : MapNode {
+    override fun onRemoved() {
     }
 }
 

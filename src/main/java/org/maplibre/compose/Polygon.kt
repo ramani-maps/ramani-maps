@@ -42,6 +42,7 @@ private fun VertexDragger(
 @Composable
 private fun PolygonDragHandle(
     vertices: MutableList<LatLng>,
+    imageId: Int? = null,
     onCenterChanged: (LatLng) -> Unit = {},
     onVerticesChanged: (MutableList<LatLng>) -> Unit = {}
 ) {
@@ -72,7 +73,7 @@ private fun PolygonDragHandle(
         center = polygonDragHandleCoord.value,
         radius = 30.0f,
         isDraggable = true,
-        color = "Red",
+        color = "Transparent",
         zIndex = 1,
         onCenterDragged = {
             dragActive.value = true
@@ -81,12 +82,23 @@ private fun PolygonDragHandle(
         onDragFinished = {
             dragActive.value = false
         })
+
+    imageId?.let {
+        Symbol(
+            center = polygonDragHandleCoord.value,
+            size = 3.0f,
+            color = "Black",
+            isDraggable = false,
+            imageId = imageId
+        )
+    }
 }
 
 @MapLibreComposable
 @Composable
 fun Polygon(
-    vertices: MutableList<MutableList<LatLng>>,
+    vertices: MutableList<LatLng>,
+    draggerImageId: Int? = null,
     fillColor: String = "Transparent",
     opacity: Float = 1.0f,
     isDraggable: Boolean = false,
@@ -97,11 +109,11 @@ fun Polygon(
         fillColor = fillColor,
         opacity = opacity,
         isDraggable = false,
-        //onVerticesChanged = onVerticesChanged
     )
     if (isDraggable) {
         PolygonDragHandle(
-            vertices = vertices.first(),
+            vertices = vertices,
+            imageId = draggerImageId,
             onVerticesChanged = {
                 onVerticesChanged(mutableListOf(it))
             })

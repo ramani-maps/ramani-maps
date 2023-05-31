@@ -84,14 +84,13 @@ internal class MapApplier(
 
         map.addOnScaleListener(object : OnScaleListener {
             override fun onScaleBegin(detector: StandardScaleGestureDetector) {
+                decorations.filter { it is MapObserverNode }
+                    .forEach { (it as MapObserverNode).onMapScaled.invoke() }
             }
 
             override fun onScale(detector: StandardScaleGestureDetector) {
-                decorations.forEach {
-                    if (it is MapObserverNode) {
-                        it.onMapScaled.invoke()
-                    }
-                }
+                decorations.filter { it is MapObserverNode }
+                    .forEach { (it as MapObserverNode).onMapScaled.invoke() }
             }
 
             override fun onScaleEnd(detector: StandardScaleGestureDetector) {

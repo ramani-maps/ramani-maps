@@ -127,64 +127,58 @@ internal class MapApplier(
 
     fun getCircleManagerForZIndex(zIndex: Int): CircleManager {
 
+        circleManagerMap[zIndex]?.let { return it }
 
-        if (!circleManagerMap.containsKey(zIndex)) {
-            val circleManager = CircleManager(mapView, map, style)
-            circleManagerMap.putIfAbsent(zIndex, circleManager)
+        val circleManager = CircleManager(mapView, map, style)
+        circleManagerMap.put(zIndex, circleManager)
 
-            circleManager.addDragListener(object : OnCircleDragListener {
-                override fun onAnnotationDragStarted(annotation: Circle?) {
-                    decorations.findInputCallback<CircleNode, Circle, Unit>(
-                        nodeMatchPredicate = { it.circle.id == annotation?.id && it.circleManager.layerId == circleManager.layerId },
-                        nodeInputCallback = { onCircleDragged }
-                    )?.invoke(annotation!!)
-                }
+        circleManager.addDragListener(object : OnCircleDragListener {
+            override fun onAnnotationDragStarted(annotation: Circle?) {
+                decorations.findInputCallback<CircleNode, Circle, Unit>(
+                    nodeMatchPredicate = { it.circle.id == annotation?.id && it.circleManager.layerId == circleManager.layerId },
+                    nodeInputCallback = { onCircleDragged }
+                )?.invoke(annotation!!)
+            }
 
-                override fun onAnnotationDrag(annotation: Circle?) {
-                    decorations.findInputCallback<CircleNode, Circle, Unit>(
-                        nodeMatchPredicate = { it.circle.id == annotation?.id && it.circleManager.layerId == circleManager.layerId },
-                        nodeInputCallback = { onCircleDragged }
-                    )?.invoke(annotation!!)
-                }
+            override fun onAnnotationDrag(annotation: Circle?) {
+                decorations.findInputCallback<CircleNode, Circle, Unit>(
+                    nodeMatchPredicate = { it.circle.id == annotation?.id && it.circleManager.layerId == circleManager.layerId },
+                    nodeInputCallback = { onCircleDragged }
+                )?.invoke(annotation!!)
+            }
 
-                override fun onAnnotationDragFinished(annotation: Circle?) {
-                    decorations.findInputCallback<CircleNode, Circle, Unit>(
-                        nodeMatchPredicate = { it.circle.id == annotation?.id && it.circleManager.layerId == circleManager.layerId },
-                        nodeInputCallback = { onCircleDragStopped }
-                    )?.invoke(annotation!!)
-                }
-            })
+            override fun onAnnotationDragFinished(annotation: Circle?) {
+                decorations.findInputCallback<CircleNode, Circle, Unit>(
+                    nodeMatchPredicate = { it.circle.id == annotation?.id && it.circleManager.layerId == circleManager.layerId },
+                    nodeInputCallback = { onCircleDragStopped }
+                )?.invoke(annotation!!)
+            }
+        })
 
-        }
 
         return circleManagerMap[zIndex]!!
     }
 
     fun getSymoblManagerForZIndex(zIndex: Int): SymbolManager {
-        if (!symbolManagerMap.containsKey(zIndex)) {
-            val symbolManager = SymbolManager(mapView, map, style)
-            symbolManagerMap.putIfAbsent(zIndex, symbolManager)
-        }
 
-        return symbolManagerMap[zIndex]!!
+        symbolManagerMap[zIndex]?.let { return it }
+        val symbolManager = SymbolManager(mapView, map, style)
+        symbolManagerMap.put(zIndex, symbolManager)
+        return symbolManager
     }
 
     fun getFillManagerForZIndex(zIndex: Int): FillManager {
-        if (!fillManagerMap.containsKey(zIndex)) {
-            val fillManager = FillManager(mapView, map, style)
-            fillManagerMap.putIfAbsent(zIndex, fillManager)
-        }
-
-        return fillManagerMap[zIndex]!!
+        fillManagerMap[zIndex]?.let { return it }
+        val fillManager = FillManager(mapView, map, style)
+        fillManagerMap.put(zIndex, fillManager)
+        return fillManager
     }
 
     fun getLineManagerForZIndex(zIndex: Int): LineManager {
-        if (!lineManagerMap.containsKey(zIndex)) {
-            val lineManager = LineManager(mapView, map, style)
-            lineManagerMap.putIfAbsent(zIndex, lineManager)
-        }
-
-        return lineManagerMap[zIndex]!!
+        lineManagerMap[zIndex]?.let { return it }
+        val lineManager = LineManager(mapView, map, style)
+        lineManagerMap.put(zIndex, lineManager)
+        return lineManager
     }
 
     override fun insertBottomUp(index: Int, instance: MapNode) {

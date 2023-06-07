@@ -84,13 +84,15 @@ internal class MapApplier(
 
         map.addOnScaleListener(object : OnScaleListener {
             override fun onScaleBegin(detector: StandardScaleGestureDetector) {
-                decorations.filter { it is MapObserverNode }
-                    .forEach { (it as MapObserverNode).onMapScaled.invoke() }
+                decorations
+                    .filterIsInstance<MapObserverNode>()
+                    .forEach { it.onMapScaled.invoke() }
             }
 
             override fun onScale(detector: StandardScaleGestureDetector) {
-                decorations.filter { it is MapObserverNode }
-                    .forEach { (it as MapObserverNode).onMapScaled.invoke() }
+                decorations
+                    .filterIsInstance<MapObserverNode>()
+                    .forEach { it.onMapScaled.invoke() }
             }
 
             override fun onScaleEnd(detector: StandardScaleGestureDetector) {
@@ -129,7 +131,7 @@ internal class MapApplier(
         circleManagerMap[zIndex]?.let { return it }
 
         val circleManager = CircleManager(mapView, map, style)
-        circleManagerMap.put(zIndex, circleManager)
+        circleManagerMap[zIndex] = circleManager
 
         circleManager.addDragListener(object : OnCircleDragListener {
             override fun onAnnotationDragStarted(annotation: Circle?) {
@@ -158,25 +160,25 @@ internal class MapApplier(
         return circleManagerMap[zIndex]!!
     }
 
-    fun getSymoblManagerForZIndex(zIndex: Int): SymbolManager {
+    fun getSymbolManagerForZIndex(zIndex: Int): SymbolManager {
 
         symbolManagerMap[zIndex]?.let { return it }
         val symbolManager = SymbolManager(mapView, map, style)
-        symbolManagerMap.put(zIndex, symbolManager)
+        symbolManagerMap[zIndex] = symbolManager
         return symbolManager
     }
 
     fun getFillManagerForZIndex(zIndex: Int): FillManager {
         fillManagerMap[zIndex]?.let { return it }
         val fillManager = FillManager(mapView, map, style)
-        fillManagerMap.put(zIndex, fillManager)
+        fillManagerMap[zIndex] = fillManager
         return fillManager
     }
 
     fun getLineManagerForZIndex(zIndex: Int): LineManager {
         lineManagerMap[zIndex]?.let { return it }
         val lineManager = LineManager(mapView, map, style)
-        lineManagerMap.put(zIndex, lineManager)
+        lineManagerMap[zIndex] = lineManager
         return lineManager
     }
 

@@ -21,6 +21,7 @@ annotation class MapLibreComposable
 @Composable
 fun MapLibre(
     modifier: Modifier,
+    apiKey: String,
     content: (@Composable @MapLibreComposable () -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
@@ -35,7 +36,7 @@ fun MapLibre(
     AndroidView(modifier = Modifier.fillMaxSize(), factory = { map })
     LaunchedEffect(Unit) {
         disposingComposition {
-            map.newComposition(parentComposition, style = map.awaitMap().awaitStyle()) {
+            map.newComposition(parentComposition, style = map.awaitMap().awaitStyle(apiKey)) {
                 CompositionLocalProvider() {
                     currentContent?.invoke()
                 }

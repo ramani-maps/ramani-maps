@@ -11,14 +11,14 @@ import com.mapbox.mapboxsdk.plugins.annotation.CircleOptions
 fun Circle(
     center: LatLng,
     radius: Float,
-    isDraggable: Boolean,
-    color: String,
+    isDraggable: Boolean = false,
+    color: String = "Yellow",
     opacity: Float = 1.0f,
     borderColor: String = "Black",
     borderWidth: Float = 0.0f,
     zIndex: Int = 0,
-    onCenterDragged: (LatLng) -> Unit,
-    onDragFinished: (LatLng) -> Unit = {}
+    onCenterDragged: (LatLng) -> Unit = {},
+    onDragFinished: (LatLng) -> Unit = {},
 ) {
     val mapApplier = currentComposer.applier as MapApplier
 

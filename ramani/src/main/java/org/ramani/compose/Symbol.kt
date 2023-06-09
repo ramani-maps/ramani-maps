@@ -25,7 +25,6 @@ fun Symbol(
     val mapApplier = currentComposer.applier as MapApplier
 
     imageId?.let {
-
         if (mapApplier.style.getImage(imageId.toString()) == null) {
             mapApplier.style.addImage(
                 imageId.toString(),

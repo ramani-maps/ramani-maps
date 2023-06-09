@@ -26,6 +26,7 @@ allprojects {
     }
 
     android {
+        namespace 'org.ramani.compose'
         compileSdkVersion 33
         buildToolsVersion "30.0.3"
 

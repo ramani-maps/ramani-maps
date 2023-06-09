@@ -1,4 +1,4 @@
-package org.maplibre.compose
+package org.ramani.compose
 
 import android.content.Context
 import android.content.pm.PackageManager

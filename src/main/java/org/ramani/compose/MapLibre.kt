@@ -1,4 +1,4 @@
-package org.maplibre.compose
+package org.ramani.compose
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

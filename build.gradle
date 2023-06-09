@@ -33,7 +33,7 @@ allprojects {
             minSdkVersion 26
             targetSdkVersion 33
 
-            group = 'org.maplibre.gl'
+            group = 'org.ramani-maps'
             versionCode 1
             versionName "1.0"
         }

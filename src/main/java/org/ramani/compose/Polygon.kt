@@ -1,4 +1,4 @@
-package org.maplibre.compose
+package org.ramani.compose
 
 import android.graphics.PointF
 import androidx.compose.runtime.Composable

@@ -1,4 +1,4 @@
-package org.maplibre.compose
+package org.ramani.compose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode

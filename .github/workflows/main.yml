@@ -19,6 +19,7 @@ jobs:
         with:
           submodules: recursive
       - name: Build
+        working-directory: ./ramani
         run: |
             ./gradlew build
             ./gradlew test

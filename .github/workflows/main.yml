@@ -1,0 +1,25 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+    - 'main'
+  pull_request:
+    branches:
+    - '*'
+  release:
+    types: [created]
+
+jobs:
+  maplibre-compose:
+    name: Build and test maplibre-compose
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Build
+        run: |
+            ./gradlew build
+            ./gradlew test
+

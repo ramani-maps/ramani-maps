@@ -18,7 +18,7 @@ fun Fill(
     val mapApplier = currentComposer.applier as MapApplier
 
     ComposeNode<FillNode, MapApplier>(factory = {
-        val fillManager = mapApplier.getFillManagerForZIndex(zIndex)
+        val fillManager = mapApplier.getOrCreateFillManagerForZIndex(zIndex)
         val fillOptions = FillOptions()
             .withLatLngs(mutableListOf(points))
             .withFillColor(fillColor)

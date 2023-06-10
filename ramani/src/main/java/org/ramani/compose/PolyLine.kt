@@ -18,7 +18,7 @@ fun PolyLine(
     val mapApplier = currentComposer.applier as MapApplier
 
     ComposeNode<PolyLineNode, MapApplier>(factory = {
-        val lineManager = mapApplier.getLineManagerForZIndex(zIndex)
+        val lineManager = mapApplier.getOrCreateLineManagerForZIndex(zIndex)
         val lineOptions = LineOptions()
             .withLatLngs(points)
             .withLineColor(color)

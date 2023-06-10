@@ -14,11 +14,13 @@ fun UpdateCenter(coord: LatLng, centerUpdated: (LatLng) -> Unit) {
 fun CircleWithItem(
     center: LatLng,
     radius: Float,
+    dragRadius: Float = radius,
     isDraggable: Boolean,
     color: String,
     borderColor: String = "Black",
     borderWidth: Float = 0.0f,
     opacity: Float = 1.0f,
+    zIndex: Int = 0,
     imageId: Int? = null,
     itemSize: Float = 0.0f,
     text: String? = null,
@@ -32,11 +34,12 @@ fun CircleWithItem(
     // Invisible circle, this is the draggable
     Circle(
         center = draggableCenterState.value,
-        radius = 30.0f,
+        radius = dragRadius,
         isDraggable = isDraggable,
         color = "Transparent",
         borderColor = borderColor,
         borderWidth = 0.0f,
+        zIndex = zIndex + 1,
         onCenterDragged = {
             onCenterChanged(it)
         },
@@ -53,6 +56,7 @@ fun CircleWithItem(
         isDraggable = false,
         color = color,
         opacity = opacity,
+        zIndex = zIndex,
         borderColor = borderColor,
         borderWidth = borderWidth,
         onCenterDragged = {}
@@ -65,6 +69,7 @@ fun CircleWithItem(
             isDraggable = false,
             imageId = imageId,
             size = itemSize,
+            zIndex = zIndex + 1,
         )
     }
 
@@ -75,6 +80,7 @@ fun CircleWithItem(
             isDraggable = false,
             text = text,
             size = itemSize,
+            zIndex = zIndex + 1
         )
     }
 }

@@ -23,7 +23,7 @@ fun Circle(
     val mapApplier = currentComposer.applier as MapApplier
 
     ComposeNode<CircleNode, MapApplier>(factory = {
-        val circleManager = mapApplier.getCircleManagerForZIndex(zIndex)
+        val circleManager = mapApplier.getOrCreateCircleManagerForZIndex(zIndex)
 
         val circleOptions = CircleOptions()
             .withCircleRadius(radius)

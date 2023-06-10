@@ -34,7 +34,7 @@ fun Symbol(
     }
 
     ComposeNode<SymbolNode, MapApplier>(factory = {
-        val symbolManager = mapApplier.getSymbolManagerForZIndex(zIndex)
+        val symbolManager = mapApplier.getOrCreateSymbolManagerForZIndex(zIndex)
         var symbolOptions = SymbolOptions()
             .withDraggable(isDraggable)
             .withLatLng(center)

@@ -43,6 +43,7 @@ private fun VertexDragger(
 private fun PolygonDragHandle(
     vertices: MutableList<LatLng>,
     imageId: Int? = null,
+    zIndexDragHandle: Int = 0,
     onCenterChanged: (LatLng) -> Unit = {},
     onVerticesChanged: (MutableList<LatLng>) -> Unit = {}
 ) {
@@ -74,7 +75,7 @@ private fun PolygonDragHandle(
         radius = 30.0f,
         isDraggable = true,
         color = "Transparent",
-        zIndex = 1,
+        zIndex = zIndexDragHandle,
         onCenterDragged = {
             dragActive.value = true
             inputDragCoord.value = it
@@ -89,7 +90,8 @@ private fun PolygonDragHandle(
             size = 3.0f,
             color = "Black",
             isDraggable = false,
-            imageId = imageId
+            imageId = imageId,
+            zIndex = zIndexDragHandle,
         )
     }
 }
@@ -101,6 +103,8 @@ fun Polygon(
     draggerImageId: Int? = null,
     fillColor: String = "Transparent",
     opacity: Float = 1.0f,
+    zIndex: Int = 0,
+    zIndexDragHandle: Int = 0,
     isDraggable: Boolean = false,
     onVerticesChanged: (MutableList<MutableList<LatLng>>) -> Unit,
 ) {
@@ -109,11 +113,13 @@ fun Polygon(
         fillColor = fillColor,
         opacity = opacity,
         isDraggable = false,
+        zIndex = zIndex
     )
     if (isDraggable) {
         PolygonDragHandle(
             vertices = vertices,
             imageId = draggerImageId,
+            zIndexDragHandle = zIndexDragHandle,
             onVerticesChanged = {
                 onVerticesChanged(mutableListOf(it))
             })

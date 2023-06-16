@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import com.mapbox.mapboxsdk.geometry.LatLng
 import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
-import org.ramani.compose.PolyLine
+import org.ramani.compose.Polyline
 import org.ramani.example.annotation_simple.ui.theme.AnnotationSimpleTheme
 
 class MainActivity : ComponentActivity() {
@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
                             isDraggable = true,
                             borderWidth = 2F,
                         )
-                        PolyLine(points = polylineState, color = "Red", lineWidth = 5.0F)
+                        Polyline(points = polylineState, color = "Red", lineWidth = 5.0F)
                     }
                 }
             }

@@ -36,4 +36,3 @@ fun coordFromPixel(point: PointF): LatLng {
 
     return projection.fromScreenLocation(point)
 }
-

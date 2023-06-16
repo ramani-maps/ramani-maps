@@ -16,7 +16,7 @@ import com.mapbox.mapboxsdk.geometry.LatLng
 @MapLibreComposable
 @Composable
 fun VertexInsertCalculator(
-    vertices: MutableList<LatLng>,
+    vertices: List<LatLng>,
     onPointsChanged: (List<LatLng>) -> Unit
 ) {
     val mapApplier = currentComposer.applier as MapApplier

@@ -25,4 +25,3 @@ fun MapObserver(onMapMoved: () -> Unit = {}, onMapScaled: () -> Unit = {}) {
             }
         })
 }
-

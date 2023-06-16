@@ -382,4 +382,3 @@ private inline fun <reified NodeT : MapNode, I, O> Iterable<MapNode>.findInputCa
     }
     return callback
 }
-

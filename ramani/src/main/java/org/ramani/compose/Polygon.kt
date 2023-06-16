@@ -131,4 +131,3 @@ fun Polygon(
             })
     }
 }
-

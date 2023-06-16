@@ -20,4 +20,3 @@ fun PixelToCoordMapper(points: MutableList<PointF>, onChange: (List<LatLng>) -> 
         projection.fromScreenLocation(it)
     })
 }
-

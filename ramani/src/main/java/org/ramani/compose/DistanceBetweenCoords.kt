@@ -22,4 +22,3 @@ fun screenDistanceBetween(a: LatLng, b: LatLng): Float {
 
     return (pixelB - pixelA).length()
 }
-

@@ -18,8 +18,8 @@ import com.mapbox.mapboxsdk.geometry.LatLng
 @Composable
 private fun VertexDragger(
     draggedCenter: LatLng,
-    vertices: MutableList<LatLng>,
-    onCenterAndVerticesChanged: (LatLng, MutableList<LatLng>) -> Unit
+    vertices: List<LatLng>,
+    onCenterAndVerticesChanged: (LatLng, List<LatLng>) -> Unit
 ) {
     if (vertices.isEmpty()) {
         return
@@ -40,18 +40,18 @@ private fun VertexDragger(
 
     val draggedVertices = vertices.map { vertex ->
         projection.fromScreenLocation(projection.toScreenLocation(vertex) + draggedPixels)
-    }.toMutableList()
+    }
 
     onCenterAndVerticesChanged(projection.fromScreenLocation(currentCenter), draggedVertices)
 }
 
 @Composable
 private fun PolygonDragHandle(
-    vertices: MutableList<LatLng>,
+    vertices: List<LatLng>,
     imageId: Int? = null,
     zIndexDragHandle: Int = 0,
     onCenterChanged: (LatLng) -> Unit = {},
-    onVerticesChanged: (MutableList<LatLng>) -> Unit = {}
+    onVerticesChanged: (List<LatLng>) -> Unit = {}
 ) {
     val polygonDragHandleCoord = remember {
         mutableStateOf(LatLng())
@@ -105,14 +105,14 @@ private fun PolygonDragHandle(
 @MapLibreComposable
 @Composable
 fun Polygon(
-    vertices: MutableList<LatLng>,
+    vertices: List<LatLng>,
     draggerImageId: Int? = null,
     fillColor: String = "Transparent",
     opacity: Float = 1.0f,
     zIndex: Int = 0,
     zIndexDragHandle: Int = 0,
     isDraggable: Boolean = false,
-    onVerticesChanged: (MutableList<MutableList<LatLng>>) -> Unit,
+    onVerticesChanged: (List<List<LatLng>>) -> Unit,
 ) {
     Fill(
         points = vertices,

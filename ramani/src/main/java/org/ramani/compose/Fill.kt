@@ -15,7 +15,7 @@ import com.mapbox.mapboxsdk.plugins.annotation.FillOptions
 @Composable
 @MapLibreComposable
 fun Fill(
-    points: MutableList<LatLng>,
+    points: List<LatLng>,
     fillColor: String = "Transparent",
     opacity: Float = 1.0f,
     zIndex: Int = 0,

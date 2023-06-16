@@ -15,7 +15,7 @@ import com.mapbox.mapboxsdk.plugins.annotation.LineOptions
 @Composable
 @MapLibreComposable
 fun Polyline(
-    points: MutableList<LatLng>,
+    points: List<LatLng>,
     color: String,
     lineWidth: Float,
     zIndex: Int = 0,

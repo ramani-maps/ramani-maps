@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             AnnotationSimpleTheme {
-                val polylineState by remember { mutableStateOf(polylinePoints.toMutableList()) }
+                val polylineState by remember { mutableStateOf(polylinePoints) }
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),

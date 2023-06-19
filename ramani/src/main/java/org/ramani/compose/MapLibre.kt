@@ -32,6 +32,7 @@ annotation class MapLibreComposable
 fun MapLibre(
     modifier: Modifier,
     apiKey: String,
+    cameraPositionState: CameraPositionState = rememberCameraPositionState(),
     content: (@Composable @MapLibreComposable () -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {

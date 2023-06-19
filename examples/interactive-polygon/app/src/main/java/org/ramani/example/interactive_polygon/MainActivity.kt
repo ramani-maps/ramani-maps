@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
                         Polygon(
                             vertices = polygonState,
                             isDraggable = true,
-                            draggerImageId = com.mapbox.mapboxsdk.R.drawable.maplibre_compass_icon,
+                            draggerImageId = R.drawable.ic_drag,
                             borderWidth = 4.0F,
                             fillColor = "Yellow",
                             opacity = 0.5F,

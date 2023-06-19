@@ -32,9 +32,9 @@ import com.mapbox.mapboxsdk.plugins.annotation.OnCircleDragListener
 import com.mapbox.mapboxsdk.plugins.annotation.Symbol
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
 import kotlinx.coroutines.awaitCancellation
-import java.lang.Math.abs
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlin.math.abs
 
 internal suspend inline fun disposingComposition(factory: () -> Composition) {
     val composition = factory()
@@ -60,7 +60,7 @@ internal suspend fun MapView.newComposition(
 
 internal suspend fun MapboxMap.awaitStyle(apiKey: String) = suspendCoroutine { continuation ->
     Helper.validateKey(apiKey)
-    val styleUrl = "https://api.maptiler.com/maps/satellite/style.json?key=$apiKey";
+    val styleUrl = "https://api.maptiler.com/maps/satellite/style.json?key=$apiKey"
     setStyle(styleUrl) { style ->
         continuation.resume(style)
     }
@@ -89,13 +89,11 @@ internal class MapApplier(
     private val zIndexReferenceAnnotationManagerMap =
         mutableMapOf<Int, AnnotationManager<*, *, *, *, *, *>>()
 
-
     init {
         attachMapListeners()
     }
 
     private fun attachMapListeners() {
-
         map.addOnScaleListener(object : OnScaleListener {
             override fun onScaleBegin(detector: StandardScaleGestureDetector) {
                 decorations
@@ -111,37 +109,31 @@ internal class MapApplier(
 
             override fun onScaleEnd(detector: StandardScaleGestureDetector) {
             }
-
         })
 
-
-        map.addOnMoveListener(
-            object : OnMoveListener {
-
-                override fun onMoveBegin(detector: MoveGestureDetector) {
-                    decorations.forEach {
-                        if (it is MapObserverNode) {
-                            it.onMapMoved.invoke()
-                        }
+        map.addOnMoveListener(object : OnMoveListener {
+            override fun onMoveBegin(detector: MoveGestureDetector) {
+                decorations.forEach {
+                    if (it is MapObserverNode) {
+                        it.onMapMoved.invoke()
                     }
                 }
+            }
 
-                override fun onMove(detector: MoveGestureDetector) {
-                    decorations.forEach {
-                        if (it is MapObserverNode) {
-                            it.onMapMoved.invoke()
-                        }
+            override fun onMove(detector: MoveGestureDetector) {
+                decorations.forEach {
+                    if (it is MapObserverNode) {
+                        it.onMapMoved.invoke()
                     }
                 }
+            }
 
-                override fun onMoveEnd(detector: MoveGestureDetector) {
-                }
-
-            })
+            override fun onMoveEnd(detector: MoveGestureDetector) {
+            }
+        })
     }
 
     fun getOrCreateCircleManagerForZIndex(zIndex: Int): CircleManager {
-
         circleManagerMap[zIndex]?.let { return it }
 
         val layerInsertInfo = getLayerInsertInfoForZIndex(zIndex)
@@ -158,7 +150,7 @@ internal class MapApplier(
             CircleManager(mapView, map, style)
         }
 
-        circleManagerMap.put(zIndex, circleManager)
+        circleManagerMap[zIndex] = circleManager
 
         if (!zIndexReferenceAnnotationManagerMap.containsKey(zIndex)) {
             zIndexReferenceAnnotationManagerMap[zIndex] = circleManager
@@ -203,14 +195,12 @@ internal class MapApplier(
         }.withIndex().minBy { it.value }.index
 
         return LayerInsertInfo(
-            zIndexReferenceAnnotationManagerMap[keys[closestLayerIndex]]?.getLayerId()!!,
+            zIndexReferenceAnnotationManagerMap[keys[closestLayerIndex]]?.layerId!!,
             if (zIndex > keys[closestLayerIndex]) LayerInsertMethod.INSERT_ABOVE else LayerInsertMethod.INSERT_BELOW
         )
-
     }
 
     fun getOrCreateSymbolManagerForZIndex(zIndex: Int): SymbolManager {
-
         symbolManagerMap[zIndex]?.let { return it }
         val layerInsertInfo = getLayerInsertInfoForZIndex(zIndex)
 
@@ -230,7 +220,8 @@ internal class MapApplier(
         if (!zIndexReferenceAnnotationManagerMap.containsKey(zIndex)) {
             zIndexReferenceAnnotationManagerMap[zIndex] = symbolManager
         }
-        symbolManagerMap.put(zIndex, symbolManager)
+
+        symbolManagerMap[zIndex] = symbolManager
         return symbolManager
     }
 
@@ -253,7 +244,8 @@ internal class MapApplier(
         if (!zIndexReferenceAnnotationManagerMap.containsKey(zIndex)) {
             zIndexReferenceAnnotationManagerMap[zIndex] = fillManager
         }
-        fillManagerMap.put(zIndex, fillManager)
+
+        fillManagerMap[zIndex] = fillManager
         return fillManager
     }
 
@@ -276,7 +268,8 @@ internal class MapApplier(
         if (!zIndexReferenceAnnotationManagerMap.containsKey(zIndex)) {
             zIndexReferenceAnnotationManagerMap[zIndex] = lineManager
         }
-        lineManagerMap.put(zIndex, lineManager)
+
+        lineManagerMap[zIndex] = lineManager
         return lineManager
     }
 

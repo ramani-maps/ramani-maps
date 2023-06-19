@@ -108,26 +108,36 @@ fun Polygon(
     vertices: List<LatLng>,
     draggerImageId: Int? = null,
     fillColor: String = "Transparent",
+    borderWidth: Float = 1.0F,
+    borderColor: String = "Black",
     opacity: Float = 1.0f,
     zIndex: Int = 0,
-    zIndexDragHandle: Int = 0,
+    zIndexDragHandle: Int = zIndex + 1,
     isDraggable: Boolean = false,
-    onVerticesChanged: (List<List<LatLng>>) -> Unit,
+    onVerticesChanged: (List<LatLng>) -> Unit,
 ) {
+    val borderPath = vertices.toMutableList().apply { this.add(this[0]) }
     Fill(
-        points = vertices,
+        points = borderPath,
         fillColor = fillColor,
         opacity = opacity,
         isDraggable = false,
         zIndex = zIndex
     )
+    if (borderWidth > 0) {
+        Polyline(
+            points = borderPath,
+            color = borderColor,
+            lineWidth = borderWidth,
+            zIndex = zIndex + 1,
+        )
+    }
     if (isDraggable) {
         PolygonDragHandle(
             vertices = vertices,
             imageId = draggerImageId,
             zIndexDragHandle = zIndexDragHandle,
-            onVerticesChanged = {
-                onVerticesChanged(mutableListOf(it))
-            })
+            onVerticesChanged = { onVerticesChanged(it) },
+        )
     }
 }

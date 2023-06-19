@@ -21,7 +21,7 @@ fun Circle(
     color: String = "Yellow",
     opacity: Float = 1.0f,
     borderColor: String = "Black",
-    borderWidth: Float = 0.0f,
+    borderWidth: Float = 0.0F,
     zIndex: Int = 0,
     onCenterDragged: (LatLng) -> Unit = {},
     onDragFinished: (LatLng) -> Unit = {},

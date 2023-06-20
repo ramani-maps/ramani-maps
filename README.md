@@ -94,3 +94,53 @@ class MainActivity : ComponentActivity() {
     )
 }
 ```
+
+### Annotation Simple
+
+![annotation simple example](./docs/annotation-simple-example.gif)
+
+The complete application is available in [examples/annotation-simple](./examples/annotation-simple),
+but the actual code is extremely short:
+
+```kotlin
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            AnnotationSimpleTheme {
+                val polylineState by remember { mutableStateOf(polylinePoints) }
+
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    // Create the map
+                    MapLibre(modifier = Modifier.fillMaxSize(), apiKey = "2z0TwvuXjwgOpvle5GYY") {
+                        // Create the draggable circle
+                        Circle(
+                            center = LatLng(4.8, 46.0),
+                            radius = 50F,
+                            isDraggable = true,
+                            borderWidth = 2F,
+                        )
+                        // Create the polyline
+                        Polyline(points = polylineState, color = "Red", lineWidth = 5.0F)
+                    }
+                }
+            }
+        }
+    }
+
+    // Coordinates of the polyline
+    private val polylinePoints = listOf(
+        LatLng(34.9, 46.2),
+        LatLng(64.0, 0.8),
+        LatLng(46.2, -46.5),
+        LatLng(54.1, -86.2),
+        LatLng(24.9, -116.6),
+        LatLng(0.0, -171.3),
+        LatLng(34.9, -240.1),
+        LatLng(34.9, -313.8),
+    )
+}
+```

@@ -159,3 +159,7 @@ class MainActivity : ComponentActivity() {
     )
 }
 ```
+
+## Contributions
+Contriubtions are of course very welcome and we are happy to assist getting pull requests reviewed and merged.
+Please note that the library currently only exposes a small subset of the underlying map functionality and so there are plently of features that can still be added.

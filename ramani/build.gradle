@@ -15,10 +15,23 @@ buildscript {
     }
 }
 
+// Load file "keystore.properties" where we keep our keys
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+
+try {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+} catch (IOException ignored) {
+    if (project.hasProperty('ossrhUsername')) keystoreProperties['ossrhUsername'] = ossrhUsername
+    if (project.hasProperty('ossrhPassword')) keystoreProperties['ossrhPassword'] = ossrhPassword
+}
+
 allprojects {
     apply plugin: 'com.android.library'
     apply plugin: 'kotlin-android'
     apply plugin: 'kotlin-kapt'
+    apply plugin: 'maven-publish'
+    apply plugin: 'signing'
 
     repositories {
         google()
@@ -36,7 +49,7 @@ allprojects {
 
             group = 'org.ramani-maps'
             versionCode 1
-            versionName "1.0"
+            version "0.1.0"
         }
 
         buildTypes {
@@ -82,6 +95,66 @@ allprojects {
         api 'org.maplibre.gl:android-plugin-annotation-v9:1.0.0'
 
         testImplementation 'junit:junit:4.13.2'
+    }
+
+    if (keystoreProperties.containsKey("ossrhUsername") && keystoreProperties.containsKey("ossrhPassword")) {
+        afterEvaluate {
+            publishing {
+                publications {
+                    release(MavenPublication) {
+                        from components.release
+
+                        pom {
+                            name = 'Ramani-Maplibre'
+                            packaging = 'aar'
+                            description = 'An Android Compose library to manipulate MapLibre maps.'
+                            url = 'https://github.com/ramani-maps/ramani-maps'
+
+                            scm {
+                                connection = 'scm:git:https://github.com/ramani-maps/ramani-maps'
+                                developerConnection = 'scm:git:https://github.com/ramani-maps/ramani-maps'
+                                url = 'https://github.com/ramani-maps/ramani-maps'
+                            }
+
+                            licenses {
+                                license {
+                                    name = 'Mozilla Public License 2.0'
+                                    url = 'https://spdx.org/licenses/MPL-2.0.html'
+                                }
+                            }
+
+                            developers {
+                                developer {
+                                    id = 'romanbapst'
+                                    name = 'Roman Bapst'
+                                    email = 'bapstroman@gmail.com'
+                                }
+                                developer {
+                                    id = 'jonasvautherin'
+                                    name = 'Jonas Vautherin'
+                                    email = 'jonas.vautherin@gmail.com'
+                                }
+                            }
+                        }
+                    }
+                }
+                repositories {
+                    maven {
+                        url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+
+                        credentials {
+                            username = keystoreProperties["ossrhUsername"]
+                            password = keystoreProperties["ossrhPassword"]
+                        }
+                    }
+                }
+            }
+
+            signing {
+                useGpgCmd()
+                sign publishing.publications.release
+            }
+        }
     }
 }
 

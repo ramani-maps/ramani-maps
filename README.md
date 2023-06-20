@@ -34,7 +34,7 @@ The map will now appear in your app!
 ## Temporary fork
 
 In order for our more advanced interactive annotations to work, we had to
-modify the MapLibre "annotation" plugin. We are working towards getting
+modify the [MapLibre "annotation" plugin](https://github.com/maplibre/maplibre-plugins-android). We are working towards getting
 our changes upstream, but this takes time. In the meantime, we advise you
 use our fork as a Gradle "composite build", by doing the following:
 

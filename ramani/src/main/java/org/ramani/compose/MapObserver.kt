@@ -16,9 +16,10 @@ import androidx.compose.runtime.ComposeNode
 @MapLibreComposable
 @Composable
 fun MapObserver(onMapMoved: () -> Unit = {}, onMapScaled: () -> Unit = {}) {
-    ComposeNode<MapObserverNode, MapApplier>(factory = {
-        MapObserverNode(onMapMoved, onMapScaled)
-    },
+    ComposeNode<MapObserverNode, MapApplier>(
+        factory = {
+            MapObserverNode(onMapMoved, onMapScaled)
+        },
         update = {
             update(onMapMoved) {
                 this.onMapMoved = { onMapMoved }
@@ -27,5 +28,6 @@ fun MapObserver(onMapMoved: () -> Unit = {}, onMapScaled: () -> Unit = {}) {
             update(onMapScaled) {
                 this.onMapScaled = { onMapScaled }
             }
-        })
+        }
+    )
 }

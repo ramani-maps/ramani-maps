@@ -118,7 +118,8 @@ fun Polygon(
     zIndex: Int = 0,
     zIndexDragHandle: Int = zIndex + 1,
     isDraggable: Boolean = false,
-    onVerticesChanged: (List<LatLng>) -> Unit,
+    onCenterChanged: (LatLng) -> Unit = {},
+    onVerticesChanged: (List<LatLng>) -> Unit = {},
 ) {
     val borderPath = vertices.toMutableList().apply { this.add(this[0]) }
     Fill(
@@ -141,6 +142,7 @@ fun Polygon(
             vertices = vertices,
             imageId = draggerImageId,
             zIndexDragHandle = zIndexDragHandle,
+            onCenterChanged = { onCenterChanged(it) },
             onVerticesChanged = { onVerticesChanged(it) },
         )
     }

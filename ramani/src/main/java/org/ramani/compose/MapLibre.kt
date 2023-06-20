@@ -16,6 +16,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.viewinterop.AndroidView
+import com.mapbox.mapboxsdk.camera.CameraPosition
+import com.mapbox.mapboxsdk.maps.MapboxMap
 
 @Retention(AnnotationRetention.BINARY)
 @ComposableTargetMarker(description = "Maplibre Composable")
@@ -32,6 +34,7 @@ annotation class MapLibreComposable
 fun MapLibre(
     modifier: Modifier,
     apiKey: String,
+    cameraPositionState: CameraPositionState = rememberCameraPositionState(),
     content: (@Composable @MapLibreComposable () -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
@@ -40,6 +43,7 @@ fun MapLibre(
     }
 
     val map = rememberMapViewWithLifecycle()
+    val currentCameraPositionState by rememberUpdatedState(cameraPositionState)
     val currentContent by rememberUpdatedState(content)
     val parentComposition = rememberCompositionContext()
 
@@ -47,10 +51,45 @@ fun MapLibre(
     LaunchedEffect(Unit) {
         disposingComposition {
             map.newComposition(parentComposition, style = map.awaitMap().awaitStyle(apiKey)) {
-                CompositionLocalProvider() {
+                CompositionLocalProvider {
+                    MapUpdater(cameraPositionState = currentCameraPositionState)
                     currentContent?.invoke()
                 }
             }
         }
     }
+}
+
+@Composable
+internal fun MapUpdater(cameraPositionState: CameraPositionState) {
+    val mapApplier = currentComposer.applier as MapApplier
+
+    ComposeNode<MapPropertiesNode, MapApplier>(factory = {
+        MapPropertiesNode(mapApplier.map, cameraPositionState)
+    }, update = {
+        update(cameraPositionState) {
+            this.cameraPositionState = it
+            map.cameraPosition = cameraPositionState.cameraPosition.toMapbox()
+        }
+    })
+}
+
+internal class MapPropertiesNode(
+    val map: MapboxMap,
+    var cameraPositionState: CameraPositionState
+) : MapNode {
+    override fun onAttached() {
+        map.cameraPosition = cameraPositionState.cameraPosition.toMapbox()
+    }
+}
+
+internal fun org.ramani.compose.CameraPosition.toMapbox(): CameraPosition {
+    val builder = CameraPosition.Builder()
+
+    target?.let { builder.target(it) }
+    zoom?.let { builder.zoom(it) }
+    tilt?.let { builder.tilt(it) }
+    bearing?.let { builder.bearing(it) }
+
+    return builder.build()
 }

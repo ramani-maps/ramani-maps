@@ -32,6 +32,12 @@ jobs:
         run: |
             ./gradlew build
             ./gradlew test
+      - name: Publish (Maven)
+        if: ${{ github.event_name == 'release' && github.event.action == 'created' }}
+        working-directory: ./ramani
+        run: |
+            echo -n "${{ secrets.MAVEN_SIGNING_KEY }}" | base64 --decode | gpg --import
+            ./gradlew -PossrhUsername=${{ secrets.OSSRH_USERNAME }} -PossrhPassword=${{ secrets.OSSRH_PASSWORD }} publish
 
   annotation-simple:
     name: "Build and test example: AnnotationSimple"

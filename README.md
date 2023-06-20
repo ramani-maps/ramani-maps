@@ -161,11 +161,26 @@ class MainActivity : ComponentActivity() {
 }
 ```
 
+## Supported features
+
+Please note that the library currently only exposes a small subset
+of the underlying map functionality and so there are plenty of features
+that can still be added. Obviously we started with the ones we use!
+
+Currently supported are:
+
+* Camera position (move the map, set the zoom, ...)
+* Symbols (i.e. markers made of an image or a text)
+* Polyline
+* Polygons
+* Fills
+
 ## Contributions
 
 Contributions are of course very welcome and we are happy to assist
 getting pull requests reviewed and merged.
-Please note that the library currently only exposes a small subset
-of the underlying map functionality and so there are plenty of features
-that can still be added.
+
+## What does Ramani mean?
+
+"Ramani" means "maps" in Swahili (one of the authors grew up in Tanzania).
 

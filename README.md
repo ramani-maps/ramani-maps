@@ -1,6 +1,7 @@
 # Ramani-Maps
 
-An Android Compose library to manipulate maps.
+An Android Compose library to manipulate maps. We currently support MapLibre,
+but we started looking into Mapbox already!
 
 ## What does the license say?
 
@@ -29,6 +30,20 @@ MapLibre(modifier = Modifier.fillMaxSize(), apiKey = "<your API key here>")
 ```
 
 The map will now appear in your app!
+
+## Temporary fork
+
+In order for our more advanced interactive annotations to work, we had to
+modify the MapLibre "annotation" plugin. We are working towards getting
+our changes upstream, but this takes time. In the meantime, we advise you
+use our fork as a Gradle "composite build", by doing the following:
+
+1. Clone https://github.com/ramani-maps/maplibre-plugins-android somewhere
+2. Add the following to your `settings.gradle`:
+
+```
+includeBuild '/path/to/maplibre-plugins-android/plugin-annotation'
+```
 
 ## Examples
 

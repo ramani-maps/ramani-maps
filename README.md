@@ -31,6 +31,8 @@ MapLibre(modifier = Modifier.fillMaxSize(), apiKey = "<your API key here>")
 
 The map will now appear in your app!
 
+NOTE: you can get a free API key [here with MapTiler](https://cloud.maptiler.com/account/keys).
+
 ## Temporary fork
 
 In order for our more advanced interactive annotations to work, we had to

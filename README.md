@@ -133,7 +133,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     // Create the map
-                    MapLibre(modifier = Modifier.fillMaxSize(), apiKey = "2z0TwvuXjwgOpvle5GYY") {
+                    MapLibre(modifier = Modifier.fillMaxSize(), apiKey = "<your API key here>") {
                         // Create the draggable circle
                         Circle(
                             center = LatLng(4.8, 46.0),

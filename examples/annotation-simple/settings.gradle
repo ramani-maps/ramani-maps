@@ -15,4 +15,6 @@ dependencyResolutionManagement {
 rootProject.name = "AnnotationSimple"
 include ':app'
 
-includeBuild '../../ramani'
+// Uncomment to use Ramani as a composite build (for dev purposes)
+//includeBuild '../../ramani'
+

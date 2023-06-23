@@ -23,10 +23,6 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Get patched annotation plugin
-        run: git clone https://github.com/ramani-maps/maplibre-plugins-android
-      - name: Setup composite build
-        run: echo "includeBuild '../maplibre-plugins-android/plugin-annotation'" >> ramani/settings.gradle
       - name: Build
         working-directory: ./ramani
         run: |
@@ -51,8 +47,9 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Get patched annotation plugin
-        run: git -C .. clone https://github.com/ramani-maps/maplibre-plugins-android
+      - name: Use ramani as composite build
+        working-directory: ./examples/annotation-simple
+        run: echo "includeBuild '../../ramani'" >> settings.gradle
       - name: Build
         working-directory: ./examples/annotation-simple
         run: |
@@ -71,8 +68,9 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Get patched annotation plugin
-        run: git -C .. clone https://github.com/ramani-maps/maplibre-plugins-android
+      - name: Use ramani as composite build
+        working-directory: ./examples/interactive-polygon
+        run: echo "includeBuild '../../ramani'" >> settings.gradle
       - name: Build
         working-directory: ./examples/interactive-polygon
         run: |

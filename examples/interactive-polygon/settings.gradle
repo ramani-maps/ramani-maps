@@ -16,4 +16,3 @@ rootProject.name = "InteractivePolygon"
 include ':app'
 
 includeBuild '../../ramani'
-includeBuild '../../../maplibre-plugins-android/plugin-annotation'

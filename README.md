@@ -20,7 +20,7 @@ but the idea is this:
 Add the dependency to `build.gradle`:
 
 ```gradle
-implementation 'org.ramani-maps:ramani-maplibre:0.1.0'
+implementation 'org.ramani-maps:ramani-maplibre:0.1.1'
 ```
 
 Insert the map composable:
@@ -32,21 +32,6 @@ MapLibre(modifier = Modifier.fillMaxSize(), apiKey = "<your API key here>")
 The map will now appear in your app!
 
 NOTE: you can get a free API key [here with MapTiler](https://cloud.maptiler.com/account/keys).
-
-## Temporary fork
-
-In order for our more advanced interactive annotations to work, we had to
-modify the [MapLibre "annotation" plugin](https://github.com/maplibre/maplibre-plugins-android).
-We are working towards getting our changes upstream, but this takes time.
-In the meantime, we advise you use our fork as a Gradle "composite build",
-by doing the following:
-
-1. Clone https://github.com/ramani-maps/maplibre-plugins-android somewhere
-2. Add the following to your `settings.gradle`:
-
-```
-includeBuild '/path/to/maplibre-plugins-android/plugin-annotation'
-```
 
 ## Examples
 

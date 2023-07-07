@@ -12,7 +12,7 @@ on:
 
 jobs:
   ramani:
-    name: Build and test ramani
+    name: Build and test ramani-maplibre
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
@@ -24,13 +24,13 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       - name: Build
-        working-directory: ./ramani
+        working-directory: ./ramani-maplibre
         run: |
             ./gradlew build
             ./gradlew test
       - name: Publish (Maven)
         if: ${{ github.event_name == 'release' && github.event.action == 'created' }}
-        working-directory: ./ramani
+        working-directory: ./ramani-maplibre
         run: |
             echo -n "${{ secrets.MAVEN_SIGNING_KEY }}" | base64 --decode | gpg --import
             ./gradlew -PossrhUsername=${{ secrets.OSSRH_USERNAME }} -PossrhPassword=${{ secrets.OSSRH_PASSWORD }} publish
@@ -49,7 +49,7 @@ jobs:
           distribution: 'temurin'
       - name: Use ramani as composite build
         working-directory: ./examples/annotation-simple
-        run: echo "includeBuild '../../ramani'" >> settings.gradle
+        run: echo "includeBuild '../../ramani-maplibre'" >> settings.gradle
       - name: Build
         working-directory: ./examples/annotation-simple
         run: |
@@ -70,7 +70,7 @@ jobs:
           distribution: 'temurin'
       - name: Use ramani as composite build
         working-directory: ./examples/interactive-polygon
-        run: echo "includeBuild '../../ramani'" >> settings.gradle
+        run: echo "includeBuild '../../ramani-maplibre'" >> settings.gradle
       - name: Build
         working-directory: ./examples/interactive-polygon
         run: |

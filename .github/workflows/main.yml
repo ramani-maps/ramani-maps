@@ -47,12 +47,19 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+      - name: Set mapbox token for ramani
+        working-directory: ./ramani-mapbox
+        run: |
+            echo "MAPBOX_API_KEY=${{ secrets.MAPBOX_TOKEN }}" >> keystore.properties
+            echo "MAPBOX_DOWNLOAD_TOKEN=${{ secrets.MAPBOX_TOKEN }}" >> keystore.properties
       - name: Use ramani as composite build
         working-directory: ./examples/annotation-simple
-        run: echo "includeBuild '../../ramani-maplibre'" >> settings.gradle
+        run: echo "includeBuild '../../ramani-mapbox'" >> settings.gradle
       - name: Build
         working-directory: ./examples/annotation-simple
         run: |
+            echo "MAPBOX_API_KEY=${{ secrets.MAPBOX_TOKEN }}" >> keystore.properties
+            echo "MAPBOX_DOWNLOAD_TOKEN=${{ secrets.MAPBOX_TOKEN }}" >> keystore.properties
             ./gradlew build
             ./gradlew test
 

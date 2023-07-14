@@ -3,6 +3,15 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+// Load file "keystore.properties" where we keep our keys
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+
+try {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+} catch (IOException ignored) {
+}
+
 android {
     namespace 'org.ramani.example.annotation_simple'
     compileSdk 33
@@ -13,6 +22,13 @@ android {
         targetSdk 33
         versionCode 1
         versionName "1.0"
+
+        if (keystoreProperties.containsKey("MAPBOX_API_KEY")) {
+            resValue "string", "mapbox_api_key", keystoreProperties["MAPBOX_API_KEY"]
+        } else {
+            println("WARNING: MAPBOX_API_KEY is missing from keystore file!")
+            resValue "string", "mapbox_api_key", ""
+        }
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -55,7 +71,7 @@ dependencies {
     implementation 'androidx.compose.ui:ui-graphics'
     implementation 'androidx.compose.ui:ui-tooling-preview'
     implementation 'androidx.compose.material3:material3'
-    implementation 'org.ramani-maps:ramani-maplibre:0.1.1'
+    implementation 'org.ramani-maps:ramani-mapbox:0.0.1'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'

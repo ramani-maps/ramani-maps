@@ -10,9 +10,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.mapbox.mapboxsdk.geometry.LatLng
+import org.ramani.compose.CameraPosition
+import org.ramani.compose.CameraPositionState
 import org.ramani.compose.Circle
-import org.ramani.compose.MapLibre
+import org.ramani.compose.LatLng
+import org.ramani.compose.Mapbox
 import org.ramani.compose.Polyline
 import org.ramani.example.annotation_simple.ui.theme.AnnotationSimpleTheme
 
@@ -27,7 +29,16 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MapLibre(modifier = Modifier.fillMaxSize(), apiKey = "2z0TwvuXjwgOpvle5GYY") {
+                    Mapbox(
+                        modifier = Modifier.fillMaxSize(),
+                        apiKey = resources.getString(R.string.mapbox_api_key),
+                        cameraPositionState = CameraPositionState(
+                            CameraPosition(
+                                target = LatLng(4.8, 46.0),
+                                zoom = 2.0,
+                            )
+                        ),
+                    ) {
                         Circle(
                             center = LatLng(4.8, 46.0),
                             radius = 50F,

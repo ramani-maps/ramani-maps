@@ -1,7 +1,6 @@
 # Ramani-Maps
 
-An Android Compose library to manipulate maps. We currently support MapLibre,
-but we started looking into Mapbox already!
+An Android Compose library to manipulate maps.
 
 ## What does the license say?
 
@@ -33,6 +32,42 @@ The map will now appear in your app!
 
 NOTE: you can get a free API key [here with MapTiler](https://cloud.maptiler.com/account/keys).
 
+## Quick Start with Mapbox
+
+Mapbox requires its own repository in the dependency management:
+
+```
+maven {
+    url 'https://api.mapbox.com/downloads/v2/releases/maven'
+    authentication {
+        basic(BasicAuthentication)
+    }
+    credentials {
+        // Do not change the username below.
+        // This should always be `mapbox` (not your username).
+        username = "mapbox"
+        // Use the secret token you stored in gradle.properties as the password
+        password = <your mapbox download token>
+    }
+}
+```
+
+Add the dependency to `build.gradle`:
+
+```gradle
+implementation 'org.ramani-maps:ramani-maplibre:0.0.1'
+```
+
+Insert the map composable:
+
+```kotlin
+Mapbox(modifier = Modifier.fillMaxSize(), apiKey = "<your API key here>")
+```
+
+The map will now appear in your app!
+
+NOTE: you need a [Mapbox](https://www.mapbox.com) account (they have a free tier).
+
 ## Examples
 
 We provide a few simple examples demonstrating some of the supported features.
@@ -41,8 +76,11 @@ We provide a few simple examples demonstrating some of the supported features.
 
 ![interactive polygon example](./docs/interactive-polygon-example.gif)
 
-The complete application is available in [examples/interactive-polygon](./examples/interactive-polygon),
-but the actual code is extremely short:
+The complete application is available in [examples/interactive-polygon](./examples/interactive-polygon).
+It builds with `ramani-maplibre`, but switching to `ramani-mapbox`
+is easy since they both have a very similar API.
+
+The actual code is extremely short:
 
 ```kotlin
 class MainActivity : ComponentActivity() {
@@ -102,8 +140,11 @@ class MainActivity : ComponentActivity() {
 
 ![annotation simple example](./docs/annotation-simple-example.gif)
 
-The complete application is available in [examples/annotation-simple](./examples/annotation-simple),
-but the actual code is extremely short:
+The complete application is available in [examples/annotation-simple](./examples/annotation-simple).
+It builds with `ramani-mapbox`, but switching to `ramani-maplibre`
+is easy since they both have a very similar API.
+
+The actual code is extremely short:
 
 ```kotlin
 class MainActivity : ComponentActivity() {
@@ -117,9 +158,16 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Create the map
-                    MapLibre(modifier = Modifier.fillMaxSize(), apiKey = "<your API key here>") {
-                        // Create the draggable circle
+                    Mapbox(
+                        modifier = Modifier.fillMaxSize(),
+                        apiKey = "<your API key here>",
+                        cameraPositionState = CameraPositionState(
+                            CameraPosition(
+                                target = LatLng(4.8, 46.0),
+                                zoom = 2.0,
+                            )
+                        ),
+                    ) {
                         Circle(
                             center = LatLng(4.8, 46.0),
                             radius = 50F,

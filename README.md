@@ -55,7 +55,7 @@ maven {
 Add the dependency to `build.gradle`:
 
 ```gradle
-implementation 'org.ramani-maps:ramani-maplibre:0.0.1'
+implementation 'org.ramani-maps:ramani-mapbox:0.0.1'
 ```
 
 Insert the map composable:
@@ -74,7 +74,11 @@ We provide a few simple examples demonstrating some of the supported features.
 
 ### Interactive Polygon
 
-![interactive polygon example](./docs/interactive-polygon-example.gif)
+The left image shows the example app running with `ramani-maplibre`,
+while the right uses `ramani-mapbox`.
+
+![interactive polygon example (MapLibre)](./docs/interactive-polygon-example-maplibre.gif)
+![interactive polygon example (Mapbox)](./docs/interactive-polygon-example-mapbox.gif)
 
 The complete application is available in [examples/interactive-polygon](./examples/interactive-polygon).
 It builds with `ramani-maplibre`, but switching to `ramani-mapbox`
@@ -138,7 +142,11 @@ class MainActivity : ComponentActivity() {
 
 ### Annotation Simple
 
-![annotation simple example](./docs/annotation-simple-example.gif)
+The left image shows the example app running with `ramani-maplibre`,
+while the right uses `ramani-mapbox`.
+
+![annotation simple example (maplibre)](./docs/annotation-simple-example-maplibre.gif)
+![annotation simple example (mapbox)](./docs/annotation-simple-example-mapbox.gif)
 
 The complete application is available in [examples/annotation-simple](./examples/annotation-simple).
 It builds with `ramani-mapbox`, but switching to `ramani-maplibre`

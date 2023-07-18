@@ -29,39 +29,27 @@ private fun VertexDragger(
         return
     }
 
-    val mapApplier = currentComposer.applier as MapApplier
-    val map = mapApplier.map
-
     var currentCenter = ScreenCoordinate(0.0, 0.0)
-    vertices.forEach { currentCenter += map.pixelForCoordinate(it.toPoint()) }
+    vertices.forEach { currentCenter += pixelFromCoord(it) }
 
     currentCenter = ScreenCoordinate(
         currentCenter.x / vertices.size,
         currentCenter.y / vertices.size
     )
 
-    val newCenter = map.pixelForCoordinate(draggedCenter.toPoint())
+    val newCenter = pixelFromCoord(draggedCenter)
     val draggedPixels = newCenter - currentCenter
     val draggedVertices = vertices
         .map { vertex ->
-            val screenVertex = map.pixelForCoordinate(vertex.toPoint())
+            val screenVertex = pixelFromCoord(vertex)
             val afterDrag = screenVertex + draggedPixels
-            map.coordinateForPixel(afterDrag)
+            coordFromPixel(afterDrag)
         }
-        .map { pointToLatLng(it) }
 
     onCenterAndVerticesChanged(
-        pointToLatLng(map.coordinateForPixel(currentCenter)),
+        coordFromPixel(currentCenter),
         draggedVertices
     )
-}
-
-private fun LatLng.toPoint(): Point {
-    return Point.fromLngLat(this.longitude, this.latitude)
-}
-
-private fun pointToLatLng(point: Point): LatLng {
-    return LatLng(point.latitude(), point.longitude())
 }
 
 @Composable

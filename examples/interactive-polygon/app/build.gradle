@@ -3,6 +3,15 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+// Load file "keystore.properties" where we keep our keys
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+
+try {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+} catch (IOException ignored) {
+}
+
 android {
     namespace 'org.ramani.example.interactive_polygon'
     compileSdk 33
@@ -13,6 +22,13 @@ android {
         targetSdk 33
         versionCode 1
         versionName "1.0"
+
+        if (keystoreProperties.containsKey("MAPLIBRE_API_KEY")) {
+            resValue "string", "maplibre_api_key", keystoreProperties["MAPLIBRE_API_KEY"]
+        } else {
+            println("WARNING: MAPLIBRE_API_KEY is missing from keystore file!")
+            resValue "string", "maplibre_api_key", ""
+        }
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

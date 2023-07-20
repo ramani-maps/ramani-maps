@@ -12,9 +12,6 @@ package org.ramani.compose
 
 import android.os.Parcel
 import android.os.Parcelable
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.rememberSaveable
 import com.mapbox.mapboxsdk.geometry.LatLng
 
 data class CameraPosition(
@@ -57,21 +54,4 @@ data class CameraPosition(
             return arrayOfNulls(size)
         }
     }
-}
-
-class CameraPositionState(var cameraPosition: CameraPosition = CameraPosition()) {
-    companion object {
-        val Saver: Saver<CameraPositionState, CameraPosition> = Saver(
-            save = { it.cameraPosition },
-            restore = { CameraPositionState(it) }
-        )
-    }
-}
-
-@Composable
-inline fun rememberCameraPositionState(
-    key: String? = null,
-    crossinline init: CameraPositionState.() -> Unit = {}
-): CameraPositionState = rememberSaveable(key = key, saver = CameraPositionState.Saver) {
-    CameraPositionState().apply(init)
 }

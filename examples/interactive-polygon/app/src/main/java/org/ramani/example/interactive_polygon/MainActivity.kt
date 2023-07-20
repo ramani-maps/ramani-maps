@@ -11,14 +11,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.neverEqualPolicy
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.mapbox.mapboxsdk.geometry.LatLng
 import org.ramani.compose.CameraPosition
-import org.ramani.compose.CameraPositionState
 import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
 import org.ramani.compose.Polygon
@@ -29,13 +27,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             InteractivePolygonTheme {
-                var polygonState by remember { mutableStateOf(polygonPoints) }
                 var polygonCenter = LatLng(44.989, 10.809)
-                var cameraPosition by remember {
-                    mutableStateOf(
-                        CameraPosition(target = polygonCenter, zoom = 15.0),
-                        neverEqualPolicy()
-                    )
+                var polygonState by rememberSaveable { mutableStateOf(polygonPoints) }
+                val cameraPosition = rememberSaveable {
+                    mutableStateOf(CameraPosition(target = polygonCenter, zoom = 15.0))
                 }
 
                 Box {
@@ -46,7 +41,7 @@ class MainActivity : ComponentActivity() {
                         MapLibre(
                             modifier = Modifier.fillMaxSize(),
                             apiKey = resources.getString(R.string.maplibre_api_key),
-                            cameraPositionState = CameraPositionState(cameraPosition),
+                            cameraPosition = cameraPosition.value
                         ) {
                             polygonState.forEachIndexed { index, vertex ->
                                 Circle(
@@ -78,7 +73,9 @@ class MainActivity : ComponentActivity() {
                     Button(
                         modifier = Modifier.align(Alignment.BottomCenter),
                         onClick = {
-                            cameraPosition = CameraPosition(target = polygonCenter)
+                            cameraPosition.value = CameraPosition(cameraPosition.value).apply {
+                                this.target = polygonCenter
+                            }
                         },
                     ) {
                         Text(text = "Center on polygon")

@@ -10,8 +10,6 @@
 
 package org.ramani.compose
 
-import android.content.Context
-import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -65,23 +63,3 @@ suspend inline fun MapView.awaitMap(): MapboxMap =
             continuation.resume(it)
         }
     }
-
-class Helper {
-    companion object {
-        fun getMapTilerKey(context: Context): String? {
-            return context.packageManager.getApplicationInfo(
-                context.packageName,
-                PackageManager.GET_META_DATA
-            ).metaData.getString("com.auterion.tazama.mapTilerKey")
-        }
-
-        fun validateKey(mapTilerKey: String?) {
-            if (mapTilerKey == null) {
-                throw Exception("Failed to read MapTiler key")
-            }
-            if (mapTilerKey.toLowerCase() == "placeholder") {
-                throw Exception("Please enter correct MapTiler key in module-level gradle.build file in defaultConfig section")
-            }
-        }
-    }
-}

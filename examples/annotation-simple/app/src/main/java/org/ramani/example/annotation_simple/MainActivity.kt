@@ -6,12 +6,10 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import org.ramani.compose.CameraPosition
-import org.ramani.compose.CameraPositionState
 import org.ramani.compose.Circle
 import org.ramani.compose.LatLng
 import org.ramani.compose.Mapbox
@@ -21,9 +19,18 @@ import org.ramani.example.annotation_simple.ui.theme.AnnotationSimpleTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             AnnotationSimpleTheme {
-                val polylineState by remember { mutableStateOf(polylinePoints) }
+                val cameraPosition = rememberSaveable {
+                    mutableStateOf(
+                        CameraPosition(
+                            target = LatLng(46.0, 4.8),
+                            zoom = 2.0,
+                        )
+                    )
+                }
+                val circleCenter = rememberSaveable { mutableStateOf(LatLng(4.8, 46.0)) }
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -32,20 +39,16 @@ class MainActivity : ComponentActivity() {
                     Mapbox(
                         modifier = Modifier.fillMaxSize(),
                         apiKey = resources.getString(R.string.mapbox_api_key),
-                        cameraPositionState = CameraPositionState(
-                            CameraPosition(
-                                target = LatLng(4.8, 46.0),
-                                zoom = 2.0,
-                            )
-                        ),
+                        cameraPosition = cameraPosition.value,
                     ) {
                         Circle(
-                            center = LatLng(4.8, 46.0),
+                            center = circleCenter.value,
                             radius = 50F,
                             isDraggable = true,
                             borderWidth = 2F,
+                            onCenterDragged = { center -> circleCenter.value = center }
                         )
-                        Polyline(points = polylineState, color = "Red", lineWidth = 5.0F)
+                        Polyline(points = polylinePoints, color = "Red", lineWidth = 5.0F)
                     }
                 }
             }

@@ -92,38 +92,61 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             InteractivePolygonTheme {
-                var polygonState by remember { mutableStateOf(polygonPoints) }
+                var polygonCenter = LatLng(44.989, 10.809)
+                var polygonState by rememberSaveable { mutableStateOf(polygonPoints) }
+                val cameraPosition = rememberSaveable {
+                    mutableStateOf(CameraPosition(target = polygonCenter, zoom = 15.0))
+                }
 
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    // Create the map
-                    MapLibre(modifier = Modifier.fillMaxSize(), apiKey = "<your API key here>") {
-                        // Create a handle for each vertex (those are blue circles)
-                        polygonState.forEachIndexed { index, vertex ->
-                            Circle(
-                                center = vertex,
-                                radius = 10.0F,
-                                color = "Blue",
-                                zIndex = 1,
+                Box {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        MapLibre(
+                            modifier = Modifier.fillMaxSize(),
+                            apiKey = resources.getString(apiKey = "<your API key here>"),
+                            cameraPosition = cameraPosition.value
+                        ) {
+                            // Create a handle for each vertex (those are blue circles)
+                            polygonState.forEachIndexed { index, vertex ->
+                                Circle(
+                                    center = vertex,
+                                    radius = 10.0F,
+                                    color = "Blue",
+                                    zIndex = 1,
+                                    isDraggable = true,
+                                    onCenterDragged = { newCenter ->
+                                        polygonState = polygonState.toMutableList()
+                                            .apply { this[index] = newCenter }
+                                    }
+                                )
+                            }
+                            // Create the polygon
+                            Polygon(
+                                vertices = polygonState,
                                 isDraggable = true,
-                                onCenterDragged = { newCenter ->
-                                    polygonState = polygonState.toMutableList()
-                                        .apply { this[index] = newCenter }
-                                }
+                                draggerImageId = R.drawable.ic_drag,
+                                borderWidth = 4.0F,
+                                fillColor = "Yellow",
+                                opacity = 0.5F,
+                                onCenterChanged = { newCenter ->
+                                    polygonCenter = newCenter
+                                },
+                                onVerticesChanged = { newVertices -> polygonState = newVertices },
                             )
                         }
-                        // Draw the polygon
-                        Polygon(
-                            vertices = polygonState,
-                            isDraggable = true,
-                            draggerImageId = R.drawable.ic_drag,
-                            borderWidth = 4.0F,
-                            fillColor = "Yellow",
-                            opacity = 0.5F,
-                            onVerticesChanged = { newVertices -> polygonState = newVertices },
-                        )
+                    }
+                    // Add a button that centers the map on the polygon when clicked
+                    Button(
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                        onClick = {
+                            cameraPosition.value = CameraPosition(cameraPosition.value).apply {
+                                this.target = polygonCenter
+                            }
+                        },
+                    ) {
+                        Text(text = "Center on polygon")
                     }
                 }
             }
@@ -132,10 +155,10 @@ class MainActivity : ComponentActivity() {
 
     // Initial position of the polygon
     private val polygonPoints = listOf(
-        LatLng(54.9, 0.8),
-        LatLng(54.9, 46.2),
-        LatLng(20.8, 46.2),
-        LatLng(20.8, 0.8),
+        LatLng(44.986, 10.812),
+        LatLng(44.986, 10.807),
+        LatLng(44.992, 10.807),
+        LatLng(44.992, 10.812),
     )
 }
 ```

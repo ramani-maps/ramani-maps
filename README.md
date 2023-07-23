@@ -55,7 +55,7 @@ maven {
 Add the dependency to `build.gradle`:
 
 ```gradle
-implementation 'org.ramani-maps:ramani-mapbox:0.0.2'
+implementation 'org.ramani-maps:ramani-mapbox:0.1.0'
 ```
 
 Insert the map composable:

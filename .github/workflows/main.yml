@@ -29,7 +29,7 @@ jobs:
             ./gradlew build
             ./gradlew test
       - name: Publish (Maven)
-        if: ${{ github.event_name == 'release' && github.event.action == 'created' }} && startsWith(github.ref_name, 'maplibre')
+        if: ${{ github.event_name == 'release' && github.event.action == 'created' && startsWith(github.ref_name, 'maplibre') }}
         working-directory: ./ramani-maplibre
         run: |
             echo -n "${{ secrets.MAVEN_SIGNING_KEY }}" | base64 --decode | gpg --import

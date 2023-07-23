@@ -54,12 +54,12 @@ jobs:
             echo "MAPBOX_DOWNLOAD_TOKEN=${{ secrets.MAPBOX_TOKEN }}" >> keystore.properties
             ./gradlew build
             ./gradlew test
-#      - name: Publish (Maven)
-#        if: ${{ github.event_name == 'release' && github.event.action == 'created' }}
-#        working-directory: ./ramani-mapbox
-#        run: |
-#            echo -n "${{ secrets.MAVEN_SIGNING_KEY }}" | base64 --decode | gpg --import
-#            ./gradlew -PossrhUsername=${{ secrets.OSSRH_USERNAME }} -PossrhPassword=${{ secrets.OSSRH_PASSWORD }} publish
+      - name: Publish (Maven)
+        if: ${{ github.event_name == 'release' && github.event.action == 'created' && startsWith(github.ref_name, 'mapbox') }}
+        working-directory: ./ramani-mapbox
+        run: |
+            echo -n "${{ secrets.MAVEN_SIGNING_KEY }}" | base64 --decode | gpg --import
+            ./gradlew -PossrhUsername=${{ secrets.OSSRH_USERNAME }} -PossrhPassword=${{ secrets.OSSRH_PASSWORD }} publish
 
   annotation-simple:
     name: "Build and test example: AnnotationSimple"

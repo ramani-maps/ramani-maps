@@ -55,7 +55,7 @@ maven {
 Add the dependency to `build.gradle`:
 
 ```gradle
-implementation 'org.ramani-maps:ramani-mapbox:0.0.2'
+implementation 'org.ramani-maps:ramani-mapbox:0.1.0'
 ```
 
 Insert the map composable:
@@ -181,9 +181,18 @@ The actual code is extremely short:
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             AnnotationSimpleTheme {
-                val polylineState by remember { mutableStateOf(polylinePoints) }
+                val cameraPosition = rememberSaveable {
+                    mutableStateOf(
+                        CameraPosition(
+                            target = LatLng(46.0, 4.8),
+                            zoom = 2.0,
+                        )
+                    )
+                }
+                val circleCenter = rememberSaveable { mutableStateOf(LatLng(4.8, 46.0)) }
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -192,21 +201,18 @@ class MainActivity : ComponentActivity() {
                     Mapbox(
                         modifier = Modifier.fillMaxSize(),
                         apiKey = "<your API key here>",
-                        cameraPositionState = CameraPositionState(
-                            CameraPosition(
-                                target = LatLng(4.8, 46.0),
-                                zoom = 2.0,
-                            )
-                        ),
+                        cameraPosition = cameraPosition.value,
                     ) {
+                        // Create a draggable circle
                         Circle(
-                            center = LatLng(4.8, 46.0),
+                            center = circleCenter.value,
                             radius = 50F,
                             isDraggable = true,
                             borderWidth = 2F,
+                            onCenterDragged = { center -> circleCenter.value = center }
                         )
-                        // Create the polyline
-                        Polyline(points = polylineState, color = "Red", lineWidth = 5.0F)
+                        // Create a polyline
+                        Polyline(points = polylinePoints, color = "Red", lineWidth = 5.0F)
                     }
                 }
             }

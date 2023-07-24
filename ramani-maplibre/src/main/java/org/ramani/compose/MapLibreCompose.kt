@@ -15,10 +15,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Composition
 import androidx.compose.runtime.CompositionContext
 import com.mapbox.android.gestures.MoveGestureDetector
+import com.mapbox.android.gestures.RotateGestureDetector
 import com.mapbox.android.gestures.StandardScaleGestureDetector
 import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.MapboxMap.OnMoveListener
+import com.mapbox.mapboxsdk.maps.MapboxMap.OnRotateListener
 import com.mapbox.mapboxsdk.maps.MapboxMap.OnScaleListener
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.plugins.annotation.AnnotationManager
@@ -130,6 +132,32 @@ internal class MapApplier(
             override fun onMoveEnd(detector: MoveGestureDetector) {
             }
         })
+
+        map.addOnRotateListener(object : OnRotateListener {
+            override fun onRotateBegin(detector: RotateGestureDetector) {
+                decorations.forEach {
+                    if (it is MapObserverNode) {
+                        it.onMapRotated(map.cameraPosition.bearing)
+                    }
+                }
+            }
+
+            override fun onRotate(detector: RotateGestureDetector) {
+                decorations.forEach {
+                    if (it is MapObserverNode) {
+                        it.onMapRotated(map.cameraPosition.bearing)
+                    }
+                }
+            }
+
+            override fun onRotateEnd(detector: RotateGestureDetector) {
+                decorations.forEach {
+                    if (it is MapObserverNode) {
+                        it.onMapRotated(map.cameraPosition.bearing)
+                    }
+                }
+            }
+        })
     }
 
     fun getOrCreateCircleManagerForZIndex(zIndex: Int): CircleManager {
@@ -216,6 +244,8 @@ internal class MapApplier(
             SymbolManager(mapView, map, style)
         }
 
+        symbolManager.iconAllowOverlap = true
+
         if (!zIndexReferenceAnnotationManagerMap.containsKey(zIndex)) {
             zIndexReferenceAnnotationManagerMap[zIndex] = symbolManager
         }
@@ -263,6 +293,7 @@ internal class MapApplier(
         } ?: run {
             LineManager(mapView, map, style)
         }
+
 
         if (!zIndexReferenceAnnotationManagerMap.containsKey(zIndex)) {
             zIndexReferenceAnnotationManagerMap[zIndex] = lineManager
@@ -360,6 +391,7 @@ internal class FillNode(
 internal class MapObserverNode(
     var onMapMoved: () -> Unit,
     var onMapScaled: () -> Unit,
+    var onMapRotated: (Double) -> Unit,
 ) : MapNode {
     override fun onRemoved() {
     }

@@ -30,15 +30,16 @@ fun Symbol(
     isDraggable: Boolean,
     zIndex: Int = 0,
     imageId: Int? = null,
+    imageRotation: Float? = null,
     text: String? = null
 ) {
     val mapApplier = currentComposer.applier as MapApplier
 
     imageId?.let {
-        if (mapApplier.style.getImage(imageId.toString()) == null) {
+        if (mapApplier.style.getImage("$imageId") == null) {
             mapApplier.style.addImage(
-                imageId.toString(),
-                ImageBitmap.imageResource(id = it).asAndroidBitmap()
+                "$imageId",
+                ImageBitmap.imageResource(it).asAndroidBitmap()
             )
         }
     }
@@ -54,6 +55,7 @@ fun Symbol(
                 .withIconImage(imageId.toString())
                 .withIconColor(color)
                 .withIconSize(size)
+                .withIconRotate(imageRotation)
         }
 
         text?.let {
@@ -80,6 +82,10 @@ fun Symbol(
 
         set(color) {
             symbol.iconColor = color
+        }
+
+        set(imageRotation) {
+            symbol.iconRotate = imageRotation
         }
     })
 }

@@ -77,6 +77,7 @@ private fun PolygonDragHandle(
     vertices: List<LatLng>,
     imageId: Int? = null,
     zIndexDragHandle: Int = 0,
+    zIndexRotationHandle: Int = zIndexDragHandle,
     azimuth: Float,
     onCenterChanged: (LatLng) -> Unit = {},
     onVerticesChanged: (List<LatLng>) -> Unit = {},
@@ -162,7 +163,7 @@ private fun PolygonDragHandle(
         radius = 50.0f,
         isDraggable = true,
         color = "Transparent",
-        zIndex = zIndexDragHandle,
+        zIndex = zIndexRotationHandle,
         onCenterDragged = {
             if (!isAzimuthDragActive.value && counter.value > 0) {
                 startAzimuth.value = azimuth
@@ -206,6 +207,7 @@ fun Polygon(
     opacity: Float = 1.0F,
     zIndex: Int = 0,
     zIndexDragHandle: Int = zIndex + 1,
+    zIndexRotationHandle: Int = zIndex + 1,
     isDraggable: Boolean = false,
     onCenterChanged: (LatLng) -> Unit = {},
     onVerticesChanged: (List<LatLng>) -> Unit = {},
@@ -235,6 +237,7 @@ fun Polygon(
             vertices = vertices,
             imageId = draggerImageId,
             zIndexDragHandle = zIndexDragHandle,
+            zIndexRotationHandle = zIndexRotationHandle,
             azimuth = azimuth,
             onCenterChanged = { onCenterChanged(it) },
             onVerticesChanged = { onVerticesChanged(it) },

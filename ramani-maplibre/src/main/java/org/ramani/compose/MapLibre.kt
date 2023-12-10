@@ -41,7 +41,7 @@ annotation class MapLibreComposable
 @Composable
 fun MapLibre(
     modifier: Modifier,
-    apiKey: String,
+    styleUrl: String = "https://demotiles.maplibre.org/style.json",
     cameraPosition: CameraPosition = rememberSaveable { CameraPosition() },
     content: (@Composable @MapLibreComposable () -> Unit)? = null,
 ) {
@@ -58,7 +58,7 @@ fun MapLibre(
     AndroidView(modifier = Modifier.fillMaxSize(), factory = { map })
     LaunchedEffect(Unit) {
         disposingComposition {
-            map.newComposition(parentComposition, style = map.awaitMap().awaitStyle(apiKey)) {
+            map.newComposition(parentComposition, style = map.awaitMap().awaitStyle(styleUrl)) {
                 CompositionLocalProvider {
                     MapUpdater(cameraPosition = currentCameraPosition)
                     currentContent?.invoke()

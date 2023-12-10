@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         MapLibre(
                             modifier = Modifier.fillMaxSize(),
-                            apiKey = resources.getString(R.string.maplibre_api_key),
+                            styleUrl = resources.getString(R.string.maplibre_style_url),
                             cameraPosition = cameraPosition.value
                         ) {
                             polygonState.forEachIndexed { index, vertex ->

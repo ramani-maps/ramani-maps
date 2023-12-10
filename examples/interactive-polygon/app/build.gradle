@@ -23,11 +23,11 @@ android {
         versionCode 1
         versionName "1.0"
 
-        if (keystoreProperties.containsKey("MAPLIBRE_API_KEY")) {
-            resValue "string", "maplibre_api_key", keystoreProperties["MAPLIBRE_API_KEY"]
+        if (keystoreProperties.containsKey("MAPLIBRE_STYLE_URL")) {
+            resValue "string", "maplibre_style_url", keystoreProperties["MAPLIBRE_STYLE_URL"]
         } else {
-            println("WARNING: MAPLIBRE_API_KEY is missing from keystore file!")
-            resValue "string", "maplibre_api_key", ""
+            println("NOTE: MAPLIBRE_STYLE_URL is not present, so we will use the default (demo tiles)")
+            resValue "string", "maplibre_style_url", "https://demotiles.maplibre.org/style.json"
         }
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

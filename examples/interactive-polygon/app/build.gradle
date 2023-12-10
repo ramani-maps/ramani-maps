@@ -23,13 +23,6 @@ android {
         versionCode 1
         versionName "1.0"
 
-        if (keystoreProperties.containsKey("MAPLIBRE_API_KEY")) {
-            resValue "string", "maplibre_api_key", keystoreProperties["MAPLIBRE_API_KEY"]
-        } else {
-            println("WARNING: MAPLIBRE_API_KEY is missing from keystore file!")
-            resValue "string", "maplibre_api_key", ""
-        }
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary true

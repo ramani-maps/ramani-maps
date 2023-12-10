@@ -41,7 +41,7 @@ annotation class MapLibreComposable
 @Composable
 fun MapLibre(
     modifier: Modifier,
-    apiKey: String,
+    styleUrl: String = "https://demotiles.maplibre.org/style.json",
     cameraPosition: CameraPosition = rememberSaveable { CameraPosition() },
     content: (@Composable @MapLibreComposable () -> Unit)? = null,
 ) {

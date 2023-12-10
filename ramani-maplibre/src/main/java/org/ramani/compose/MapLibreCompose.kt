@@ -60,8 +60,7 @@ internal suspend fun MapView.newComposition(
     }
 }
 
-internal suspend fun MapboxMap.awaitStyle(apiKey: String) = suspendCoroutine { continuation ->
-    val styleUrl = "https://api.maptiler.com/maps/satellite/style.json?key=$apiKey"
+internal suspend fun MapboxMap.awaitStyle(styleUrl: String) = suspendCoroutine { continuation ->
     setStyle(styleUrl) { style ->
         continuation.resume(style)
     }

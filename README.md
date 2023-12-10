@@ -25,12 +25,22 @@ implementation 'org.ramani-maps:ramani-maplibre:0.1.2'
 Insert the map composable:
 
 ```kotlin
-MapLibre(modifier = Modifier.fillMaxSize(), apiKey = "<your API key here>")
+MapLibre(modifier = Modifier.fillMaxSize())
 ```
 
-The map will now appear in your app!
+A map will now appear in your app!
 
-NOTE: you can get a free API key [here with MapTiler](https://cloud.maptiler.com/account/keys).
+If you want to do anything useful though (the free maps are not very detailed),
+you'll either need a commercial tile provider or your own tile hosting.
+Several tile providers offer vector tiles with support for MapLibre:
+
+* [MapTiler](https://cloud.maptiler.com/account/keys)
+* [Stadia Maps](https://client.stadiamaps.com/)
+
+Note that most vendors require an API key in order to authenticate requests.
+For MapTiler, you must add `?key=YOUR-API-KEY` at the end of the URL,
+and for Stadia Maps, you must add `?api_key=YOUR-API-KEY`.
+Consult your tile provider's documentation for details.
 
 ## Quick Start with Mapbox
 

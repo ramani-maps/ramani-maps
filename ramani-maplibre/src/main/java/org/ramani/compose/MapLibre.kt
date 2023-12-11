@@ -58,7 +58,7 @@ fun MapLibre(
     AndroidView(modifier = Modifier.fillMaxSize(), factory = { map })
     LaunchedEffect(Unit) {
         disposingComposition {
-            map.newComposition(parentComposition, style = map.awaitMap().awaitStyle(apiKey)) {
+            map.newComposition(parentComposition, style = map.awaitMap().awaitStyle(styleUrl)) {
                 CompositionLocalProvider {
                     MapUpdater(cameraPosition = currentCameraPosition)
                     currentContent?.invoke()

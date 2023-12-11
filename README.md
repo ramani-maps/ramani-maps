@@ -81,10 +81,6 @@ NOTE: you need a [Mapbox](https://www.mapbox.com) account (they have a free tier
 ## Examples
 
 We provide a few simple examples demonstrating some of the supported features.
-You can run an examples by opening the project folder directly in Android Studio
-(there is no Gradle project at the root of the repo),
-and uncommenting the last line of `settings.gradle` in the example directory
-([MapLibre example](examples/interactive-polygon/settings.gradle)).
 
 ### Interactive Polygon
 

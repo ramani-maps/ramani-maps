@@ -92,7 +92,7 @@ allprojects {
         implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1'
 
         api 'org.maplibre.gl:android-sdk:10.2.0'
-        api 'org.maplibre.gl:android-plugin-annotation-v9:2.0.1'
+        api 'org.maplibre.gl:android-plugin-annotation-v9:2.0.2'
 
         testImplementation 'junit:junit:4.13.2'
     }

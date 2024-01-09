@@ -12,7 +12,15 @@ package org.ramani.compose
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ComposableTargetMarker
+import androidx.compose.runtime.ComposeNode
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.currentComposer
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCompositionContext
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -43,6 +51,7 @@ fun MapLibre(
     modifier: Modifier,
     styleUrl: String = "https://demotiles.maplibre.org/style.json",
     cameraPosition: CameraPosition = rememberSaveable { CameraPosition() },
+    uiSettings: UiSettings = UiSettings(),
     content: (@Composable @MapLibreComposable () -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
@@ -52,12 +61,15 @@ fun MapLibre(
 
     val map = rememberMapViewWithLifecycle()
     val currentCameraPosition by rememberUpdatedState(cameraPosition)
+    val currentUiSettings by rememberUpdatedState(uiSettings)
     val currentContent by rememberUpdatedState(content)
     val parentComposition = rememberCompositionContext()
 
     AndroidView(modifier = Modifier.fillMaxSize(), factory = { map })
-    LaunchedEffect(Unit) {
+    LaunchedEffect(currentUiSettings) {
         disposingComposition {
+            val mapboxMap = map.awaitMap()
+            mapboxMap.applyUiSettings(currentUiSettings)
             map.newComposition(parentComposition, style = map.awaitMap().awaitStyle(styleUrl)) {
                 CompositionLocalProvider {
                     MapUpdater(cameraPosition = currentCameraPosition)
@@ -66,6 +78,15 @@ fun MapLibre(
             }
         }
     }
+}
+
+private fun MapboxMap.applyUiSettings(uiSettings: UiSettings) {
+    this.uiSettings.setCompassMargins(
+        uiSettings.compassMargins.left,
+        uiSettings.compassMargins.top,
+        uiSettings.compassMargins.right,
+        uiSettings.compassMargins.bottom
+    )
 }
 
 @Composable

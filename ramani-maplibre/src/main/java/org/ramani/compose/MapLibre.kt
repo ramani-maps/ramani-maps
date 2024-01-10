@@ -52,6 +52,7 @@ fun MapLibre(
     styleUrl: String = "https://demotiles.maplibre.org/style.json",
     cameraPosition: CameraPosition = rememberSaveable { CameraPosition() },
     uiSettings: UiSettings = UiSettings(),
+    properties: MapProperties = MapProperties(),
     content: (@Composable @MapLibreComposable () -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
@@ -62,14 +63,17 @@ fun MapLibre(
     val map = rememberMapViewWithLifecycle()
     val currentCameraPosition by rememberUpdatedState(cameraPosition)
     val currentUiSettings by rememberUpdatedState(uiSettings)
+    val currentMapProperties by rememberUpdatedState(properties)
     val currentContent by rememberUpdatedState(content)
     val parentComposition = rememberCompositionContext()
 
     AndroidView(modifier = Modifier.fillMaxSize(), factory = { map })
-    LaunchedEffect(currentUiSettings) {
+    LaunchedEffect(currentUiSettings, currentMapProperties) {
         disposingComposition {
             val mapboxMap = map.awaitMap()
             mapboxMap.applyUiSettings(currentUiSettings)
+            mapboxMap.applyProperties(currentMapProperties)
+
             map.newComposition(parentComposition, style = map.awaitMap().awaitStyle(styleUrl)) {
                 CompositionLocalProvider {
                     MapUpdater(cameraPosition = currentCameraPosition)
@@ -87,6 +91,10 @@ private fun MapboxMap.applyUiSettings(uiSettings: UiSettings) {
         uiSettings.compassMargins.right,
         uiSettings.compassMargins.bottom
     )
+}
+
+private fun MapboxMap.applyProperties(properties: MapProperties) {
+    properties.maxZoom?.let { this.setMaxZoomPreference(it) }
 }
 
 @Composable

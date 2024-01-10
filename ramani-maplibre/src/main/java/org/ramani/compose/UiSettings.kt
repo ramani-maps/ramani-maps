@@ -13,7 +13,7 @@ import android.os.Parcel
 import android.os.Parcelable
 
 class UiSettings(var compassMargins: CompassMargins = CompassMargins()) : Parcelable {
-    constructor (uiSettings: UiSettings) : this(uiSettings.compassMargins)
+    constructor(uiSettings: UiSettings) : this(uiSettings.compassMargins)
 
     constructor(parcel: Parcel) : this(parcel.readParcelable<CompassMargins>(CompassMargins::class.java.classLoader)!!)
 

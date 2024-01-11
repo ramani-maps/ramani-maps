@@ -10,8 +10,10 @@
 
 package org.ramani.compose
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposableTargetMarker
 import androidx.compose.runtime.ComposeNode
@@ -23,17 +25,22 @@ import androidx.compose.runtime.rememberCompositionContext
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.viewinterop.AndroidView
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.android.gestures.RotateGestureDetector
 import com.mapbox.android.gestures.ShoveGestureDetector
 import com.mapbox.android.gestures.StandardScaleGestureDetector
+import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
+import com.mapbox.mapboxsdk.location.LocationComponentOptions
+import com.mapbox.mapboxsdk.location.engine.LocationEngineRequest
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.MapboxMap.OnMoveListener
 import com.mapbox.mapboxsdk.maps.MapboxMap.OnRotateListener
 import com.mapbox.mapboxsdk.maps.MapboxMap.OnScaleListener
 import com.mapbox.mapboxsdk.maps.MapboxMap.OnShoveListener
+import com.mapbox.mapboxsdk.maps.Style
 
 @Retention(AnnotationRetention.BINARY)
 @ComposableTargetMarker(description = "Maplibre Composable")
@@ -46,6 +53,20 @@ import com.mapbox.mapboxsdk.maps.MapboxMap.OnShoveListener
 )
 annotation class MapLibreComposable
 
+/**
+ * A composable representing a MapLibre map.
+ *
+ * @param modifier The modifier applied to the map.
+ * @param styleUrl The style url to access the tile provider. Defaults to a demo tile provider.
+ * @param cameraPosition The position of the map camera.
+ * @param uiSettings Settings related to the map UI.
+ * @param properties Properties being applied to the map.
+ * @param locationRequestProperties Properties related to the location marker. If null (which is
+ *        the default), then the location will not be enabled on the map. Enabling the location
+ *        requires setting this field and getting the location permission in your app.
+ * @param locationStyling Styling related to the location marker (color, pulse, etc).
+ * @param content The content of the map.
+ */
 @Composable
 fun MapLibre(
     modifier: Modifier,
@@ -53,6 +74,8 @@ fun MapLibre(
     cameraPosition: CameraPosition = rememberSaveable { CameraPosition() },
     uiSettings: UiSettings = UiSettings(),
     properties: MapProperties = MapProperties(),
+    locationRequestProperties: LocationRequestProperties? = null,
+    locationStyling: LocationStyling = LocationStyling(),
     content: (@Composable @MapLibreComposable () -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
@@ -60,21 +83,36 @@ fun MapLibre(
         return
     }
 
+    val context = LocalContext.current
     val map = rememberMapViewWithLifecycle()
     val currentCameraPosition by rememberUpdatedState(cameraPosition)
     val currentUiSettings by rememberUpdatedState(uiSettings)
     val currentMapProperties by rememberUpdatedState(properties)
+    val currentLocationRequestProperties by rememberUpdatedState(locationRequestProperties)
+    val currentLocationStyling by rememberUpdatedState(locationStyling)
     val currentContent by rememberUpdatedState(content)
     val parentComposition = rememberCompositionContext()
 
-    AndroidView(modifier = Modifier.fillMaxSize(), factory = { map })
-    LaunchedEffect(currentUiSettings, currentMapProperties) {
+    AndroidView(modifier = modifier, factory = { map })
+    LaunchedEffect(
+        currentUiSettings,
+        currentMapProperties,
+        currentLocationRequestProperties,
+        currentLocationStyling
+    ) {
         disposingComposition {
-            val mapboxMap = map.awaitMap()
-            mapboxMap.applyUiSettings(currentUiSettings)
-            mapboxMap.applyProperties(currentMapProperties)
+            val maplibreMap = map.awaitMap()
+            val style = maplibreMap.awaitStyle(styleUrl)
+            maplibreMap.applyUiSettings(currentUiSettings)
+            maplibreMap.applyProperties(currentMapProperties)
+            maplibreMap.setupLocation(
+                context,
+                style,
+                currentLocationRequestProperties,
+                currentLocationStyling
+            )
 
-            map.newComposition(parentComposition, style = map.awaitMap().awaitStyle(styleUrl)) {
+            map.newComposition(parentComposition, style) {
                 CompositionLocalProvider {
                     MapUpdater(cameraPosition = currentCameraPosition)
                     currentContent?.invoke()
@@ -95,6 +133,47 @@ private fun MapboxMap.applyUiSettings(uiSettings: UiSettings) {
 
 private fun MapboxMap.applyProperties(properties: MapProperties) {
     properties.maxZoom?.let { this.setMaxZoomPreference(it) }
+}
+
+private fun MapboxMap.setupLocation(
+    context: Context,
+    style: Style,
+    locationRequestProperties: LocationRequestProperties?,
+    locationStyling: LocationStyling,
+) {
+    if (locationRequestProperties == null) return
+
+    val locationActivationOptions = LocationComponentActivationOptions
+        .builder(context, style)
+        .locationComponentOptions(locationStyling.toMapLibre(context))
+        .useDefaultLocationEngine(true)
+        .locationEngineRequest(locationRequestProperties.toMapLibre())
+        .build()
+    this.locationComponent.activateLocationComponent(locationActivationOptions)
+
+    if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+        context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+    ) {
+        this.locationComponent.isLocationComponentEnabled = true
+    }
+}
+
+private fun LocationStyling.toMapLibre(context: Context): LocationComponentOptions {
+    val builder = LocationComponentOptions.builder(context)
+    this.accuracyAlpha?.let { builder.accuracyAlpha(it) }
+    this.accuracyColor?.let { builder.accuracyColor(it) }
+    this.enablePulse?.let { builder.pulseEnabled(it) }
+    this.enablePulseFade?.let { builder.pulseFadeEnabled(it) }
+    this.pulseColor?.let { builder.pulseColor(it) }
+
+    return builder.build()
+}
+
+private fun LocationRequestProperties.toMapLibre(): LocationEngineRequest {
+    return LocationEngineRequest.Builder(this.interval)
+        .setFastestInterval(this.fastestInterval)
+        .setPriority(this.priority.value)
+        .build()
 }
 
 @Composable

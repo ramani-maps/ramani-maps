@@ -171,8 +171,10 @@ private fun LocationStyling.toMapLibre(context: Context): LocationComponentOptio
 
 private fun LocationRequestProperties.toMapLibre(): LocationEngineRequest {
     return LocationEngineRequest.Builder(this.interval)
-        .setFastestInterval(this.fastestInterval)
         .setPriority(this.priority.value)
+        .setFastestInterval(this.fastestInterval)
+        .setDisplacement(this.displacement)
+        .setMaxWaitTime(this.maxWaitTime)
         .build()
 }
 

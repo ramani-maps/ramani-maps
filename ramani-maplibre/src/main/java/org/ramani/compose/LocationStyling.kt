@@ -27,6 +27,14 @@ class LocationStyling(
     var enablePulseFade: Boolean? = null,
     @ColorInt var pulseColor: Int? = null,
 ) : Parcelable {
+    constructor(locationStyling: LocationStyling) : this(
+        locationStyling.accuracyAlpha,
+        locationStyling.accuracyColor,
+        locationStyling.enablePulse,
+        locationStyling.enablePulseFade,
+        locationStyling.pulseColor,
+    )
+
     constructor(parcel: Parcel) : this(
         parcel.readValue(Float::class.java.classLoader) as? Float,
         parcel.readValue(Int::class.java.classLoader) as? Int,

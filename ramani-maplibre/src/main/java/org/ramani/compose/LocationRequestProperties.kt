@@ -36,6 +36,14 @@ class LocationRequestProperties(
     var displacement: Float = 0F,
     var maxWaitTime: Long = 0L
 ) : Parcelable {
+    constructor(locationRequestProperties: LocationRequestProperties) : this(
+        locationRequestProperties.priority,
+        locationRequestProperties.interval,
+        locationRequestProperties.fastestInterval,
+        locationRequestProperties.displacement,
+        locationRequestProperties.maxWaitTime,
+    )
+
     constructor(parcel: Parcel) : this(
         LocationPriority.valueOf(parcel.readInt().toString()),
         parcel.readLong(),

@@ -251,10 +251,13 @@ that can still be added. Obviously we started with the ones we use!
 
 Currently supported are:
 
+* Map properties (set min/max zoom, ...)
 * Camera position (move the map, set the zoom, ...)
+* Device location (show the position on the map)
 * Symbols (i.e. markers made of an image or a text)
-* Polyline
+* Polylines
 * Polygons
+* Circles
 * Fills
 
 ## Contributions

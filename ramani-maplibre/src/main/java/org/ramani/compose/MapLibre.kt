@@ -48,6 +48,9 @@ import com.mapbox.mapboxsdk.maps.MapboxMap.OnRotateListener
 import com.mapbox.mapboxsdk.maps.MapboxMap.OnScaleListener
 import com.mapbox.mapboxsdk.maps.MapboxMap.OnShoveListener
 import com.mapbox.mapboxsdk.maps.Style
+import com.mapbox.mapboxsdk.style.layers.Layer
+import com.mapbox.mapboxsdk.style.sources.Source
+import com.mapbox.mapboxsdk.utils.BitmapUtils
 
 @Retention(AnnotationRetention.BINARY)
 @ComposableTargetMarker(description = "Maplibre Composable")
@@ -74,6 +77,9 @@ annotation class MapLibreComposable
  * @param locationStyling Styling related to the location marker (color, pulse, etc).
  * @param userLocation If set and if the location is enabled (by setting [locationRequestProperties],
  *        it will be updated to contain the latest user location as known by the map.
+ * @param sources External (user-defined) sources for the map.
+ * @param layers External (user-defined) layers for the map.
+ * @param images Images to be added to the map and used by external layers (pairs of <id, drawable code>).
  * @param content The content of the map.
  */
 @Composable
@@ -86,6 +92,9 @@ fun MapLibre(
     locationRequestProperties: LocationRequestProperties? = null,
     locationStyling: LocationStyling = LocationStyling(),
     userLocation: MutableState<Location>? = null,
+    sources: List<Source>? = null,
+    layers: List<Layer>? = null,
+    images: List<Pair<String, Int>>? = null,
     content: (@Composable @MapLibreComposable () -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
@@ -100,6 +109,9 @@ fun MapLibre(
     val currentMapProperties by rememberUpdatedState(properties)
     val currentLocationRequestProperties by rememberUpdatedState(locationRequestProperties)
     val currentLocationStyling by rememberUpdatedState(locationStyling)
+    val currentSources by rememberUpdatedState(sources)
+    val currentLayers by rememberUpdatedState(layers)
+    val currentImages by rememberUpdatedState(images)
     val currentContent by rememberUpdatedState(content)
     val parentComposition = rememberCompositionContext()
 
@@ -113,6 +125,7 @@ fun MapLibre(
         disposingComposition {
             val maplibreMap = map.awaitMap()
             val style = maplibreMap.awaitStyle(styleUrl)
+
             maplibreMap.applyUiSettings(currentUiSettings)
             maplibreMap.applyProperties(currentMapProperties)
             maplibreMap.setupLocation(
@@ -122,6 +135,9 @@ fun MapLibre(
                 currentLocationStyling,
                 userLocation,
             )
+            maplibreMap.addImages(context, currentImages)
+            maplibreMap.addSources(currentSources)
+            maplibreMap.addLayers(currentLayers)
 
             map.newComposition(parentComposition, style) {
                 CompositionLocalProvider {
@@ -221,6 +237,26 @@ private fun LocationRequestProperties.toMapLibre(): LocationEngineRequest {
         .setDisplacement(this.displacement)
         .setMaxWaitTime(this.maxWaitTime)
         .build()
+}
+
+private fun MapboxMap.addImages(context: Context, images: List<Pair<String, Int>>?) {
+    images?.let {
+        images.mapNotNull { image ->
+            val drawable = context.getDrawable(image.second)
+            val bitmap = BitmapUtils.getBitmapFromDrawable(drawable)
+            bitmap?.let { Pair(image.first, bitmap) }
+        }.forEach {
+            style!!.addImage(it.first, it.second)
+        }
+    }
+}
+
+private fun MapboxMap.addSources(sources: List<Source>?) {
+    sources?.let { sources.forEach { style!!.addSource(it) } }
+}
+
+private fun MapboxMap.addLayers(layers: List<Layer>?) {
+    layers?.let { layers.forEach { style!!.addLayer(it) } }
 }
 
 @Composable

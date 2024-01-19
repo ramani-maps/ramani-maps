@@ -19,7 +19,7 @@ but the idea is this:
 Add the dependency to `build.gradle`:
 
 ```gradle
-implementation 'org.ramani-maps:ramani-maplibre:0.1.2'
+implementation 'org.ramani-maps:ramani-maplibre:0.3.0'
 ```
 
 Insert the map composable:

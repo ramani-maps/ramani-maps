@@ -28,6 +28,8 @@ jobs:
         run: |
             ./gradlew build
             ./gradlew test
+      - name: Print github values
+        run: echo "github.event_name=${{ github.event_name }}, github.event.action=${{ github.event.action }}, github.ref_name=${{ github.ref_name }}"
       - name: Publish (Maven)
         if: ${{ github.event_name == 'release' && github.event.action == 'created' && startsWith(github.ref_name, 'maplibre') }}
         working-directory: ./ramani-maplibre

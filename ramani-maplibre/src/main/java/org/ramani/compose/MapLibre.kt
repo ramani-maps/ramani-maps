@@ -35,6 +35,7 @@ import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.android.gestures.RotateGestureDetector
 import com.mapbox.android.gestures.ShoveGestureDetector
 import com.mapbox.android.gestures.StandardScaleGestureDetector
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
 import com.mapbox.mapboxsdk.location.LocationComponentOptions
 import com.mapbox.mapboxsdk.location.engine.LocationEngineCallback
@@ -294,7 +295,21 @@ internal fun MapUpdater(cameraPosition: CameraPosition) {
 
         update(cameraPosition) {
             this.cameraPosition = it
-            map.cameraPosition = cameraPosition.toMapbox()
+            val cameraUpdate = CameraUpdateFactory.newCameraPosition(cameraPosition.toMapbox())
+
+            when (cameraPosition.motionType) {
+                CameraMotionType.INSTANT -> map.moveCamera(cameraUpdate)
+
+                CameraMotionType.EASE -> map.easeCamera(
+                    cameraUpdate,
+                    cameraPosition.animationDurationMs
+                )
+
+                CameraMotionType.FLY -> map.animateCamera(
+                    cameraUpdate,
+                    cameraPosition.animationDurationMs
+                )
+            }
         }
     })
 }

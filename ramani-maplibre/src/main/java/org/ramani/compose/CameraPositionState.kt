@@ -10,48 +10,37 @@
 
 package org.ramani.compose
 
-import android.os.Parcel
 import android.os.Parcelable
 import com.mapbox.mapboxsdk.geometry.LatLng
+import kotlinx.parcelize.Parcelize
+import org.ramani.compose.CameraMotionType.EASE
+import org.ramani.compose.CameraMotionType.FLY
+import org.ramani.compose.CameraMotionType.INSTANT
 
+/**
+ * @property INSTANT Move the camera instantaneously to the new position.
+ * @property EASE Gradually move the camera over [CameraPosition.animationDurationMs] milliseconds.
+ * @property FLY Move the camera using a transition that evokes a powered flight
+ *           over [CameraPosition.animationDurationMs] milliseconds.
+ */
+@Parcelize
+enum class CameraMotionType : Parcelable { INSTANT, EASE, FLY }
+
+@Parcelize
 data class CameraPosition(
     var target: LatLng? = null,
     var zoom: Double? = null,
     var tilt: Double? = null,
     var bearing: Double? = null,
+    var motionType: CameraMotionType = FLY,
+    var animationDurationMs: Int = 1000,
 ) : Parcelable {
     constructor(cameraPosition: CameraPosition) : this(
         cameraPosition.target,
         cameraPosition.zoom,
         cameraPosition.tilt,
-        cameraPosition.bearing
+        cameraPosition.bearing,
+        cameraPosition.motionType,
+        cameraPosition.animationDurationMs,
     )
-
-    constructor(parcel: Parcel) : this(
-        parcel.readParcelable(LatLng::class.java.classLoader),
-        parcel.readValue(Double::class.java.classLoader) as? Double,
-        parcel.readValue(Double::class.java.classLoader) as? Double,
-        parcel.readValue(Double::class.java.classLoader) as? Double
-    )
-
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeParcelable(target, flags)
-        parcel.writeValue(zoom)
-        parcel.writeValue(tilt)
-        parcel.writeValue(bearing)
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    companion object CREATOR : Parcelable.Creator<CameraPosition> {
-        override fun createFromParcel(parcel: Parcel): CameraPosition {
-            return CameraPosition(parcel)
-        }
-
-        override fun newArray(size: Int): Array<CameraPosition?> {
-            return arrayOfNulls(size)
-        }
-    }
 }

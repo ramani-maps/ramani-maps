@@ -11,19 +11,11 @@ package org.ramani.compose
 
 import android.os.Parcel
 import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 class UiSettings(var compassMargins: CompassMargins = CompassMargins()) : Parcelable {
     constructor(uiSettings: UiSettings) : this(uiSettings.compassMargins)
-
-    constructor(parcel: Parcel) : this(parcel.readParcelable<CompassMargins>(CompassMargins::class.java.classLoader)!!)
-
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeParcelable(compassMargins, flags)
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -37,18 +29,9 @@ class UiSettings(var compassMargins: CompassMargins = CompassMargins()) : Parcel
     override fun hashCode(): Int {
         return compassMargins.hashCode()
     }
-
-    companion object CREATOR : Parcelable.Creator<UiSettings> {
-        override fun createFromParcel(parcel: Parcel): UiSettings {
-            return UiSettings(parcel)
-        }
-
-        override fun newArray(size: Int): Array<UiSettings?> {
-            return arrayOfNulls(size)
-        }
-    }
 }
 
+@Parcelize
 class CompassMargins(val left: Int = 0, val top: Int = 0, val right: Int = 0, val bottom: Int = 0) :
     Parcelable {
     constructor(parcel: Parcel) : this(
@@ -57,17 +40,6 @@ class CompassMargins(val left: Int = 0, val top: Int = 0, val right: Int = 0, va
         parcel.readInt(),
         parcel.readInt()
     )
-
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeInt(left)
-        parcel.writeInt(top)
-        parcel.writeInt(right)
-        parcel.writeInt(bottom)
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -87,15 +59,5 @@ class CompassMargins(val left: Int = 0, val top: Int = 0, val right: Int = 0, va
         result = 31 * result + right
         result = 31 * result + bottom
         return result
-    }
-
-    companion object CREATOR : Parcelable.Creator<CompassMargins> {
-        override fun createFromParcel(parcel: Parcel): CompassMargins {
-            return CompassMargins(parcel)
-        }
-
-        override fun newArray(size: Int): Array<CompassMargins?> {
-            return arrayOfNulls(size)
-        }
     }
 }

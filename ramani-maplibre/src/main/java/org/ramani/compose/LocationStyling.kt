@@ -9,9 +9,9 @@
  */
 package org.ramani.compose
 
-import android.os.Parcel
 import android.os.Parcelable
 import androidx.annotation.ColorInt
+import kotlinx.parcelize.Parcelize
 
 /**
  * @property accuracyAlpha Opacity of the accuracy view between 0 (transparent) and 1 (opaque).
@@ -20,6 +20,7 @@ import androidx.annotation.ColorInt
  * @property enablePulseFade Enable the fading of the pulsing circle.
  * @property pulseColor Color of the pulsing circle.
  */
+@Parcelize
 class LocationStyling(
     var accuracyAlpha: Float? = null,
     @ColorInt var accuracyColor: Int? = null,
@@ -34,26 +35,6 @@ class LocationStyling(
         locationStyling.enablePulseFade,
         locationStyling.pulseColor,
     )
-
-    constructor(parcel: Parcel) : this(
-        parcel.readValue(Float::class.java.classLoader) as? Float,
-        parcel.readValue(Int::class.java.classLoader) as? Int,
-        parcel.readValue(Boolean::class.java.classLoader) as? Boolean,
-        parcel.readValue(Boolean::class.java.classLoader) as? Boolean,
-        parcel.readValue(Int::class.java.classLoader) as? Int
-    )
-
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeValue(accuracyAlpha)
-        parcel.writeValue(accuracyColor)
-        parcel.writeValue(enablePulse)
-        parcel.writeValue(enablePulseFade)
-        parcel.writeValue(pulseColor)
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -75,15 +56,5 @@ class LocationStyling(
         result = 31 * result + (enablePulseFade?.hashCode() ?: 0)
         result = 31 * result + (pulseColor ?: 0)
         return result
-    }
-
-    companion object CREATOR : Parcelable.Creator<LocationStyling> {
-        override fun createFromParcel(parcel: Parcel): LocationStyling {
-            return LocationStyling(parcel)
-        }
-
-        override fun newArray(size: Int): Array<LocationStyling?> {
-            return arrayOfNulls(size)
-        }
     }
 }

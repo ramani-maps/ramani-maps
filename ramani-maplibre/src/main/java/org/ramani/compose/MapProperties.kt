@@ -9,11 +9,12 @@
  */
 package org.ramani.compose
 
-import android.os.Parcel
 import android.os.Parcelable
 import androidx.annotation.FloatRange
 import com.mapbox.mapboxsdk.constants.MapboxConstants
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 class MapProperties(
     @FloatRange(
         from = MapboxConstants.MINIMUM_ZOOM.toDouble(),
@@ -21,16 +22,6 @@ class MapProperties(
     ) var maxZoom: Double? = null,
 ) : Parcelable {
     constructor(mapProperties: MapProperties) : this(mapProperties.maxZoom)
-
-    constructor(parcel: Parcel) : this(parcel.readValue(Double::class.java.classLoader) as? Double)
-
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeValue(maxZoom)
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -43,15 +34,5 @@ class MapProperties(
 
     override fun hashCode(): Int {
         return maxZoom?.hashCode() ?: 0
-    }
-
-    companion object CREATOR : Parcelable.Creator<MapProperties> {
-        override fun createFromParcel(parcel: Parcel): MapProperties {
-            return MapProperties(parcel)
-        }
-
-        override fun newArray(size: Int): Array<MapProperties?> {
-            return arrayOfNulls(size)
-        }
     }
 }

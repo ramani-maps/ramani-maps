@@ -27,7 +27,7 @@ import org.ramani.compose.CameraMotionType.INSTANT
 enum class CameraMotionType : Parcelable { INSTANT, EASE, FLY }
 
 @Parcelize
-data class CameraPosition(
+class CameraPosition(
     var target: LatLng? = null,
     var zoom: Double? = null,
     var tilt: Double? = null,
@@ -43,4 +43,28 @@ data class CameraPosition(
         cameraPosition.motionType,
         cameraPosition.animationDurationMs,
     )
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as CameraPosition
+
+        if (target != other.target) return false
+        if (zoom != other.zoom) return false
+        if (tilt != other.tilt) return false
+        if (bearing != other.bearing) return false
+        if (motionType != other.motionType) return false
+        return animationDurationMs == other.animationDurationMs
+    }
+
+    override fun hashCode(): Int {
+        var result = target?.hashCode() ?: 0
+        result = 31 * result + (zoom?.hashCode() ?: 0)
+        result = 31 * result + (tilt?.hashCode() ?: 0)
+        result = 31 * result + (bearing?.hashCode() ?: 0)
+        result = 31 * result + motionType.hashCode()
+        result = 31 * result + animationDurationMs
+        return result
+    }
 }

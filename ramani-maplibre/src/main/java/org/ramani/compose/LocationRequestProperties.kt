@@ -9,8 +9,8 @@
  */
 package org.ramani.compose
 
-import android.os.Parcel
 import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import org.ramani.compose.LocationPriority.PRIORITY_BALANCED_POWER_ACCURACY
 import org.ramani.compose.LocationPriority.PRIORITY_HIGH_ACCURACY
 import org.ramani.compose.LocationPriority.PRIORITY_LOW_POWER
@@ -22,13 +22,15 @@ import org.ramani.compose.LocationPriority.PRIORITY_NO_POWER
  * @property PRIORITY_LOW_POWER Request coarse ~10km accuracy location.
  * @property PRIORITY_NO_POWER Request passive location (no locations will be returned unless a different client requests location updates).
  */
-enum class LocationPriority(val value: Int) {
+@Parcelize
+enum class LocationPriority(val value: Int) : Parcelable {
     PRIORITY_HIGH_ACCURACY(0),
     PRIORITY_BALANCED_POWER_ACCURACY(1),
     PRIORITY_LOW_POWER(2),
     PRIORITY_NO_POWER(3)
 }
 
+@Parcelize
 class LocationRequestProperties(
     var priority: LocationPriority = PRIORITY_HIGH_ACCURACY,
     var interval: Long = 1000L,
@@ -43,26 +45,6 @@ class LocationRequestProperties(
         locationRequestProperties.displacement,
         locationRequestProperties.maxWaitTime,
     )
-
-    constructor(parcel: Parcel) : this(
-        LocationPriority.valueOf(parcel.readInt().toString()),
-        parcel.readLong(),
-        parcel.readLong(),
-        parcel.readFloat(),
-        parcel.readLong()
-    )
-
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeInt(priority.value)
-        parcel.writeLong(interval)
-        parcel.writeLong(fastestInterval)
-        parcel.writeFloat(displacement)
-        parcel.writeLong(maxWaitTime)
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -84,15 +66,5 @@ class LocationRequestProperties(
         result = 31 * result + displacement.hashCode()
         result = 31 * result + maxWaitTime.hashCode()
         return result
-    }
-
-    companion object CREATOR : Parcelable.Creator<LocationRequestProperties> {
-        override fun createFromParcel(parcel: Parcel): LocationRequestProperties {
-            return LocationRequestProperties(parcel)
-        }
-
-        override fun newArray(size: Int): Array<LocationRequestProperties?> {
-            return arrayOfNulls(size)
-        }
     }
 }

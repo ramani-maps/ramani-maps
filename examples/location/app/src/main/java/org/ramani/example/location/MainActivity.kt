@@ -2,6 +2,7 @@ package org.ramani.example.location
 
 import android.Manifest
 import android.graphics.Color
+import android.location.Location
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,6 +18,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.mapbox.mapboxsdk.geometry.LatLng
+import org.ramani.compose.CameraPosition
 import org.ramani.compose.LocationRequestProperties
 import org.ramani.compose.LocationStyling
 import org.ramani.compose.MapLibre
@@ -32,6 +35,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             LocationTheme {
                 val locationProperties = rememberSaveable { locationPropertiesState }
+                val cameraPosition = rememberSaveable { mutableStateOf(CameraPosition()) }
+                val userLocation = rememberSaveable { mutableStateOf(Location(null)) }
 
                 Box {
                     Surface(
@@ -41,17 +46,24 @@ class MainActivity : ComponentActivity() {
                         MapLibre(
                             modifier = Modifier.fillMaxSize(),
                             styleUrl = resources.getString(R.string.maplibre_style_url),
+                            cameraPosition = cameraPosition.value,
                             locationRequestProperties = locationProperties.value,
                             locationStyling = LocationStyling(
                                 enablePulse = true,
                                 pulseColor = Color.YELLOW,
-                            )
+                            ),
+                            userLocation = userLocation,
                         )
                     }
                     Button(
                         modifier = Modifier.align(Alignment.BottomCenter),
                         onClick = {
-                            // TODO should set the camera position to the user location
+                            cameraPosition.value = CameraPosition(cameraPosition.value).apply {
+                                this.target = LatLng(
+                                    userLocation.value.latitude,
+                                    userLocation.value.longitude
+                                )
+                            }
                         },
                     ) {
                         Text(text = "Center on device location")

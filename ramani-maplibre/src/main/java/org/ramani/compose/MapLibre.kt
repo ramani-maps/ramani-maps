@@ -11,14 +11,17 @@
 package org.ramani.compose
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.Location
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposableTargetMarker
 import androidx.compose.runtime.ComposeNode
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCompositionContext
@@ -34,7 +37,10 @@ import com.mapbox.android.gestures.ShoveGestureDetector
 import com.mapbox.android.gestures.StandardScaleGestureDetector
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
 import com.mapbox.mapboxsdk.location.LocationComponentOptions
+import com.mapbox.mapboxsdk.location.engine.LocationEngineCallback
+import com.mapbox.mapboxsdk.location.engine.LocationEngineDefault
 import com.mapbox.mapboxsdk.location.engine.LocationEngineRequest
+import com.mapbox.mapboxsdk.location.engine.LocationEngineResult
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.MapboxMap.OnMoveListener
 import com.mapbox.mapboxsdk.maps.MapboxMap.OnRotateListener
@@ -65,6 +71,8 @@ annotation class MapLibreComposable
  *        the default), then the location will not be enabled on the map. Enabling the location
  *        requires setting this field and getting the location permission in your app.
  * @param locationStyling Styling related to the location marker (color, pulse, etc).
+ * @param userLocation If set and if the location is enabled (by setting [locationRequestProperties],
+ *        it will be updated to contain the latest user location as known by the map.
  * @param content The content of the map.
  */
 @Composable
@@ -76,6 +84,7 @@ fun MapLibre(
     properties: MapProperties = MapProperties(),
     locationRequestProperties: LocationRequestProperties? = null,
     locationStyling: LocationStyling = LocationStyling(),
+    userLocation: MutableState<Location>? = null,
     content: (@Composable @MapLibreComposable () -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
@@ -109,7 +118,8 @@ fun MapLibre(
                 context,
                 style,
                 currentLocationRequestProperties,
-                currentLocationStyling
+                currentLocationStyling,
+                userLocation,
             )
 
             map.newComposition(parentComposition, style) {
@@ -140,22 +150,56 @@ private fun MapboxMap.setupLocation(
     style: Style,
     locationRequestProperties: LocationRequestProperties?,
     locationStyling: LocationStyling,
+    userLocation: MutableState<Location>?,
 ) {
     if (locationRequestProperties == null) return
 
+    val locationEngineRequest = locationRequestProperties.toMapLibre()
     val locationActivationOptions = LocationComponentActivationOptions
         .builder(context, style)
         .locationComponentOptions(locationStyling.toMapLibre(context))
         .useDefaultLocationEngine(true)
-        .locationEngineRequest(locationRequestProperties.toMapLibre())
+        .locationEngineRequest(locationEngineRequest)
         .build()
     this.locationComponent.activateLocationComponent(locationActivationOptions)
 
-    if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-        context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-    ) {
+    if (isFineLocationGranted(context) || isCoarseLocationGranted(context)) {
+        @SuppressLint("MissingPermission")
         this.locationComponent.isLocationComponentEnabled = true
+        userLocation?.let { trackLocation(context, locationEngineRequest, userLocation) }
     }
+}
+
+private fun isFineLocationGranted(context: Context): Boolean {
+    return context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+}
+
+private fun isCoarseLocationGranted(context: Context): Boolean {
+    return context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+}
+
+@SuppressLint("MissingPermission")
+private fun trackLocation(
+    context: Context,
+    locationEngineRequest: LocationEngineRequest,
+    userLocation: MutableState<Location>
+) {
+    assert(isFineLocationGranted(context) || isCoarseLocationGranted(context))
+
+    val locationEngine = LocationEngineDefault.getDefaultLocationEngine(context)
+    locationEngine.requestLocationUpdates(
+        locationEngineRequest,
+        object : LocationEngineCallback<LocationEngineResult> {
+            override fun onSuccess(result: LocationEngineResult?) {
+                result?.lastLocation?.let { userLocation.value = it }
+            }
+
+            override fun onFailure(exception: Exception) {
+                throw exception
+            }
+        },
+        null
+    )
 }
 
 private fun LocationStyling.toMapLibre(context: Context): LocationComponentOptions {

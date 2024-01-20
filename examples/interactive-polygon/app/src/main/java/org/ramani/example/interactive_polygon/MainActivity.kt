@@ -11,6 +11,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -19,7 +20,10 @@ import org.maplibre.android.geometry.LatLng
 import org.ramani.compose.CameraPosition
 import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
+import org.ramani.compose.MapObserver
 import org.ramani.compose.Polygon
+import org.ramani.compose.ProgressPercent
+import org.ramani.compose.ProgressCircle
 import org.ramani.example.interactive_polygon.ui.theme.InteractivePolygonTheme
 
 class MainActivity : ComponentActivity() {
@@ -33,6 +37,10 @@ class MainActivity : ComponentActivity() {
                     mutableStateOf(CameraPosition(target = polygonCenter, zoom = 15.0))
                 }
 
+                val progress = remember {
+                    mutableStateOf(0.0f)
+                }
+
                 Box {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
@@ -43,6 +51,14 @@ class MainActivity : ComponentActivity() {
                             styleUrl = resources.getString(R.string.maplibre_style_url),
                             cameraPosition = cameraPosition.value
                         ) {
+
+                            MapObserver(onMapRotated = {
+                                progress.value = (it / 360).toFloat()
+                            })
+
+
+                            ProgressCircle(center = LatLng(0.0,0.0), radius = 25.0f, progress = ProgressPercent((progress.value*100).toInt()), borderWidth = 5.0f, fillColor = "Orange", borderColor = "Blue", indicatorTextSize = 15.0f)
+
                             polygonState.forEachIndexed { index, vertex ->
                                 Circle(
                                     center = vertex,

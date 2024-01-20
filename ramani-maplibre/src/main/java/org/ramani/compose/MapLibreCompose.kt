@@ -33,6 +33,7 @@ import com.mapbox.mapboxsdk.plugins.annotation.LineManager
 import com.mapbox.mapboxsdk.plugins.annotation.OnCircleDragListener
 import com.mapbox.mapboxsdk.plugins.annotation.Symbol
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
+import com.mapbox.mapboxsdk.style.sources.GeoJsonOptions
 import kotlinx.coroutines.awaitCancellation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -81,6 +82,7 @@ internal class MapApplier(
 ) : AbstractApplier<MapNode>(MapNodeRoot) {
     private val decorations = mutableListOf<MapNode>()
 
+
     private val circleManagerMap = mutableMapOf<Int, CircleManager>()
     private val fillManagerMap = mutableMapOf<Int, FillManager>()
     private val symbolManagerMap = mutableMapOf<Int, SymbolManager>()
@@ -110,6 +112,12 @@ internal class MapApplier(
             override fun onScaleEnd(detector: StandardScaleGestureDetector) {
             }
         })
+
+        map.setOnFpsChangedListener {
+           decorations
+               .filterIsInstance<MapObserverNode>()
+               .forEach() { it.onFpsChanged.invoke() }
+        }
 
         map.addOnMoveListener(object : OnMoveListener {
             override fun onMoveBegin(detector: MoveGestureDetector) {
@@ -391,6 +399,7 @@ internal class MapObserverNode(
     var onMapMoved: () -> Unit,
     var onMapScaled: () -> Unit,
     var onMapRotated: (Double) -> Unit,
+    var onFpsChanged: () -> Unit,
 ) : MapNode {
     override fun onRemoved() {
     }

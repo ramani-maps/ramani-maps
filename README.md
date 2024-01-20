@@ -259,6 +259,7 @@ Currently supported are:
 * Polygons
 * Circles
 * Fills
+* External sources, layers, images (useful to import a GeoJson and render clusters)
 
 ## Contributions
 

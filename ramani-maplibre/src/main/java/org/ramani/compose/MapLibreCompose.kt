@@ -17,11 +17,12 @@ import androidx.compose.runtime.CompositionContext
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.android.gestures.RotateGestureDetector
 import com.mapbox.android.gestures.StandardScaleGestureDetector
-import org.maplibre.android.maps.MapView
+import kotlinx.coroutines.awaitCancellation
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapLibreMap.OnMoveListener
 import org.maplibre.android.maps.MapLibreMap.OnRotateListener
 import org.maplibre.android.maps.MapLibreMap.OnScaleListener
+import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.maplibre.android.plugins.annotation.AnnotationManager
 import org.maplibre.android.plugins.annotation.Circle
@@ -33,7 +34,6 @@ import org.maplibre.android.plugins.annotation.LineManager
 import org.maplibre.android.plugins.annotation.OnCircleDragListener
 import org.maplibre.android.plugins.annotation.Symbol
 import org.maplibre.android.plugins.annotation.SymbolManager
-import kotlinx.coroutines.awaitCancellation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.abs
@@ -81,6 +81,7 @@ internal class MapApplier(
 ) : AbstractApplier<MapNode>(MapNodeRoot) {
     private val decorations = mutableListOf<MapNode>()
 
+
     private val circleManagerMap = mutableMapOf<Int, CircleManager>()
     private val fillManagerMap = mutableMapOf<Int, FillManager>()
     private val symbolManagerMap = mutableMapOf<Int, SymbolManager>()
@@ -110,6 +111,12 @@ internal class MapApplier(
             override fun onScaleEnd(detector: StandardScaleGestureDetector) {
             }
         })
+
+        map.setOnFpsChangedListener {
+            decorations
+                .filterIsInstance<MapObserverNode>()
+                .forEach() { it.onFpsChanged.invoke() }
+        }
 
         map.addOnMoveListener(object : OnMoveListener {
             override fun onMoveBegin(detector: MoveGestureDetector) {
@@ -380,6 +387,7 @@ internal class MapObserverNode(
     var onMapMoved: () -> Unit,
     var onMapScaled: () -> Unit,
     var onMapRotated: (Double) -> Unit,
+    var onFpsChanged: () -> Unit,
 ) : MapNode {
     override fun onRemoved() {
     }

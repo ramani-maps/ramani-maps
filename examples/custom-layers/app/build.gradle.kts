@@ -1,6 +1,19 @@
+import java.io.FileInputStream
+import java.io.IOException
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+}
+
+// Load file "keystore.properties" where we keep our keys
+val keystorePropertiesFile: File = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+
+try {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+} catch (ignored: IOException) {
 }
 
 android {
@@ -13,6 +26,33 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+
+        if (keystoreProperties.containsKey("MAPLIBRE_STYLE_URL")) {
+            resValue(
+                "string",
+                "maplibre_style_url",
+                keystoreProperties["MAPLIBRE_STYLE_URL"] as String
+            )
+        } else {
+            println("NOTE: MAPLIBRE_STYLE_URL is not present, so we will use the default (demo tiles)")
+            resValue("string", "maplibre_style_url", "https://demotiles.maplibre.org/style.json")
+        }
+
+        if (keystoreProperties.containsKey("MAPTILER_API_KEY")) {
+            resValue("string", "maptiler_api_key", keystoreProperties["MAPTILER_API_KEY"] as String)
+        } else {
+            throw RuntimeException("You need to specify MAPTILER_API_KEY in the keystore.properties file!")
+        }
+
+        if (keystoreProperties.containsKey("THUNDERFOREST_API_KEY")) {
+            resValue(
+                "string",
+                "thunderforest_api_key",
+                keystoreProperties["THUNDERFOREST_API_KEY"] as String
+            )
+        } else {
+            throw RuntimeException("You need to specify THUNDERFOREST_API_KEY in the keystore.properties file!")
+        }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -59,6 +99,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("org.ramani-maps:ramani-maplibre:0.3.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")

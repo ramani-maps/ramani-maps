@@ -166,6 +166,11 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+      - name: Set tokens
+        working-directory: ./examples/custom-layers
+        run: |
+            echo "MAPTILER_API_KEY=placeholder" >> keystore.properties
+            echo "THUNDERFOREST_API_KEY=placeholder" >> keystore.properties
       - name: Use ramani as composite build
         working-directory: ./examples/custom-layers
         run: echo 'includeBuild("../../ramani-maplibre")' >> settings.gradle

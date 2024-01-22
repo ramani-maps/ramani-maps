@@ -12,7 +12,8 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
+rootProject.name = "CustomLayers"
+include ':app'
 
-rootProject.name = "Custom Layers"
-include(":app")
- 
+// Uncomment to use Ramani as a composite build (for dev purposes)
+//includeBuild '../../ramani-maplibre'

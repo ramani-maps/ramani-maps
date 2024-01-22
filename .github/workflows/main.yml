@@ -154,3 +154,29 @@ jobs:
             ./gradlew build
             ./gradlew test
 
+  custom-layers:
+    name: "Build and test example: CustomLayers"
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Set tokens
+        working-directory: ./examples/custom-layers
+        run: |
+            echo "MAPTILER_API_KEY=placeholder" >> keystore.properties
+            echo "THUNDERFOREST_API_KEY=placeholder" >> keystore.properties
+      - name: Use ramani as composite build
+        working-directory: ./examples/custom-layers
+        run: echo 'includeBuild("../../ramani-maplibre")' >> settings.gradle
+      - name: Build
+        working-directory: ./examples/custom-layers
+        run: |
+            ./gradlew build
+            ./gradlew test
+

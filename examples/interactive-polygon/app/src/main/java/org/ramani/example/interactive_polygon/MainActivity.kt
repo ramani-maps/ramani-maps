@@ -22,8 +22,8 @@ import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
 import org.ramani.compose.MapObserver
 import org.ramani.compose.Polygon
-import org.ramani.compose.ProgressPercent
 import org.ramani.compose.ProgressCircle
+import org.ramani.compose.ProgressPercent
 import org.ramani.example.interactive_polygon.ui.theme.InteractivePolygonTheme
 
 class MainActivity : ComponentActivity() {
@@ -56,8 +56,15 @@ class MainActivity : ComponentActivity() {
                                 progress.value = (it / 360).toFloat()
                             })
 
-
-                            ProgressCircle(center = LatLng(0.0,0.0), radius = 25.0f, progress = ProgressPercent((progress.value*100).toInt()), borderWidth = 5.0f, fillColor = "Orange", borderColor = "Blue", indicatorTextSize = 15.0f)
+                            ProgressCircle(
+                                center = LatLng(0.0, 0.0),
+                                radius = 25.0f,
+                                progress = ProgressPercent((progress.value * 100).toInt()),
+                                borderWidth = 5.0f,
+                                fillColor = "Orange",
+                                borderColor = "Blue",
+                                indicatorTextSize = 15.0f,
+                            )
 
                             polygonState.forEachIndexed { index, vertex ->
                                 Circle(

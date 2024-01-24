@@ -1,4 +1,4 @@
-package org.ramani.compose
+package org.ramani.example.custom_annotation
 
 import android.graphics.PointF
 import androidx.compose.runtime.Composable
@@ -10,6 +10,12 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.plus
 import com.mapbox.mapboxsdk.geometry.LatLng
+import org.ramani.compose.Circle
+import org.ramani.compose.Fill
+import org.ramani.compose.MapApplier
+import org.ramani.compose.MapObserver
+import org.ramani.compose.Polyline
+import org.ramani.compose.Symbol
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin

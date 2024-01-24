@@ -66,7 +66,7 @@ internal suspend fun MapboxMap.awaitStyle(styleUrl: String) = suspendCoroutine {
     }
 }
 
-internal interface MapNode {
+interface MapNode {
     fun onAttached() {}
     fun onRemoved() {}
     fun onCleared() {}
@@ -74,13 +74,12 @@ internal interface MapNode {
 
 private object MapNodeRoot : MapNode
 
-internal class MapApplier(
+class MapApplier(
     val map: MapboxMap,
     val mapView: MapView,
     val style: Style
 ) : AbstractApplier<MapNode>(MapNodeRoot) {
     private val decorations = mutableListOf<MapNode>()
-
 
     private val circleManagerMap = mutableMapOf<Int, CircleManager>()
     private val fillManagerMap = mutableMapOf<Int, FillManager>()

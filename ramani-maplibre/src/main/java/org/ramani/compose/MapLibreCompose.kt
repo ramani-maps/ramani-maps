@@ -98,13 +98,13 @@ internal class MapApplier(
             override fun onScaleBegin(detector: StandardScaleGestureDetector) {
                 decorations
                     .filterIsInstance<MapObserverNode>()
-                    .forEach { it.onMapScaled.invoke() }
+                    .forEach { it.onMapScaled() }
             }
 
             override fun onScale(detector: StandardScaleGestureDetector) {
                 decorations
                     .filterIsInstance<MapObserverNode>()
-                    .forEach { it.onMapScaled.invoke() }
+                    .forEach { it.onMapScaled() }
             }
 
             override fun onScaleEnd(detector: StandardScaleGestureDetector) {
@@ -113,19 +113,15 @@ internal class MapApplier(
 
         map.addOnMoveListener(object : OnMoveListener {
             override fun onMoveBegin(detector: MoveGestureDetector) {
-                decorations.forEach {
-                    if (it is MapObserverNode) {
-                        it.onMapMoved.invoke()
-                    }
-                }
+                decorations
+                    .filterIsInstance<MapObserverNode>()
+                    .forEach { it.onMapMoved() }
             }
 
             override fun onMove(detector: MoveGestureDetector) {
-                decorations.forEach {
-                    if (it is MapObserverNode) {
-                        it.onMapMoved.invoke()
-                    }
-                }
+                decorations
+                    .filterIsInstance<MapObserverNode>()
+                    .forEach { it.onMapMoved() }
             }
 
             override fun onMoveEnd(detector: MoveGestureDetector) {
@@ -134,27 +130,21 @@ internal class MapApplier(
 
         map.addOnRotateListener(object : OnRotateListener {
             override fun onRotateBegin(detector: RotateGestureDetector) {
-                decorations.forEach {
-                    if (it is MapObserverNode) {
-                        it.onMapRotated(map.cameraPosition.bearing)
-                    }
-                }
+                decorations
+                    .filterIsInstance<MapObserverNode>()
+                    .forEach { it.onMapRotated(map.cameraPosition.bearing) }
             }
 
             override fun onRotate(detector: RotateGestureDetector) {
-                decorations.forEach {
-                    if (it is MapObserverNode) {
-                        it.onMapRotated(map.cameraPosition.bearing)
-                    }
-                }
+                decorations
+                    .filterIsInstance<MapObserverNode>()
+                    .forEach { it.onMapRotated(map.cameraPosition.bearing) }
             }
 
             override fun onRotateEnd(detector: RotateGestureDetector) {
-                decorations.forEach {
-                    if (it is MapObserverNode) {
-                        it.onMapRotated(map.cameraPosition.bearing)
-                    }
-                }
+                decorations
+                    .filterIsInstance<MapObserverNode>()
+                    .forEach { it.onMapRotated(map.cameraPosition.bearing) }
             }
         })
     }
@@ -204,7 +194,6 @@ internal class MapApplier(
                 )?.invoke(annotation!!)
             }
         })
-
 
         return circleManagerMap[zIndex]!!
     }

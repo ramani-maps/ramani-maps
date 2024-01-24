@@ -122,12 +122,6 @@ internal class MapApplier(
             }
         })
 
-        map.setOnFpsChangedListener {
-            decorations
-                .filterIsInstance<MapObserverNode>()
-                .forEach() { it.onFpsChanged.invoke() }
-        }
-
         map.addOnMoveListener(object : OnMoveListener {
             override fun onMoveBegin(detector: MoveGestureDetector) {
                 decorations
@@ -397,7 +391,6 @@ internal class MapObserverNode(
     var onMapMoved: () -> Unit,
     var onMapScaled: () -> Unit,
     var onMapRotated: (Double) -> Unit,
-    var onFpsChanged: () -> Unit,
 ) : MapNode {
     override fun onRemoved() {
     }

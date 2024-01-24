@@ -18,12 +18,11 @@ import androidx.compose.runtime.ComposeNode
 fun MapObserver(
     onMapMoved: () -> Unit = {},
     onMapScaled: () -> Unit = {},
-    onMapRotated: (Double) -> Unit,
-    onFpsChanged: () -> Unit = {},
+    onMapRotated: (Double) -> Unit = {},
 ) {
     ComposeNode<MapObserverNode, MapApplier>(
         factory = {
-            MapObserverNode(onMapMoved, onMapScaled, onMapRotated, onFpsChanged)
+            MapObserverNode(onMapMoved, onMapScaled, onMapRotated)
         },
         update = {
             update(onMapMoved) {
@@ -36,10 +35,6 @@ fun MapObserver(
 
             update(onMapRotated) {
                 this.onMapRotated = onMapRotated
-            }
-
-            update(onFpsChanged) {
-                this.onFpsChanged = onFpsChanged
             }
         }
     )

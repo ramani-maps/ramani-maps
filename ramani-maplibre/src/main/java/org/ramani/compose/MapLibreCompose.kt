@@ -95,6 +95,16 @@ internal class MapApplier(
     }
 
     private fun attachMapListeners() {
+        map.addOnCameraMoveListener {
+            decorations
+                .filterIsInstance<MapObserverNode>()
+                .forEach {
+                    it.onMapMoved()
+                    it.onMapScaled()
+                    it.onMapRotated.invoke(map.cameraPosition.bearing)
+                }
+        }
+
         map.addOnScaleListener(object : OnScaleListener {
             override fun onScaleBegin(detector: StandardScaleGestureDetector) {
                 decorations

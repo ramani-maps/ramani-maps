@@ -27,15 +27,11 @@ fun ProgressCircle(
 ) {
     val mapApplier = currentComposer.applier as MapApplier
     val proj = mapApplier.map.projection
-
     val centerLocal = proj.toScreenLocation(center)
-    val updateCounter = remember { mutableStateOf(0) }
-
     val dpToPixel = with(LocalDensity.current) { 1.dp.toPx() }
 
-    MapObserver(onFpsChanged = {
-        updateCounter.value += 1
-    }, onMapRotated = { }, onMapMoved = {})
+    val recomposeState = remember { mutableStateOf(true) }
+    MapObserver(onMapScaled = { recomposeState.value = !recomposeState.value })
 
     Symbol(
         center = proj.fromScreenLocation(
@@ -58,7 +54,7 @@ fun ProgressCircle(
         borderWidth = borderWidth
     )
 
-    key(updateCounter.value) {
+    key(recomposeState.value) {
         if (progress.value == 100) {
             Circle(
                 center = center,

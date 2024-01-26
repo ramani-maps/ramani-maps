@@ -1,8 +1,8 @@
 buildscript {
     ext {
-        kotlin_version = "1.8.21"
+        kotlin_version = "1.9.22"
         hilt_version = '2.44'
-        compose_ui_version = '1.4.3'
+        compose_ui_version = '1.6.0'
     }
 
     repositories {
@@ -10,7 +10,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.2.1'
+        classpath 'com.android.tools.build:gradle:8.2.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -41,12 +41,11 @@ allprojects {
 
     android {
         namespace 'org.ramani.compose'
-        compileSdkVersion 33
-        buildToolsVersion "30.0.3"
+        compileSdk 34
 
         defaultConfig {
             minSdkVersion 25
-            targetSdkVersion 33
+            targetSdkVersion 34
 
             group = 'org.ramani-maps'
             versionCode 4
@@ -69,7 +68,7 @@ allprojects {
             compose true
         }
         composeOptions {
-            kotlinCompilerExtensionVersion "1.4.7"
+            kotlinCompilerExtensionVersion '1.5.8'
         }
 
         testOptions {
@@ -88,7 +87,7 @@ allprojects {
         implementation "androidx.compose.foundation:foundation:$compose_ui_version"
         implementation "androidx.compose.material:material:$compose_ui_version"
         implementation "androidx.compose.ui:ui:$compose_ui_version"
-        implementation 'androidx.core:core-ktx:1.10.1'
+        implementation 'androidx.core:core-ktx:1.12.0'
         implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
         implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1'
 
@@ -133,7 +132,7 @@ allprojects {
                                 developer {
                                     id = 'jonasvautherin'
                                     name = 'Jonas Vautherin'
-                                    email = 'jonas.vautherin@gmail.com'
+                                    email = 'dev@jonas.vautherin.ch'
                                 }
                             }
                         }

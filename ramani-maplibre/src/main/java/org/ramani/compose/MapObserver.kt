@@ -18,7 +18,7 @@ import androidx.compose.runtime.ComposeNode
 fun MapObserver(
     onMapMoved: () -> Unit = {},
     onMapScaled: () -> Unit = {},
-    onMapRotated: (Double) -> Unit
+    onMapRotated: (Double) -> Unit = {},
 ) {
     ComposeNode<MapObserverNode, MapApplier>(
         factory = {

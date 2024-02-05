@@ -66,7 +66,7 @@ internal suspend fun MapboxMap.awaitStyle(styleUrl: String) = suspendCoroutine {
     }
 }
 
-internal interface MapNode {
+interface MapNode {
     fun onAttached() {}
     fun onRemoved() {}
     fun onCleared() {}
@@ -74,7 +74,7 @@ internal interface MapNode {
 
 private object MapNodeRoot : MapNode
 
-internal class MapApplier(
+class MapApplier(
     val map: MapboxMap,
     val mapView: MapView,
     val style: Style
@@ -94,6 +94,16 @@ internal class MapApplier(
     }
 
     private fun attachMapListeners() {
+        map.addOnCameraMoveListener {
+            decorations
+                .filterIsInstance<MapObserverNode>()
+                .forEach {
+                    it.onMapMoved()
+                    it.onMapScaled()
+                    it.onMapRotated.invoke(map.cameraPosition.bearing)
+                }
+        }
+
         map.addOnScaleListener(object : OnScaleListener {
             override fun onScaleBegin(detector: StandardScaleGestureDetector) {
                 decorations

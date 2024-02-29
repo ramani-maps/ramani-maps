@@ -42,6 +42,7 @@ import com.mapbox.mapboxsdk.location.engine.LocationEngineCallback
 import com.mapbox.mapboxsdk.location.engine.LocationEngineDefault
 import com.mapbox.mapboxsdk.location.engine.LocationEngineRequest
 import com.mapbox.mapboxsdk.location.engine.LocationEngineResult
+import com.mapbox.mapboxsdk.location.modes.CameraMode
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.MapboxMap.OnMoveListener
 import com.mapbox.mapboxsdk.maps.MapboxMap.OnRotateListener
@@ -95,6 +96,7 @@ fun MapLibre(
     sources: List<Source>? = null,
     layers: List<Layer>? = null,
     images: List<Pair<String, Int>>? = null,
+    cameraPositionCallback: CameraPositionCallback? = null,
     content: (@Composable @MapLibreComposable () -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
@@ -141,7 +143,10 @@ fun MapLibre(
 
             map.newComposition(parentComposition, style) {
                 CompositionLocalProvider {
-                    MapUpdater(cameraPosition = currentCameraPosition)
+                    MapUpdater(
+                        cameraPosition = currentCameraPosition,
+                        cameraPositionCallback = cameraPositionCallback
+                    )
                     currentContent?.invoke()
                 }
             }
@@ -260,7 +265,10 @@ private fun MapboxMap.addLayers(layers: List<Layer>?) {
 }
 
 @Composable
-internal fun MapUpdater(cameraPosition: CameraPosition) {
+internal fun MapUpdater(
+    cameraPosition: CameraPosition,
+    cameraPositionCallback: CameraPositionCallback?
+) {
     val mapApplier = currentComposer.applier as MapApplier
 
     fun observeZoom(cameraPosition: CameraPosition) {
@@ -280,6 +288,7 @@ internal fun MapUpdater(cameraPosition: CameraPosition) {
             override fun onMoveBegin(detector: MoveGestureDetector) {}
 
             override fun onMove(detector: MoveGestureDetector) {
+                cameraPosition.trackingMode = CameraTrackingMode.NONE
                 cameraPosition.target = mapApplier.map.cameraPosition.target
             }
 
@@ -292,6 +301,7 @@ internal fun MapUpdater(cameraPosition: CameraPosition) {
             override fun onRotateBegin(detector: RotateGestureDetector) {}
 
             override fun onRotate(detector: RotateGestureDetector) {
+                cameraPosition.trackingMode = CameraTrackingMode.NONE
                 cameraPosition.bearing = mapApplier.map.cameraPosition.bearing
             }
 
@@ -311,12 +321,15 @@ internal fun MapUpdater(cameraPosition: CameraPosition) {
         })
     }
 
-    fun observeIdle(cameraPosition: CameraPosition) {
+    fun observeIdle(cameraPosition: CameraPosition, onChange: (CameraPosition) -> Unit) {
         mapApplier.map.addOnCameraIdleListener {
             cameraPosition.zoom = mapApplier.map.cameraPosition.zoom
             cameraPosition.target = mapApplier.map.cameraPosition.target
             cameraPosition.bearing = mapApplier.map.cameraPosition.bearing
             cameraPosition.tilt = mapApplier.map.cameraPosition.tilt
+
+            // Allow exporting the camera position.
+            onChange(cameraPosition)
         }
     }
 
@@ -327,24 +340,34 @@ internal fun MapUpdater(cameraPosition: CameraPosition) {
         observeCameraPosition(cameraPosition)
         observeBearing(cameraPosition)
         observeTilt(cameraPosition)
-        observeIdle(cameraPosition)
+        observeIdle(cameraPosition) {
+            cameraPositionCallback?.onChanged(it)
+        }
 
         update(cameraPosition) {
             this.cameraPosition = it
             val cameraUpdate = CameraUpdateFactory.newCameraPosition(cameraPosition.toMapbox())
 
-            when (cameraPosition.motionType) {
-                CameraMotionType.INSTANT -> map.moveCamera(cameraUpdate)
+            when (cameraPosition.trackingMode) {
+                CameraTrackingMode.NONE -> {
+                    map.locationComponent.cameraMode = CameraMode.NONE
+                    when (cameraPosition.motionType) {
+                        CameraMotionType.INSTANT -> map.moveCamera(cameraUpdate)
 
-                CameraMotionType.EASE -> map.easeCamera(
-                    cameraUpdate,
-                    cameraPosition.animationDurationMs
-                )
+                        CameraMotionType.EASE -> map.easeCamera(
+                            cameraUpdate,
+                            cameraPosition.animationDurationMs
+                        )
 
-                CameraMotionType.FLY -> map.animateCamera(
-                    cameraUpdate,
-                    cameraPosition.animationDurationMs
-                )
+                        CameraMotionType.FLY -> map.animateCamera(
+                            cameraUpdate,
+                            cameraPosition.animationDurationMs
+                        )
+                    }
+                }
+                CameraTrackingMode.FOLLOW -> map.locationComponent.cameraMode = CameraMode.TRACKING
+                CameraTrackingMode.FOLLOW_WITH_HEADING -> map.locationComponent.cameraMode = CameraMode.TRACKING_COMPASS
+                CameraTrackingMode.FOLLOW_WITH_COURSE -> map.locationComponent.cameraMode = CameraMode.TRACKING_GPS
             }
         }
     })
@@ -355,17 +378,15 @@ internal class MapPropertiesNode(
     var cameraPosition: CameraPosition
 ) : MapNode {
     override fun onAttached() {
-        map.cameraPosition = cameraPosition.toMapbox()
+        when (cameraPosition.trackingMode) {
+            CameraTrackingMode.NONE -> {
+                map.locationComponent.cameraMode = CameraMode.NONE
+                map.cameraPosition = cameraPosition.toMapbox()
+            }
+            CameraTrackingMode.FOLLOW -> map.locationComponent.cameraMode = CameraMode.TRACKING
+            CameraTrackingMode.FOLLOW_WITH_HEADING -> map.locationComponent.cameraMode = CameraMode.TRACKING_COMPASS
+            CameraTrackingMode.FOLLOW_WITH_COURSE -> map.locationComponent.cameraMode = CameraMode.TRACKING_GPS
+        }
     }
 }
 
-internal fun CameraPosition.toMapbox(): com.mapbox.mapboxsdk.camera.CameraPosition {
-    val builder = com.mapbox.mapboxsdk.camera.CameraPosition.Builder()
-
-    target?.let { builder.target(it) }
-    zoom?.let { builder.zoom(it) }
-    tilt?.let { builder.tilt(it) }
-    bearing?.let { builder.bearing(it) }
-
-    return builder.build()
-}

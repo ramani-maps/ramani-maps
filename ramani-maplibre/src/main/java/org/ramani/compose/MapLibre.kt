@@ -354,7 +354,7 @@ internal fun MapUpdater(
         observeTilt(cameraPosition)
         observeIdle(cameraPosition) {
             // TODO: This needs to be run only when the camera position changes - not every idle.
-//            cameraPositionCallback?.onChanged(it)
+            cameraPositionCallback?.onChanged(it)
         }
 
         update(cameraPosition) {

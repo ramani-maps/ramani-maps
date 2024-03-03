@@ -30,13 +30,9 @@ data class MapViewCamera(
                                  pitch: CameraPitch = CameraPitch.Free,
                                  direction: Double = 0.0) = MapViewCamera(CameraState.TrackingUserLocation, zoom, pitch, direction)
 
-        fun TrackingUserLocationWithHeading(zoom: Double = 10.0,
-                                            pitch: CameraPitch = CameraPitch.Free,
-                                            direction: Double = 0.0) = MapViewCamera(CameraState.TrackingUserLocationWithHeading, zoom, pitch, direction)
-
-        fun TrackingUserLocationWithCourse(zoom: Double = 10.0,
+        fun TrackingUserLocationWithBearing(zoom: Double = 10.0,
                                            pitch: CameraPitch = CameraPitch.Free,
-                                           direction: Double = 0.0) = MapViewCamera(CameraState.TrackingUserLocationWithCourse, zoom, pitch, direction)
+                                           direction: Double = 0.0) = MapViewCamera(CameraState.TrackingUserLocationWithBearing, zoom, pitch, direction)
 
         internal fun fromCameraPosition(cameraPosition: CameraPosition): MapViewCamera {
             when (cameraPosition.trackingMode) {
@@ -56,15 +52,8 @@ data class MapViewCamera(
                         cameraPosition.bearing ?: 0.0
                     )
                 }
-                CameraTrackingMode.FOLLOW_WITH_HEADING -> {
-                    return TrackingUserLocationWithHeading(
-                        cameraPosition.zoom ?: 10.0,
-                        CameraPitch.Free,
-                        cameraPosition.bearing ?: 0.0
-                    )
-                }
-                CameraTrackingMode.FOLLOW_WITH_COURSE -> {
-                    return TrackingUserLocationWithCourse(
+                CameraTrackingMode.FOLLOW_WITH_BEARING -> {
+                    return TrackingUserLocationWithBearing(
                         cameraPosition.zoom ?: 10.0,
                         CameraPitch.Free,
                         cameraPosition.bearing ?: 0.0
@@ -92,20 +81,12 @@ data class MapViewCamera(
                     trackingMode = CameraTrackingMode.FOLLOW
                 )
             }
-            is CameraState.TrackingUserLocationWithHeading -> {
+            is CameraState.TrackingUserLocationWithBearing -> {
                 return CameraPosition(
                     zoom = zoom,
                     tilt = 0.0,
                     bearing = direction,
-                    trackingMode = CameraTrackingMode.FOLLOW_WITH_HEADING
-                )
-            }
-            is CameraState.TrackingUserLocationWithCourse -> {
-                return CameraPosition(
-                    zoom = zoom,
-                    tilt = 0.0,
-                    bearing = direction,
-                    trackingMode = CameraTrackingMode.FOLLOW_WITH_COURSE
+                    trackingMode = CameraTrackingMode.FOLLOW_WITH_BEARING
                 )
             }
             else -> return CameraPosition()

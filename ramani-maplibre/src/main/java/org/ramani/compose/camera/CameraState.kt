@@ -7,7 +7,6 @@ import kotlinx.parcelize.Parcelize
 sealed class CameraState: Parcelable {
     data class Centered(val latitude: Double, val longitude: Double) : CameraState()
     data object TrackingUserLocation : CameraState()
-    data object TrackingUserLocationWithHeading : CameraState()
-    data object TrackingUserLocationWithCourse : CameraState()
+    data object TrackingUserLocationWithBearing : CameraState()
     // TODO: Bounding box & showcase
 }

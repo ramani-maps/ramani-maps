@@ -21,12 +21,11 @@ import org.ramani.compose.camera.CameraPitch
 /**
  * @property NONE The camera does not track the user location.
  * @property FOLLOW The camera follows the user location.
- * @property FOLLOW_WITH_HEADING The camera follows the user location and rotates to match the user's heading.
- * @property FOLLOW_WITH_COURSE The camera follows the user location and rotates to match the user's course.
+ * @property FOLLOW_WITH_BEARING The camera follows the user location and rotates to match the user's course.
  */
 @Parcelize
 enum class CameraTrackingMode : Parcelable {
-    NONE, FOLLOW, FOLLOW_WITH_HEADING, FOLLOW_WITH_COURSE
+    NONE, FOLLOW, FOLLOW_WITH_BEARING
 }
 
 /**

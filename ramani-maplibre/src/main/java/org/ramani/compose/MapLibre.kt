@@ -14,6 +14,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Camera
 import android.location.Location
 import android.util.Log
 import androidx.compose.foundation.layout.Box
@@ -55,6 +56,7 @@ import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.style.layers.Layer
 import com.mapbox.mapboxsdk.style.sources.Source
 import com.mapbox.mapboxsdk.utils.BitmapUtils
+import org.ramani.compose.camera.CameraPitch
 
 @Retention(AnnotationRetention.BINARY)
 @ComposableTargetMarker(description = "Maplibre Composable")
@@ -295,7 +297,10 @@ internal fun MapUpdater(
         })
     }
 
-    fun observeCameraPosition(cameraPosition: CameraPosition) {
+    fun observeCameraPosition(
+        cameraPosition: CameraPosition,
+        onCameraMoveEnded: (CameraPosition) -> Unit
+    ) {
         mapApplier.map.addOnMoveListener(object : OnMoveListener {
             override fun onMoveBegin(detector: MoveGestureDetector) {}
 
@@ -304,7 +309,9 @@ internal fun MapUpdater(
                 cameraPosition.target = mapApplier.map.cameraPosition.target
             }
 
-            override fun onMoveEnd(detector: MoveGestureDetector) {}
+            override fun onMoveEnd(detector: MoveGestureDetector) {
+                onCameraMoveEnded(cameraPosition)
+            }
         })
     }
 
@@ -333,15 +340,12 @@ internal fun MapUpdater(
         })
     }
 
-    fun observeIdle(cameraPosition: CameraPosition, onChange: (CameraPosition) -> Unit) {
+    fun observeIdle(cameraPosition: CameraPosition) {
         mapApplier.map.addOnCameraIdleListener {
-            cameraPosition.zoom = mapApplier.map.cameraPosition.zoom
             cameraPosition.target = mapApplier.map.cameraPosition.target
             cameraPosition.bearing = mapApplier.map.cameraPosition.bearing
+            cameraPosition.zoom = mapApplier.map.cameraPosition.zoom
             cameraPosition.tilt = mapApplier.map.cameraPosition.tilt
-
-            // Allow exporting the camera position.
-            onChange(cameraPosition)
         }
     }
 
@@ -349,13 +353,13 @@ internal fun MapUpdater(
         MapPropertiesNode(mapApplier.map, cameraPosition)
     }, update = {
         observeZoom(cameraPosition)
-        observeCameraPosition(cameraPosition)
-        observeBearing(cameraPosition)
-        observeTilt(cameraPosition)
-        observeIdle(cameraPosition) {
+        observeCameraPosition(cameraPosition) {
             // TODO: This needs to be run only when the camera position changes - not every idle.
             cameraPositionCallback?.onChanged(it)
         }
+        observeBearing(cameraPosition)
+        observeTilt(cameraPosition)
+        observeIdle(cameraPosition)
 
         update(cameraPosition) {
             this.cameraPosition = it

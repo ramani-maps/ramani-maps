@@ -25,7 +25,17 @@ import org.ramani.compose.camera.CameraPitch
  */
 @Parcelize
 enum class CameraTrackingMode : Parcelable {
-    NONE, FOLLOW, FOLLOW_WITH_BEARING
+    NONE, FOLLOW, FOLLOW_WITH_BEARING;
+
+    companion object {
+        fun fromMapbox(cameraMode: Int): CameraTrackingMode {
+            return when (cameraMode) {
+                com.mapbox.mapboxsdk.location.modes.CameraMode.TRACKING -> FOLLOW
+                com.mapbox.mapboxsdk.location.modes.CameraMode.TRACKING_COMPASS -> FOLLOW_WITH_BEARING
+                else -> NONE
+            }
+        }
+    }
 }
 
 /**
@@ -65,7 +75,9 @@ class CameraPosition(
 
         other as CameraPosition
 
-        if (target != other.target) return false
+        // A distance of less 0.0001 is considered equal for LatLng
+        val distanceBetweenTargets = other.target?.let { target?.distanceTo(it) } ?: 0.0
+        if (distanceBetweenTargets > 0.0001) return false
         if (zoom != other.zoom) return false
         if (tilt != other.tilt) return false
         if (bearing != other.bearing) return false
@@ -94,5 +106,24 @@ class CameraPosition(
         bearing?.let { builder.bearing(it) }
 
         return builder.build()
+    }
+
+    companion object {
+        fun fromMapbox(
+            cameraPosition: com.mapbox.mapboxsdk.camera.CameraPosition,
+            pitch: CameraPitch = CameraPitch.Free,
+            trackingMode: CameraTrackingMode = CameraTrackingMode.NONE,
+        ): CameraPosition {
+            return CameraPosition(
+                cameraPosition.target,
+                cameraPosition.zoom,
+                cameraPosition.tilt,
+                pitch,
+                cameraPosition.bearing,
+                trackingMode,
+                FLY,
+                1000,
+            )
+        }
     }
 }

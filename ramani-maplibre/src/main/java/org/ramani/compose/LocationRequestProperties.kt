@@ -10,6 +10,7 @@
 package org.ramani.compose
 
 import android.os.Parcelable
+import com.mapbox.mapboxsdk.location.engine.LocationEngineRequest
 import kotlinx.parcelize.Parcelize
 import org.ramani.compose.LocationPriority.PRIORITY_BALANCED_POWER_ACCURACY
 import org.ramani.compose.LocationPriority.PRIORITY_HIGH_ACCURACY
@@ -24,10 +25,10 @@ import org.ramani.compose.LocationPriority.PRIORITY_NO_POWER
  */
 @Parcelize
 enum class LocationPriority(val value: Int) : Parcelable {
-    PRIORITY_HIGH_ACCURACY(0),
-    PRIORITY_BALANCED_POWER_ACCURACY(1),
-    PRIORITY_LOW_POWER(2),
-    PRIORITY_NO_POWER(3)
+    PRIORITY_HIGH_ACCURACY(LocationEngineRequest.PRIORITY_HIGH_ACCURACY),
+    PRIORITY_BALANCED_POWER_ACCURACY(LocationEngineRequest.PRIORITY_BALANCED_POWER_ACCURACY),
+    PRIORITY_LOW_POWER(LocationEngineRequest.PRIORITY_LOW_POWER),
+    PRIORITY_NO_POWER(LocationEngineRequest.PRIORITY_NO_POWER)
 }
 
 @Parcelize

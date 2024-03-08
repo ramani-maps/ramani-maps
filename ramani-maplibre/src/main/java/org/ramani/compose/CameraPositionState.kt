@@ -16,6 +16,27 @@ import kotlinx.parcelize.Parcelize
 import org.ramani.compose.CameraMotionType.EASE
 import org.ramani.compose.CameraMotionType.FLY
 import org.ramani.compose.CameraMotionType.INSTANT
+import org.ramani.compose.camera.CameraPitch
+
+/**
+ * @property NONE The camera does not track the user location.
+ * @property FOLLOW The camera follows the user location.
+ * @property FOLLOW_WITH_BEARING The camera follows the user location and rotates to match the user's course.
+ */
+@Parcelize
+enum class CameraTrackingMode : Parcelable {
+    NONE, FOLLOW, FOLLOW_WITH_BEARING;
+
+    companion object {
+        fun fromMapbox(cameraMode: Int): CameraTrackingMode {
+            return when (cameraMode) {
+                com.mapbox.mapboxsdk.location.modes.CameraMode.TRACKING -> FOLLOW
+                com.mapbox.mapboxsdk.location.modes.CameraMode.TRACKING_COMPASS -> FOLLOW_WITH_BEARING
+                else -> NONE
+            }
+        }
+    }
+}
 
 /**
  * @property INSTANT Move the camera instantaneously to the new position.
@@ -31,7 +52,9 @@ class CameraPosition(
     var target: LatLng? = null,
     var zoom: Double? = null,
     var tilt: Double? = null,
+    var pitch: CameraPitch = CameraPitch.Free,
     var bearing: Double? = null,
+    var trackingMode: CameraTrackingMode = CameraTrackingMode.NONE,
     var motionType: CameraMotionType = FLY,
     var animationDurationMs: Int = 1000,
 ) : Parcelable {
@@ -39,7 +62,9 @@ class CameraPosition(
         cameraPosition.target,
         cameraPosition.zoom,
         cameraPosition.tilt,
+        cameraPosition.pitch,
         cameraPosition.bearing,
+        cameraPosition.trackingMode,
         cameraPosition.motionType,
         cameraPosition.animationDurationMs,
     )
@@ -50,10 +75,13 @@ class CameraPosition(
 
         other as CameraPosition
 
-        if (target != other.target) return false
+        // A distance of less 0.0001 is considered equal for LatLng
+        val distanceBetweenTargets = other.target?.let { target?.distanceTo(it) } ?: 0.0
+        if (distanceBetweenTargets > 0.0001) return false
         if (zoom != other.zoom) return false
         if (tilt != other.tilt) return false
         if (bearing != other.bearing) return false
+        if (trackingMode != other.trackingMode) return false
         if (motionType != other.motionType) return false
         return animationDurationMs == other.animationDurationMs
     }
@@ -63,8 +91,39 @@ class CameraPosition(
         result = 31 * result + (zoom?.hashCode() ?: 0)
         result = 31 * result + (tilt?.hashCode() ?: 0)
         result = 31 * result + (bearing?.hashCode() ?: 0)
+        result = 31 * result + trackingMode.hashCode()
         result = 31 * result + motionType.hashCode()
         result = 31 * result + animationDurationMs
         return result
+    }
+
+    internal fun toMapbox(): com.mapbox.mapboxsdk.camera.CameraPosition {
+        val builder = com.mapbox.mapboxsdk.camera.CameraPosition.Builder()
+
+        target?.let { builder.target(it) }
+        zoom?.let { builder.zoom(it) }
+        tilt?.let { builder.tilt(it) }
+        bearing?.let { builder.bearing(it) }
+
+        return builder.build()
+    }
+
+    companion object {
+        fun fromMapbox(
+            cameraPosition: com.mapbox.mapboxsdk.camera.CameraPosition,
+            pitch: CameraPitch = CameraPitch.Free,
+            trackingMode: CameraTrackingMode = CameraTrackingMode.NONE,
+        ): CameraPosition {
+            return CameraPosition(
+                cameraPosition.target,
+                cameraPosition.zoom,
+                cameraPosition.tilt,
+                pitch,
+                cameraPosition.bearing,
+                trackingMode,
+                FLY,
+                1000,
+            )
+        }
     }
 }

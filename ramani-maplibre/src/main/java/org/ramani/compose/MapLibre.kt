@@ -340,7 +340,7 @@ internal fun MapUpdater(
         })
     }
 
-    fun observeIdle(cameraPosition: CameraPosition) {
+    fun observeIdle(cameraPosition: CameraPosition, onCameraIdle: (CameraPosition) -> Unit) {
         mapApplier.map.addOnCameraIdleListener {
             cameraPosition.target = mapApplier.map.cameraPosition.target
             cameraPosition.bearing = mapApplier.map.cameraPosition.bearing
@@ -354,12 +354,14 @@ internal fun MapUpdater(
     }, update = {
         observeZoom(cameraPosition)
         observeCameraPosition(cameraPosition) {
-            // TODO: This needs to be run only when the camera position changes - not every idle.
-            cameraPositionCallback?.onChanged(it)
+            // TODO: This captures 90% of the move, but not the final position..
+//            cameraPositionCallback?.onChanged(it)
         }
         observeBearing(cameraPosition)
         observeTilt(cameraPosition)
-        observeIdle(cameraPosition)
+        observeIdle(cameraPosition) {
+            cameraPositionCallback?.onChanged(it)
+        }
 
         update(cameraPosition) {
             this.cameraPosition = it

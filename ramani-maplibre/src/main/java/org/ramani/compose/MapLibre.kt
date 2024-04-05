@@ -369,7 +369,10 @@ internal fun MapUpdater(
 
             when (cameraPosition.trackingMode) {
                 CameraTrackingMode.NONE -> {
-                    map.locationComponent.cameraMode = CameraMode.NONE
+                    if (map.locationComponent.isLocationComponentActivated) {
+                        map.locationComponent.cameraMode = CameraMode.NONE
+                    }
+
                     when (cameraPosition.motionType) {
                         CameraMotionType.INSTANT -> map.moveCamera(cameraUpdate)
 
@@ -385,11 +388,12 @@ internal fun MapUpdater(
                     }
                 }
                 CameraTrackingMode.FOLLOW -> {
-                    assert(map.locationComponent.isLocationComponentEnabled)
+                    assert(map.locationComponent.isLocationComponentActivated)
                     map.locationComponent.cameraMode = CameraMode.TRACKING
                     map.locationComponent.renderMode = RenderMode.COMPASS
                 }
                 CameraTrackingMode.FOLLOW_WITH_BEARING -> {
+                    assert(map.locationComponent.isLocationComponentActivated)
                     map.locationComponent.cameraMode = CameraMode.TRACKING_GPS
                     map.locationComponent.renderMode = RenderMode.COMPASS
                 }
@@ -405,15 +409,18 @@ internal class MapPropertiesNode(
     override fun onAttached() {
         when (cameraPosition.trackingMode) {
             CameraTrackingMode.NONE -> {
-                map.locationComponent.cameraMode = CameraMode.NONE
+                if (map.locationComponent.isLocationComponentActivated) {
+                    map.locationComponent.cameraMode = CameraMode.NONE
+                }
                 map.cameraPosition = cameraPosition.toMapbox()
             }
             CameraTrackingMode.FOLLOW -> {
-                assert(map.locationComponent.isLocationComponentEnabled)
+                assert(map.locationComponent.isLocationComponentActivated)
                 map.locationComponent.cameraMode = CameraMode.TRACKING
                 map.locationComponent.renderMode = RenderMode.COMPASS
             }
             CameraTrackingMode.FOLLOW_WITH_BEARING -> {
+                assert(map.locationComponent.isLocationComponentActivated)
                 map.locationComponent.cameraMode = CameraMode.TRACKING_GPS
                 map.locationComponent.renderMode = RenderMode.COMPASS
             }

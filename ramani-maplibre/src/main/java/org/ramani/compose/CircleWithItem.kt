@@ -13,7 +13,7 @@ package org.ramani.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import com.mapbox.mapboxsdk.geometry.LatLng
+import org.maplibre.android.geometry.LatLng
 
 @Composable
 fun UpdateCenter(coord: LatLng, centerUpdated: (LatLng) -> Unit) {

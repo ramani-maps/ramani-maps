@@ -17,22 +17,22 @@ import androidx.compose.runtime.CompositionContext
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.android.gestures.RotateGestureDetector
 import com.mapbox.android.gestures.StandardScaleGestureDetector
-import com.mapbox.mapboxsdk.maps.MapView
-import com.mapbox.mapboxsdk.maps.MapboxMap
-import com.mapbox.mapboxsdk.maps.MapboxMap.OnMoveListener
-import com.mapbox.mapboxsdk.maps.MapboxMap.OnRotateListener
-import com.mapbox.mapboxsdk.maps.MapboxMap.OnScaleListener
-import com.mapbox.mapboxsdk.maps.Style
-import com.mapbox.mapboxsdk.plugins.annotation.AnnotationManager
-import com.mapbox.mapboxsdk.plugins.annotation.Circle
-import com.mapbox.mapboxsdk.plugins.annotation.CircleManager
-import com.mapbox.mapboxsdk.plugins.annotation.Fill
-import com.mapbox.mapboxsdk.plugins.annotation.FillManager
-import com.mapbox.mapboxsdk.plugins.annotation.Line
-import com.mapbox.mapboxsdk.plugins.annotation.LineManager
-import com.mapbox.mapboxsdk.plugins.annotation.OnCircleDragListener
-import com.mapbox.mapboxsdk.plugins.annotation.Symbol
-import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
+import org.maplibre.android.maps.MapView
+import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.android.maps.MapLibreMap.OnMoveListener
+import org.maplibre.android.maps.MapLibreMap.OnRotateListener
+import org.maplibre.android.maps.MapLibreMap.OnScaleListener
+import org.maplibre.android.maps.Style
+import org.maplibre.android.plugins.annotation.AnnotationManager
+import org.maplibre.android.plugins.annotation.Circle
+import org.maplibre.android.plugins.annotation.CircleManager
+import org.maplibre.android.plugins.annotation.Fill
+import org.maplibre.android.plugins.annotation.FillManager
+import org.maplibre.android.plugins.annotation.Line
+import org.maplibre.android.plugins.annotation.LineManager
+import org.maplibre.android.plugins.annotation.OnCircleDragListener
+import org.maplibre.android.plugins.annotation.Symbol
+import org.maplibre.android.plugins.annotation.SymbolManager
 import kotlinx.coroutines.awaitCancellation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -60,7 +60,7 @@ internal suspend fun MapView.newComposition(
     }
 }
 
-internal suspend fun MapboxMap.awaitStyle(styleUrl: String) = suspendCoroutine { continuation ->
+internal suspend fun MapLibreMap.awaitStyle(styleUrl: String) = suspendCoroutine { continuation ->
     setStyle(styleUrl) { style ->
         continuation.resume(style)
     }
@@ -75,7 +75,7 @@ internal interface MapNode {
 private object MapNodeRoot : MapNode
 
 internal class MapApplier(
-    val map: MapboxMap,
+    val map: MapLibreMap,
     val mapView: MapView,
     val style: Style
 ) : AbstractApplier<MapNode>(MapNodeRoot) {

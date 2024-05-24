@@ -16,10 +16,10 @@ import androidx.compose.runtime.currentComposer
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.res.imageResource
-import com.mapbox.mapboxsdk.geometry.LatLng
-import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
-import com.mapbox.mapboxsdk.style.layers.Property.TEXT_ANCHOR_CENTER
-import com.mapbox.mapboxsdk.style.layers.Property.TEXT_JUSTIFY_CENTER
+import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.plugins.annotation.SymbolOptions
+import org.maplibre.android.style.layers.Property.TEXT_ANCHOR_CENTER
+import org.maplibre.android.style.layers.Property.TEXT_JUSTIFY_CENTER
 
 @Composable
 @MapLibreComposable

@@ -35,23 +35,23 @@ import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.android.gestures.RotateGestureDetector
 import com.mapbox.android.gestures.ShoveGestureDetector
 import com.mapbox.android.gestures.StandardScaleGestureDetector
-import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
-import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
-import com.mapbox.mapboxsdk.location.LocationComponentOptions
-import com.mapbox.mapboxsdk.location.engine.LocationEngineCallback
-import com.mapbox.mapboxsdk.location.engine.LocationEngineDefault
-import com.mapbox.mapboxsdk.location.engine.LocationEngineRequest
-import com.mapbox.mapboxsdk.location.engine.LocationEngineResult
-import com.mapbox.mapboxsdk.location.modes.RenderMode
-import com.mapbox.mapboxsdk.maps.MapboxMap
-import com.mapbox.mapboxsdk.maps.MapboxMap.OnMoveListener
-import com.mapbox.mapboxsdk.maps.MapboxMap.OnRotateListener
-import com.mapbox.mapboxsdk.maps.MapboxMap.OnScaleListener
-import com.mapbox.mapboxsdk.maps.MapboxMap.OnShoveListener
-import com.mapbox.mapboxsdk.maps.Style
-import com.mapbox.mapboxsdk.style.layers.Layer
-import com.mapbox.mapboxsdk.style.sources.Source
-import com.mapbox.mapboxsdk.utils.BitmapUtils
+import org.maplibre.android.camera.CameraUpdateFactory
+import org.maplibre.android.location.LocationComponentActivationOptions
+import org.maplibre.android.location.LocationComponentOptions
+import org.maplibre.android.location.engine.LocationEngineCallback
+import org.maplibre.android.location.engine.LocationEngineDefault
+import org.maplibre.android.location.engine.LocationEngineRequest
+import org.maplibre.android.location.engine.LocationEngineResult
+import org.maplibre.android.location.modes.RenderMode
+import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.android.maps.MapLibreMap.OnMoveListener
+import org.maplibre.android.maps.MapLibreMap.OnRotateListener
+import org.maplibre.android.maps.MapLibreMap.OnScaleListener
+import org.maplibre.android.maps.MapLibreMap.OnShoveListener
+import org.maplibre.android.maps.Style
+import org.maplibre.android.style.layers.Layer
+import org.maplibre.android.style.sources.Source
+import org.maplibre.android.utils.BitmapUtils
 
 @Retention(AnnotationRetention.BINARY)
 @ComposableTargetMarker(description = "Maplibre Composable")
@@ -153,7 +153,7 @@ fun MapLibre(
     }
 }
 
-private fun MapboxMap.applyUiSettings(uiSettings: UiSettings) {
+private fun MapLibreMap.applyUiSettings(uiSettings: UiSettings) {
     this.uiSettings.setCompassMargins(
         uiSettings.compassMargins.left,
         uiSettings.compassMargins.top,
@@ -162,11 +162,11 @@ private fun MapboxMap.applyUiSettings(uiSettings: UiSettings) {
     )
 }
 
-private fun MapboxMap.applyProperties(properties: MapProperties) {
+private fun MapLibreMap.applyProperties(properties: MapProperties) {
     properties.maxZoom?.let { this.setMaxZoomPreference(it) }
 }
 
-private fun MapboxMap.setupLocation(
+private fun MapLibreMap.setupLocation(
     context: Context,
     style: Style,
     locationRequestProperties: LocationRequestProperties?,
@@ -246,7 +246,7 @@ private fun LocationRequestProperties.toMapLibre(): LocationEngineRequest {
         .build()
 }
 
-private fun MapboxMap.addImages(context: Context, images: List<Pair<String, Int>>?) {
+private fun MapLibreMap.addImages(context: Context, images: List<Pair<String, Int>>?) {
     images?.let {
         images.mapNotNull { image ->
             val drawable = context.getDrawable(image.second)
@@ -258,11 +258,11 @@ private fun MapboxMap.addImages(context: Context, images: List<Pair<String, Int>
     }
 }
 
-private fun MapboxMap.addSources(sources: List<Source>?) {
+private fun MapLibreMap.addSources(sources: List<Source>?) {
     sources?.let { sources.forEach { style!!.addSource(it) } }
 }
 
-private fun MapboxMap.addLayers(layers: List<Layer>?) {
+private fun MapLibreMap.addLayers(layers: List<Layer>?) {
     layers?.let { layers.forEach { style!!.addLayer(it) } }
 }
 
@@ -338,7 +338,7 @@ internal fun MapUpdater(cameraPosition: CameraPosition) {
 
         update(cameraPosition) {
             this.cameraPosition = it
-            val cameraUpdate = CameraUpdateFactory.newCameraPosition(cameraPosition.toMapbox())
+            val cameraUpdate = CameraUpdateFactory.newCameraPosition(cameraPosition.toMapLibre())
 
             when (cameraPosition.motionType) {
                 CameraMotionType.INSTANT -> map.moveCamera(cameraUpdate)
@@ -358,16 +358,16 @@ internal fun MapUpdater(cameraPosition: CameraPosition) {
 }
 
 internal class MapPropertiesNode(
-    val map: MapboxMap,
+    val map: MapLibreMap,
     var cameraPosition: CameraPosition
 ) : MapNode {
     override fun onAttached() {
-        map.cameraPosition = cameraPosition.toMapbox()
+        map.cameraPosition = cameraPosition.toMapLibre()
     }
 }
 
-internal fun CameraPosition.toMapbox(): com.mapbox.mapboxsdk.camera.CameraPosition {
-    val builder = com.mapbox.mapboxsdk.camera.CameraPosition.Builder()
+internal fun CameraPosition.toMapLibre(): org.maplibre.android.camera.CameraPosition {
+    val builder = org.maplibre.android.camera.CameraPosition.Builder()
 
     target?.let { builder.target(it) }
     zoom?.let { builder.zoom(it) }

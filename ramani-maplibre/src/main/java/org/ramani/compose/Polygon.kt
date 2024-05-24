@@ -17,7 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.core.graphics.minus
 import androidx.core.graphics.plus
-import com.mapbox.mapboxsdk.geometry.LatLng
+import org.maplibre.android.geometry.LatLng
 import kotlin.math.atan2
 
 @Composable

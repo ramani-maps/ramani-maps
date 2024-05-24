@@ -13,8 +13,8 @@ package org.ramani.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import androidx.compose.runtime.currentComposer
-import com.mapbox.mapboxsdk.geometry.LatLng
-import com.mapbox.mapboxsdk.plugins.annotation.LineOptions
+import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.plugins.annotation.LineOptions
 
 @Composable
 @MapLibreComposable

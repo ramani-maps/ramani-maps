@@ -11,7 +11,7 @@
 package org.ramani.compose
 
 import android.os.Parcelable
-import com.mapbox.mapboxsdk.geometry.LatLng
+import org.maplibre.android.geometry.LatLng
 import kotlinx.parcelize.Parcelize
 import org.ramani.compose.CameraMotionType.EASE
 import org.ramani.compose.CameraMotionType.FLY

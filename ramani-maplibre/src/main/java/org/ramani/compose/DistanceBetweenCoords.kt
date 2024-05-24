@@ -13,7 +13,7 @@ package org.ramani.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.currentComposer
 import androidx.core.graphics.minus
-import com.mapbox.mapboxsdk.geometry.LatLng
+import org.maplibre.android.geometry.LatLng
 
 @MapLibreComposable
 @Composable

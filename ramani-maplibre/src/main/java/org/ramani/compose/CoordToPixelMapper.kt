@@ -13,7 +13,7 @@ package org.ramani.compose
 import android.graphics.PointF
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.currentComposer
-import com.mapbox.mapboxsdk.geometry.LatLng
+import org.maplibre.android.geometry.LatLng
 
 @Composable
 fun CoordToPixelMapper(coordinates: MutableList<LatLng>, onChange: (List<PointF>) -> Unit) {

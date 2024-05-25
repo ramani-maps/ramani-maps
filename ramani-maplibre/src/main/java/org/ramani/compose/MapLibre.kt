@@ -42,6 +42,7 @@ import com.mapbox.mapboxsdk.location.engine.LocationEngineCallback
 import com.mapbox.mapboxsdk.location.engine.LocationEngineDefault
 import com.mapbox.mapboxsdk.location.engine.LocationEngineRequest
 import com.mapbox.mapboxsdk.location.engine.LocationEngineResult
+import com.mapbox.mapboxsdk.location.modes.RenderMode
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.MapboxMap.OnMoveListener
 import com.mapbox.mapboxsdk.maps.MapboxMap.OnRotateListener
@@ -80,6 +81,7 @@ annotation class MapLibreComposable
  * @param sources External (user-defined) sources for the map.
  * @param layers External (user-defined) layers for the map.
  * @param images Images to be added to the map and used by external layers (pairs of <id, drawable code>).
+ * @param renderMode Ways the user location can be rendered on the map.
  * @param content The content of the map.
  */
 @Composable
@@ -95,6 +97,7 @@ fun MapLibre(
     sources: List<Source>? = null,
     layers: List<Layer>? = null,
     images: List<Pair<String, Int>>? = null,
+    renderMode: Int = RenderMode.NORMAL,
     content: (@Composable @MapLibreComposable () -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
@@ -134,6 +137,7 @@ fun MapLibre(
                 currentLocationRequestProperties,
                 currentLocationStyling,
                 userLocation,
+                renderMode
             )
             maplibreMap.addImages(context, currentImages)
             maplibreMap.addSources(currentSources)
@@ -168,6 +172,7 @@ private fun MapboxMap.setupLocation(
     locationRequestProperties: LocationRequestProperties?,
     locationStyling: LocationStyling,
     userLocation: MutableState<Location>?,
+    renderMode: Int
 ) {
     if (locationRequestProperties == null) return
 
@@ -185,6 +190,8 @@ private fun MapboxMap.setupLocation(
         this.locationComponent.isLocationComponentEnabled = true
         userLocation?.let { trackLocation(context, locationEngineRequest, userLocation) }
     }
+
+    this.locationComponent.renderMode = renderMode
 }
 
 private fun isFineLocationGranted(context: Context): Boolean {

@@ -48,8 +48,8 @@ allprojects {
             targetSdkVersion 34
 
             group = 'org.ramani-maps'
-            versionCode 4
-            version "0.3.0"
+            versionCode 5
+            version "0.4.0"
         }
 
         buildTypes {

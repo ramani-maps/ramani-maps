@@ -15,7 +15,7 @@ jobs:
     name: Build and test ramani-maplibre
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Set up JDK 17
@@ -41,7 +41,7 @@ jobs:
     name: Build and test ramani-mapbox
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Set up JDK 17
@@ -67,7 +67,7 @@ jobs:
     name: "Build and test example: AnnotationSimple"
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Set up JDK 17
@@ -95,7 +95,7 @@ jobs:
     name: "Build and test example: InteractivePolygon"
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Set up JDK 17
@@ -116,7 +116,7 @@ jobs:
     name: "Build and test example: Location"
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Set up JDK 17
@@ -137,7 +137,7 @@ jobs:
     name: "Build and test example: Clusters"
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Set up JDK 17
@@ -158,7 +158,7 @@ jobs:
     name: "Build and test example: CustomLayers"
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Set up JDK 17
@@ -184,7 +184,7 @@ jobs:
     name: "Build and test example: CustomAnnotation"
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Set up JDK 17

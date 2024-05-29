@@ -8,15 +8,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.mapbox.mapboxsdk.Mapbox
-import com.mapbox.mapboxsdk.style.expressions.Expression
-import com.mapbox.mapboxsdk.style.layers.FillLayer
-import com.mapbox.mapboxsdk.style.layers.LineLayer
-import com.mapbox.mapboxsdk.style.layers.PropertyFactory
-import com.mapbox.mapboxsdk.style.layers.RasterLayer
-import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
-import com.mapbox.mapboxsdk.style.sources.RasterSource
-import com.mapbox.mapboxsdk.style.sources.VectorSource
+import org.maplibre.android.MapLibre
+import org.maplibre.android.style.expressions.Expression
+import org.maplibre.android.style.layers.FillLayer
+import org.maplibre.android.style.layers.LineLayer
+import org.maplibre.android.style.layers.PropertyFactory
+import org.maplibre.android.style.layers.RasterLayer
+import org.maplibre.android.style.sources.GeoJsonSource
+import org.maplibre.android.style.sources.RasterSource
+import org.maplibre.android.style.sources.VectorSource
 import org.ramani.compose.MapLibre
 import org.ramani.example.custom_layers.ui.theme.CustomLayersTheme
 import java.net.URI
@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
 
         // This is usually done in the MapLibre composable, but in this case we need to initialize
         // the map earlier in order to define the sources and layers.
-        Mapbox.getInstance(this)
+        MapLibre.getInstance(this)
 
         // Define the source GeoJson:
         //    "Geographical UAS zones of Switzerland"

@@ -8,13 +8,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.mapbox.mapboxsdk.Mapbox
-import com.mapbox.mapboxsdk.style.expressions.Expression
-import com.mapbox.mapboxsdk.style.layers.CircleLayer
-import com.mapbox.mapboxsdk.style.layers.PropertyFactory
-import com.mapbox.mapboxsdk.style.layers.SymbolLayer
-import com.mapbox.mapboxsdk.style.sources.GeoJsonOptions
-import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
+import org.maplibre.android.MapLibre
+import org.maplibre.android.style.expressions.Expression
+import org.maplibre.android.style.layers.CircleLayer
+import org.maplibre.android.style.layers.PropertyFactory
+import org.maplibre.android.style.layers.SymbolLayer
+import org.maplibre.android.style.sources.GeoJsonOptions
+import org.maplibre.android.style.sources.GeoJsonSource
 import org.ramani.compose.MapLibre
 import org.ramani.example.clusters.ui.theme.ClustersTheme
 import java.net.URI
@@ -25,7 +25,7 @@ class MainActivity : ComponentActivity() {
 
         // This is usually done in the MapLibre composable, but in this case we need to initialize
         // the map earlier in order to define the sources and layers.
-        Mapbox.getInstance(this)
+        MapLibre.getInstance(this)
 
         // Define the source GeoJson.
         val mySource = GeoJsonSource(

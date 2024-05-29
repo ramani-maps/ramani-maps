@@ -74,7 +74,7 @@ interface MapNode {
 
 private object MapNodeRoot : MapNode
 
-internal class MapApplier(
+class MapApplier(
     val map: MapLibreMap,
     val mapView: MapView,
     val style: Style

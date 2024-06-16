@@ -36,6 +36,7 @@ import com.mapbox.android.gestures.RotateGestureDetector
 import com.mapbox.android.gestures.ShoveGestureDetector
 import com.mapbox.android.gestures.StandardScaleGestureDetector
 import org.maplibre.android.camera.CameraUpdateFactory
+import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.location.LocationComponentActivationOptions
 import org.maplibre.android.location.LocationComponentOptions
 import org.maplibre.android.location.engine.LocationEngineCallback
@@ -98,6 +99,7 @@ fun MapLibre(
     layers: List<Layer>? = null,
     images: List<Pair<String, Int>>? = null,
     renderMode: Int = RenderMode.NORMAL,
+    onMapLongClick: (LatLng) -> Unit = {},
     content: (@Composable @MapLibreComposable () -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
@@ -143,6 +145,11 @@ fun MapLibre(
             maplibreMap.addSources(currentSources)
             maplibreMap.addLayers(currentLayers)
 
+            maplibreMap.addOnMapLongClickListener { latLng ->
+                onMapLongClick(latLng)
+                true
+            }
+
             map.newComposition(parentComposition, style) {
                 CompositionLocalProvider {
                     MapUpdater(cameraPosition = currentCameraPosition)
@@ -164,6 +171,7 @@ private fun MapLibreMap.applyUiSettings(uiSettings: UiSettings) {
 
 private fun MapLibreMap.applyProperties(properties: MapProperties) {
     properties.maxZoom?.let { this.setMaxZoomPreference(it) }
+
 }
 
 private fun MapLibreMap.setupLocation(

@@ -119,10 +119,12 @@ fun MapLibre(
     val currentLayers by rememberUpdatedState(layers)
     val currentImages by rememberUpdatedState(images)
     val currentContent by rememberUpdatedState(content)
+    val currentStyleUrl by rememberUpdatedState(styleUrl)
     val parentComposition = rememberCompositionContext()
 
     AndroidView(modifier = modifier, factory = { map })
     LaunchedEffect(
+        currentStyleUrl,
         currentUiSettings,
         currentMapProperties,
         currentLocationRequestProperties,

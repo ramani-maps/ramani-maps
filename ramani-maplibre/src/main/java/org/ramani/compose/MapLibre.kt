@@ -171,7 +171,6 @@ private fun MapLibreMap.applyUiSettings(uiSettings: UiSettings) {
 
 private fun MapLibreMap.applyProperties(properties: MapProperties) {
     properties.maxZoom?.let { this.setMaxZoomPreference(it) }
-
 }
 
 private fun MapLibreMap.setupLocation(

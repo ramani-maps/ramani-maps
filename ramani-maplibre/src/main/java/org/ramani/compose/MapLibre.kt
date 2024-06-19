@@ -83,6 +83,7 @@ annotation class MapLibreComposable
  * @param layers External (user-defined) layers for the map.
  * @param images Images to be added to the map and used by external layers (pairs of <id, drawable code>).
  * @param renderMode Ways the user location can be rendered on the map.
+ * @param onMapLongClick Callback that is invoked when the map is long clicked
  * @param content The content of the map.
  */
 @Composable

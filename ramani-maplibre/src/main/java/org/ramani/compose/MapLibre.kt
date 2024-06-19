@@ -124,7 +124,6 @@ fun MapLibre(
 
     AndroidView(modifier = modifier, factory = { map })
     LaunchedEffect(
-        currentStyleUrl,
         currentUiSettings,
         currentMapProperties,
         currentLocationRequestProperties,
@@ -160,6 +159,11 @@ fun MapLibre(
                 }
             }
         }
+    }
+
+    LaunchedEffect(currentStyleUrl) {
+        val maplibreMap = map.awaitMap()
+        maplibreMap.setStyle(currentStyleUrl)
     }
 }
 

@@ -154,16 +154,11 @@ fun MapLibre(
 
             map.newComposition(parentComposition, style) {
                 CompositionLocalProvider {
-                    MapUpdater(cameraPosition = currentCameraPosition)
+                    MapUpdater(cameraPosition = currentCameraPosition, styleUrl = currentStyleUrl)
                     currentContent?.invoke()
                 }
             }
         }
-    }
-
-    LaunchedEffect(currentStyleUrl) {
-        val maplibreMap = map.awaitMap()
-        maplibreMap.setStyle(currentStyleUrl)
     }
 }
 
@@ -281,7 +276,7 @@ private fun MapLibreMap.addLayers(layers: List<Layer>?) {
 }
 
 @Composable
-internal fun MapUpdater(cameraPosition: CameraPosition) {
+internal fun MapUpdater(cameraPosition: CameraPosition, styleUrl: String) {
     val mapApplier = currentComposer.applier as MapApplier
 
     fun observeZoom(cameraPosition: CameraPosition) {
@@ -342,13 +337,18 @@ internal fun MapUpdater(cameraPosition: CameraPosition) {
     }
 
     ComposeNode<MapPropertiesNode, MapApplier>(factory = {
-        MapPropertiesNode(mapApplier.map, cameraPosition)
+        MapPropertiesNode(mapApplier.map, cameraPosition, styleUrl)
     }, update = {
         observeZoom(cameraPosition)
         observeCameraPosition(cameraPosition)
         observeBearing(cameraPosition)
         observeTilt(cameraPosition)
         observeIdle(cameraPosition)
+
+        update(styleUrl) {
+            this.styleUrl = it
+            updateStyle()
+        }
 
         update(cameraPosition) {
             this.cameraPosition = it
@@ -373,10 +373,15 @@ internal fun MapUpdater(cameraPosition: CameraPosition) {
 
 internal class MapPropertiesNode(
     val map: MapLibreMap,
-    var cameraPosition: CameraPosition
+    var cameraPosition: CameraPosition,
+    var styleUrl: String
 ) : MapNode {
     override fun onAttached() {
         map.cameraPosition = cameraPosition.toMapLibre()
+    }
+
+    fun updateStyle() {
+        map.setStyle(styleUrl)
     }
 }
 

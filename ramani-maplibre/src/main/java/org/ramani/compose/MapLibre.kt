@@ -346,8 +346,7 @@ internal fun MapUpdater(cameraPosition: CameraPosition, styleUrl: String) {
         observeIdle(cameraPosition)
 
         update(styleUrl) {
-            this.styleUrl = it
-            updateStyle()
+            updateStyle(it)
         }
 
         update(cameraPosition) {
@@ -374,14 +373,15 @@ internal fun MapUpdater(cameraPosition: CameraPosition, styleUrl: String) {
 internal class MapPropertiesNode(
     val map: MapLibreMap,
     var cameraPosition: CameraPosition,
-    var styleUrl: String
+    var styleUrl: String,
 ) : MapNode {
     override fun onAttached() {
         map.cameraPosition = cameraPosition.toMapLibre()
     }
 
-    fun updateStyle() {
+    fun updateStyle(styleUrl: String) {
         map.setStyle(styleUrl)
+        this.styleUrl = styleUrl
     }
 }
 

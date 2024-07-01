@@ -44,39 +44,11 @@ Consult your tile provider's documentation for details.
 
 ## Quick Start with Mapbox
 
-Mapbox requires its own repository in the dependency management:
-
-```
-maven {
-    url 'https://api.mapbox.com/downloads/v2/releases/maven'
-    authentication {
-        basic(BasicAuthentication)
-    }
-    credentials {
-        // Do not change the username below.
-        // This should always be `mapbox` (not your username).
-        username = "mapbox"
-        // Use the secret token you stored in gradle.properties as the password
-        password = <your mapbox download token>
-    }
-}
-```
-
-Add the dependency to `build.gradle`:
-
-```gradle
-implementation 'org.ramani-maps:ramani-mapbox:0.1.0'
-```
-
-Insert the map composable:
-
-```kotlin
-Mapbox(modifier = Modifier.fillMaxSize(), apiKey = "<your API key here>")
-```
-
-The map will now appear in your app!
-
-NOTE: you need a [Mapbox](https://www.mapbox.com) account (they have a free tier).
+Mapbox's behaviour has made it clear that they don't want (or care about) Ramani
+support. There is no plan to work further in that direction. You can still find
+Ramani-Mapbox in the corresponding [release
+tag](https://github.com/ramani-maps/ramani-maps/tree/mapbox-0.1.0), but note
+that it probably won't work with newer versions of Mapbox.
 
 ## Examples
 

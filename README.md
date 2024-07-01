@@ -91,10 +91,7 @@ while the right uses `ramani-mapbox`.
 ![interactive polygon example (Mapbox)](./docs/interactive-polygon-example-mapbox.gif)
 
 The complete application is available in [examples/interactive-polygon](./examples/interactive-polygon).
-It builds with `ramani-maplibre`, but switching to `ramani-mapbox`
-is easy since they both have a very similar API.
-
-The actual code is extremely short:
+The relevant code is extremely short:
 
 ```kotlin
 class MainActivity : ComponentActivity() {
@@ -115,7 +112,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         MapLibre(
                             modifier = Modifier.fillMaxSize(),
-                            apiKey = resources.getString(apiKey = "<your API key here>"),
+                            styleUrl = "<Your style URL here>",
                             cameraPosition = cameraPosition.value
                         ) {
                             // Create a handle for each vertex (those are blue circles)
@@ -182,10 +179,7 @@ while the right uses `ramani-mapbox`.
 ![annotation simple example (mapbox)](./docs/annotation-simple-example-mapbox.gif)
 
 The complete application is available in [examples/annotation-simple](./examples/annotation-simple).
-It builds with `ramani-mapbox`, but switching to `ramani-maplibre`
-is easy since they both have a very similar API.
-
-The actual code is extremely short:
+The relevant code is extremely short:
 
 ```kotlin
 class MainActivity : ComponentActivity() {
@@ -208,10 +202,11 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Mapbox(
+
+                    MapLibre(
                         modifier = Modifier.fillMaxSize(),
-                        apiKey = "<your API key here>",
-                        cameraPosition = cameraPosition.value,
+                        styleUrl = "<Your style URL here>",
+                        cameraPosition = cameraPosition.value
                     ) {
                         // Create a draggable circle
                         Circle(

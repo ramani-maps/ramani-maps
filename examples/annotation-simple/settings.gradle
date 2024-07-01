@@ -6,32 +6,9 @@ pluginManagement {
     }
 }
 
-def keystorePropertiesFile
-for (file in getRootProject().getProjectDir().listFiles()) {
-    if (file.name == "keystore.properties") {
-        keystorePropertiesFile = file
-    }
-}
-def keystoreProperties = new Properties()
-keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        maven {
-            url 'https://api.mapbox.com/downloads/v2/releases/maven'
-            authentication {
-                basic(BasicAuthentication)
-            }
-            credentials {
-                // Do not change the username below.
-                // This should always be `mapbox` (not your username).
-                username = "mapbox"
-                // Use the secret token you stored in gradle.properties as the password
-                password = keystoreProperties["MAPBOX_DOWNLOAD_TOKEN"]
-            }
-        }
-
         google()
         mavenCentral()
     }
@@ -40,4 +17,4 @@ rootProject.name = "AnnotationSimple"
 include ':app'
 
 // Uncomment to use Ramani as a composite build (for dev purposes)
-//includeBuild '../../ramani-mapbox'
+//includeBuild '../../ramani-maplibre'

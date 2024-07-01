@@ -9,10 +9,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import org.maplibre.android.geometry.LatLng
 import org.ramani.compose.CameraPosition
 import org.ramani.compose.Circle
-import org.ramani.compose.LatLng
-import org.ramani.compose.Mapbox
+import org.ramani.compose.MapLibre
 import org.ramani.compose.Polyline
 import org.ramani.example.annotation_simple.ui.theme.AnnotationSimpleTheme
 
@@ -36,9 +36,9 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Mapbox(
+                    MapLibre(
                         modifier = Modifier.fillMaxSize(),
-                        apiKey = resources.getString(R.string.mapbox_api_key),
+                        styleUrl = resources.getString(R.string.maplibre_style_url),
                         cameraPosition = cameraPosition.value,
                     ) {
                         Circle(

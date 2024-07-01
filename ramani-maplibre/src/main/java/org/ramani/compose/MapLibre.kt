@@ -119,6 +119,7 @@ fun MapLibre(
     val currentLayers by rememberUpdatedState(layers)
     val currentImages by rememberUpdatedState(images)
     val currentContent by rememberUpdatedState(content)
+    val currentStyleUrl by rememberUpdatedState(styleUrl)
     val parentComposition = rememberCompositionContext()
 
     AndroidView(modifier = modifier, factory = { map })
@@ -153,7 +154,7 @@ fun MapLibre(
 
             map.newComposition(parentComposition, style) {
                 CompositionLocalProvider {
-                    MapUpdater(cameraPosition = currentCameraPosition)
+                    MapUpdater(cameraPosition = currentCameraPosition, styleUrl = currentStyleUrl)
                     currentContent?.invoke()
                 }
             }
@@ -275,7 +276,7 @@ private fun MapLibreMap.addLayers(layers: List<Layer>?) {
 }
 
 @Composable
-internal fun MapUpdater(cameraPosition: CameraPosition) {
+internal fun MapUpdater(cameraPosition: CameraPosition, styleUrl: String) {
     val mapApplier = currentComposer.applier as MapApplier
 
     fun observeZoom(cameraPosition: CameraPosition) {
@@ -336,13 +337,17 @@ internal fun MapUpdater(cameraPosition: CameraPosition) {
     }
 
     ComposeNode<MapPropertiesNode, MapApplier>(factory = {
-        MapPropertiesNode(mapApplier.map, cameraPosition)
+        MapPropertiesNode(mapApplier.map, cameraPosition, styleUrl)
     }, update = {
         observeZoom(cameraPosition)
         observeCameraPosition(cameraPosition)
         observeBearing(cameraPosition)
         observeTilt(cameraPosition)
         observeIdle(cameraPosition)
+
+        update(styleUrl) {
+            updateStyle(it)
+        }
 
         update(cameraPosition) {
             this.cameraPosition = it
@@ -367,10 +372,16 @@ internal fun MapUpdater(cameraPosition: CameraPosition) {
 
 internal class MapPropertiesNode(
     val map: MapLibreMap,
-    var cameraPosition: CameraPosition
+    var cameraPosition: CameraPosition,
+    var styleUrl: String,
 ) : MapNode {
     override fun onAttached() {
         map.cameraPosition = cameraPosition.toMapLibre()
+    }
+
+    fun updateStyle(styleUrl: String) {
+        map.setStyle(styleUrl)
+        this.styleUrl = styleUrl
     }
 }
 

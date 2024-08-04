@@ -1,0 +1,29 @@
+[versions]
+android-gradle-plugin = "8.4.1"
+androidx-core-ktx = "1.13.1"
+compose-ui = "1.6.0"
+kotlin = "1.9.22"
+kotlin-parcelize = "2.0.20-RC"
+kotlin-gradle-plugin = "2.0.0"
+kotlinx-coroutines-android = "1.7.3"
+maplibre-android-sdk = "11.1.0"
+maplibre-android-plugin-annotation = "3.0.0"
+junit = "4.13.2"
+
+[libraries]
+android-gradle-plugin = { group = "com.android.tools.build", name = "gradle", version.ref = "android-gradle-plugin" }
+androidx-compose-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "compose-ui" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidx-core-ktx" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "compose-ui" }
+androidx-material = { group = "androidx.compose.material", name = "material", version.ref = "compose-ui" }
+kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinx-coroutines-android" }
+maplibre-android-sdk = { group = "org.maplibre.gl", name = "android-sdk", version.ref = "maplibre-android-sdk" }
+maplibre-android-plugin-annotation = { group = "org.maplibre.gl", name = "android-plugin-annotation-v9", version.ref = "maplibre-android-plugin-annotation" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+
+[plugins]
+android-library = { id = "com.android.library", version.ref = "android-gradle-plugin" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin-gradle-plugin"  }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin-gradle-plugin" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin-parcelize" }

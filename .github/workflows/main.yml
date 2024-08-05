@@ -51,7 +51,7 @@ jobs:
           distribution: 'temurin'
       - name: Use ramani as composite build
         working-directory: ./examples/annotation-simple
-        run: echo "includeBuild '../../ramani-maplibre'" >> settings.gradle
+        run: echo "includeBuild(\"../../ramani-maplibre\")" >> settings.gradle.kts
       - name: Build
         working-directory: ./examples/annotation-simple
         run: |
@@ -72,7 +72,7 @@ jobs:
           distribution: 'temurin'
       - name: Use ramani as composite build
         working-directory: ./examples/interactive-polygon
-        run: echo "includeBuild '../../ramani-maplibre'" >> settings.gradle
+        run: echo "includeBuild(\"../../ramani-maplibre\")" >> settings.gradle.kts
       - name: Build
         working-directory: ./examples/interactive-polygon
         run: |
@@ -93,7 +93,7 @@ jobs:
           distribution: 'temurin'
       - name: Use ramani as composite build
         working-directory: ./examples/location
-        run: echo "includeBuild '../../ramani-maplibre'" >> settings.gradle
+        run: echo "includeBuild(\"../../ramani-maplibre\")" >> settings.gradle.kts
       - name: Build
         working-directory: ./examples/location
         run: |
@@ -114,7 +114,7 @@ jobs:
           distribution: 'temurin'
       - name: Use ramani as composite build
         working-directory: ./examples/clusters
-        run: echo 'includeBuild("../../ramani-maplibre")' >> settings.gradle
+        run: echo "includeBuild(\"../../ramani-maplibre\")" >> settings.gradle.kts
       - name: Build
         working-directory: ./examples/clusters
         run: |
@@ -140,7 +140,7 @@ jobs:
             echo "THUNDERFOREST_API_KEY=placeholder" >> keystore.properties
       - name: Use ramani as composite build
         working-directory: ./examples/custom-layers
-        run: echo 'includeBuild("../../ramani-maplibre")' >> settings.gradle
+        run: echo "includeBuild(\"../../ramani-maplibre\")" >> settings.gradle.kts
       - name: Build
         working-directory: ./examples/custom-layers
         run: |
@@ -161,7 +161,7 @@ jobs:
           distribution: 'temurin'
       - name: Use ramani as composite build
         working-directory: ./examples/custom-annotation
-        run: echo 'includeBuild("../../ramani-maplibre")' >> settings.gradle
+        run: echo "includeBuild(\"../../ramani-maplibre\")" >> settings.gradle.kts
       - name: Build
         working-directory: ./examples/custom-annotation
         run: |

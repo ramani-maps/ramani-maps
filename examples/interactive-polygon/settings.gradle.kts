@@ -5,6 +5,7 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
@@ -12,8 +13,10 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "CustomLayers"
-include ':app'
+
+rootProject.name = "InteractivePolygon"
+include(":app")
 
 // Uncomment to use Ramani as a composite build (for dev purposes)
-//includeBuild '../../ramani-maplibre'
+//includeBuild("../../ramani-maplibre")
+

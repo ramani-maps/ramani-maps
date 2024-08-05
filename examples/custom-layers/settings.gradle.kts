@@ -13,8 +13,9 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "AnnotationSimple"
-include ':app'
+
+rootProject.name = "CustomLayers"
+include(":app")
 
 // Uncomment to use Ramani as a composite build (for dev purposes)
-//includeBuild '../../ramani-maplibre'
+//includeBuild("../../ramani-maplibre")

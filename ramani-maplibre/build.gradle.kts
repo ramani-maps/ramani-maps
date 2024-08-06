@@ -18,6 +18,8 @@ val keystoreProperties = Properties()
 try {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 } catch (ignored: IOException) {
+    if (project.hasProperty("ossrhUsername")) keystoreProperties["ossrhUsername"] = property("ossrhUsername")
+    if (project.hasProperty("ossrhPassword")) keystoreProperties["ossrhPassword"] = property("ossrhPassword")
 }
 
 android {
@@ -102,7 +104,9 @@ if (keystoreProperties.containsKey("ossrhUsername") && keystoreProperties.contai
             }
             repositories {
                 maven {
-                    url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+                    val releasesUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+                    val snapshotsUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+                    url = uri(if (project.hasProperty("release")) releasesUrl else snapshotsUrl)
 
                     credentials {
                         username = keystoreProperties["ossrhUsername"] as String

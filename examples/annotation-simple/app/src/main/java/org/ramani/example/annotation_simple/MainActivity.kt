@@ -3,13 +3,18 @@ package org.ramani.example.annotation_simple
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.maps.Style
 import org.ramani.compose.CameraPosition
 import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
@@ -17,6 +22,10 @@ import org.ramani.compose.Polyline
 import org.ramani.example.annotation_simple.ui.theme.AnnotationSimpleTheme
 
 class MainActivity : ComponentActivity() {
+    companion object {
+        const val DEFAULT_STYLE_URL = "https://demotiles.maplibre.org/style.json"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -31,24 +40,38 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 val circleCenter = rememberSaveable { mutableStateOf(LatLng(4.8, 46.0)) }
+                val isDefaultStyle = rememberSaveable { mutableStateOf(true) }
+                val styleUrl = rememberSaveable { mutableStateOf(DEFAULT_STYLE_URL) }
 
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    MapLibre(
+                Box {
+                    Surface(
                         modifier = Modifier.fillMaxSize(),
-                        styleUrl = resources.getString(R.string.maplibre_style_url),
-                        cameraPosition = cameraPosition.value,
+                        color = MaterialTheme.colorScheme.background
                     ) {
-                        Circle(
-                            center = circleCenter.value,
-                            radius = 50F,
-                            isDraggable = true,
-                            borderWidth = 2F,
-                            onCenterDragged = { center -> circleCenter.value = center }
-                        )
-                        Polyline(points = polylinePoints, color = "Red", lineWidth = 5.0F)
+                        MapLibre(
+                            modifier = Modifier.fillMaxSize(),
+                            styleBuilder = Style.Builder().fromUri(styleUrl.value),
+                            cameraPosition = cameraPosition.value,
+                        ) {
+                            Circle(
+                                center = circleCenter.value,
+                                radius = 50F,
+                                isDraggable = true,
+                                borderWidth = 2F,
+                                onCenterDragged = { center -> circleCenter.value = center }
+                            )
+                            Polyline(points = polylinePoints, color = "Red", lineWidth = 5.0F)
+                        }
+                    }
+                    Button(
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                        onClick = {
+                            styleUrl.value =
+                                if (isDefaultStyle.value) DEFAULT_STYLE_URL
+                                else resources.getString(R.string.maplibre_style_url)
+                            isDefaultStyle.value = !isDefaultStyle.value
+                        }) {
+                        Text("Swap style")
                     }
                 }
             }

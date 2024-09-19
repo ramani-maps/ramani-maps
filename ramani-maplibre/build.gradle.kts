@@ -30,7 +30,7 @@ android {
         minSdk = 25
 
         group = "org.ramani-maps"
-        version = "0.5.1"
+        version = "0.6.0"
     }
 
     buildTypes {

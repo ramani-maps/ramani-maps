@@ -14,10 +14,10 @@ import androidx.compose.runtime.AbstractApplier
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Composition
 import androidx.compose.runtime.CompositionContext
+import kotlinx.coroutines.awaitCancellation
 import org.maplibre.android.gestures.MoveGestureDetector
 import org.maplibre.android.gestures.RotateGestureDetector
 import org.maplibre.android.gestures.StandardScaleGestureDetector
-import kotlinx.coroutines.awaitCancellation
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapLibreMap.OnMoveListener
 import org.maplibre.android.maps.MapLibreMap.OnRotateListener
@@ -60,11 +60,12 @@ internal suspend fun MapView.newComposition(
     }
 }
 
-internal suspend fun MapLibreMap.awaitStyle(styleUrl: String) = suspendCoroutine { continuation ->
-    setStyle(styleUrl) { style ->
-        continuation.resume(style)
+internal suspend fun MapLibreMap.awaitStyle(styleBuilder: Style.Builder) =
+    suspendCoroutine { continuation ->
+        setStyle(styleBuilder) { style ->
+            continuation.resume(style)
+        }
     }
-}
 
 interface MapNode {
     fun onAttached() {}

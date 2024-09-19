@@ -84,7 +84,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         MapLibre(
                             modifier = Modifier.fillMaxSize(),
-                            styleUrl = "<Your style URL here>",
+                            styleBuilder = Style.Builder().fromUri("<Your style URL here>"),
                             cameraPosition = cameraPosition.value
                         ) {
                             // Create a handle for each vertex (those are blue circles)
@@ -177,7 +177,7 @@ class MainActivity : ComponentActivity() {
 
                     MapLibre(
                         modifier = Modifier.fillMaxSize(),
-                        styleUrl = "<Your style URL here>",
+                        styleBuilder = Style.Builder().fromUri("<Your style URL here>"),
                         cameraPosition = cameraPosition.value
                     ) {
                         // Create a draggable circle

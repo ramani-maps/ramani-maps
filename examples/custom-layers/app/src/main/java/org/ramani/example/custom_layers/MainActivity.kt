@@ -9,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import org.maplibre.android.MapLibre
+import org.maplibre.android.maps.Style
 import org.maplibre.android.style.expressions.Expression
 import org.maplibre.android.style.layers.FillLayer
 import org.maplibre.android.style.layers.LineLayer
@@ -106,7 +107,8 @@ class MainActivity : ComponentActivity() {
                 ) {
                     MapLibre(
                         modifier = Modifier.fillMaxSize(),
-                        styleUrl = resources.getString(R.string.maplibre_style_url),
+                        styleBuilder = Style.Builder()
+                            .fromUri(resources.getString(R.string.maplibre_style_url)),
                         sources = listOf(nfzSource, contourSource, hillShadeSource),
                         layers = listOf(nfzFill, nfzPoly, hillshadeLayer, contourLayer),
                     )

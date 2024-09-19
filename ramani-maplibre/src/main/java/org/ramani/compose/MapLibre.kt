@@ -31,12 +31,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.viewinterop.AndroidView
+import org.maplibre.android.camera.CameraUpdateFactory
+import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.gestures.MoveGestureDetector
 import org.maplibre.android.gestures.RotateGestureDetector
 import org.maplibre.android.gestures.ShoveGestureDetector
 import org.maplibre.android.gestures.StandardScaleGestureDetector
-import org.maplibre.android.camera.CameraUpdateFactory
-import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.location.LocationComponentActivationOptions
 import org.maplibre.android.location.LocationComponentOptions
 import org.maplibre.android.location.engine.LocationEngineCallback
@@ -69,7 +69,7 @@ annotation class MapLibreComposable
  * A composable representing a MapLibre map.
  *
  * @param modifier The modifier applied to the map.
- * @param styleUrl The style url to access the tile provider. Defaults to a demo tile provider.
+ * @param styleBuilder The style builder to access the tile provider. Defaults to a demo tile provider.
  * @param cameraPosition The position of the map camera.
  * @param uiSettings Settings related to the map UI.
  * @param properties Properties being applied to the map.
@@ -89,7 +89,8 @@ annotation class MapLibreComposable
 @Composable
 fun MapLibre(
     modifier: Modifier,
-    styleUrl: String = "https://demotiles.maplibre.org/style.json",
+    styleBuilder: Style.Builder = Style.Builder()
+        .fromUri("https://demotiles.maplibre.org/style.json"),
     cameraPosition: CameraPosition = rememberSaveable { CameraPosition() },
     uiSettings: UiSettings = UiSettings(),
     properties: MapProperties = MapProperties(),
@@ -119,7 +120,7 @@ fun MapLibre(
     val currentLayers by rememberUpdatedState(layers)
     val currentImages by rememberUpdatedState(images)
     val currentContent by rememberUpdatedState(content)
-    val currentStyleUrl by rememberUpdatedState(styleUrl)
+    val currentStyleBuilder by rememberUpdatedState(styleBuilder)
     val parentComposition = rememberCompositionContext()
 
     AndroidView(modifier = modifier, factory = { map })
@@ -131,7 +132,7 @@ fun MapLibre(
     ) {
         disposingComposition {
             val maplibreMap = map.awaitMap()
-            val style = maplibreMap.awaitStyle(styleUrl)
+            val style = maplibreMap.awaitStyle(styleBuilder)
 
             maplibreMap.applyUiSettings(currentUiSettings)
             maplibreMap.applyProperties(currentMapProperties)
@@ -141,7 +142,7 @@ fun MapLibre(
                 currentLocationRequestProperties,
                 currentLocationStyling,
                 userLocation,
-                renderMode
+                renderMode,
             )
             maplibreMap.addImages(context, currentImages)
             maplibreMap.addSources(currentSources)
@@ -154,7 +155,10 @@ fun MapLibre(
 
             map.newComposition(parentComposition, style) {
                 CompositionLocalProvider {
-                    MapUpdater(cameraPosition = currentCameraPosition, styleUrl = currentStyleUrl)
+                    MapUpdater(
+                        cameraPosition = currentCameraPosition,
+                        styleBuilder = currentStyleBuilder,
+                    )
                     currentContent?.invoke()
                 }
             }
@@ -276,7 +280,7 @@ private fun MapLibreMap.addLayers(layers: List<Layer>?) {
 }
 
 @Composable
-internal fun MapUpdater(cameraPosition: CameraPosition, styleUrl: String) {
+internal fun MapUpdater(cameraPosition: CameraPosition, styleBuilder: Style.Builder) {
     val mapApplier = currentComposer.applier as MapApplier
 
     fun observeZoom(cameraPosition: CameraPosition) {
@@ -337,7 +341,7 @@ internal fun MapUpdater(cameraPosition: CameraPosition, styleUrl: String) {
     }
 
     ComposeNode<MapPropertiesNode, MapApplier>(factory = {
-        MapPropertiesNode(mapApplier.map, cameraPosition, styleUrl)
+        MapPropertiesNode(mapApplier.map, cameraPosition, styleBuilder)
     }, update = {
         observeZoom(cameraPosition)
         observeCameraPosition(cameraPosition)
@@ -345,7 +349,7 @@ internal fun MapUpdater(cameraPosition: CameraPosition, styleUrl: String) {
         observeTilt(cameraPosition)
         observeIdle(cameraPosition)
 
-        update(styleUrl) {
+        update(styleBuilder) {
             updateStyle(it)
         }
 
@@ -373,15 +377,15 @@ internal fun MapUpdater(cameraPosition: CameraPosition, styleUrl: String) {
 internal class MapPropertiesNode(
     val map: MapLibreMap,
     var cameraPosition: CameraPosition,
-    var styleUrl: String,
+    var styleBuilder: Style.Builder,
 ) : MapNode {
     override fun onAttached() {
         map.cameraPosition = cameraPosition.toMapLibre()
     }
 
-    fun updateStyle(styleUrl: String) {
-        map.setStyle(styleUrl)
-        this.styleUrl = styleUrl
+    fun updateStyle(styleBuilder: Style.Builder) {
+        map.setStyle(styleBuilder)
+        this.styleBuilder = styleBuilder
     }
 }
 

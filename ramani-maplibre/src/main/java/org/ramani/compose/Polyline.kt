@@ -22,7 +22,7 @@ enum class PolylineDashType(val dashArray: Array<Float>?) {
     LongDash(arrayOf(3f, 1f));
     
     companion object {
-        fun fromInt(value: Int) = entries.firstOrNull { it.ordinal == value } ?: SolidThickLine
+        fun fromInt(value: Int) = entries.firstOrNull { it.ordinal == value } ?: NoDash
     }
 }
 

@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.res.imageResource
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.plugins.annotation.SymbolOptions
+import org.maplibre.android.style.layers.Property.ICON_ANCHOR_CENTER
 import org.maplibre.android.style.layers.Property.TEXT_ANCHOR_CENTER
 import org.maplibre.android.style.layers.Property.TEXT_JUSTIFY_CENTER
 
@@ -30,8 +31,16 @@ fun Symbol(
     isDraggable: Boolean,
     zIndex: Int = 0,
     imageId: Int? = null,
+    imageAnchor: String = ICON_ANCHOR_CENTER,
+    imageOffset: Array<Float> = arrayOf(0f, 0f),
     imageRotation: Float? = null,
-    text: String? = null
+    text: String? = null,
+    textAnchor: String = TEXT_ANCHOR_CENTER,
+    textJustify: String = TEXT_JUSTIFY_CENTER,
+    textOffset: Array<Float> = arrayOf(0f, 3f),
+    textColor: String = "#000000",
+    textHaloColor: String = "#000000",
+    textHaloWidth: Float = 0f
 ) {
     val mapApplier = currentComposer.applier as MapApplier
 
@@ -55,16 +64,21 @@ fun Symbol(
                 .withIconImage(imageId.toString())
                 .withIconColor(color)
                 .withIconSize(size)
+                .withIconAnchor(imageAnchor)
                 .withIconRotate(imageRotation)
+                .withIconOffset(imageOffset)
         }
 
         text?.let {
             symbolOptions = symbolOptions
                 .withTextField(text)
-                .withTextColor(color)
+                .withTextColor(textColor)
+                .withTextHaloColor(textHaloColor)
+                .withTextHaloWidth(textHaloWidth)
                 .withTextSize(size)
-                .withTextJustify(TEXT_JUSTIFY_CENTER)
-                .withTextAnchor(TEXT_ANCHOR_CENTER)
+                .withTextJustify(textJustify)
+                .withTextAnchor(textAnchor)
+                .withTextOffset(textOffset)
         }
 
         val symbol = symbolManager.create(symbolOptions)

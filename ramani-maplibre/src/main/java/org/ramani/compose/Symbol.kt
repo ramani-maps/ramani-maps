@@ -17,6 +17,8 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.res.imageResource
 import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.plugins.annotation.OnSymbolDragListener
+import org.maplibre.android.plugins.annotation.Symbol
 import org.maplibre.android.plugins.annotation.SymbolOptions
 import org.maplibre.android.style.layers.Property.ICON_ANCHOR_CENTER
 import org.maplibre.android.style.layers.Property.TEXT_ANCHOR_CENTER
@@ -29,6 +31,7 @@ fun Symbol(
     size: Float,
     color: String,
     isDraggable: Boolean,
+    onDrag: (LatLng) -> Unit = {},
     zIndex: Int = 0,
     imageId: Int? = null,
     imageAnchor: String = ICON_ANCHOR_CENTER,
@@ -82,6 +85,29 @@ fun Symbol(
         }
 
         val symbol = symbolManager.create(symbolOptions)
+
+        if (isDraggable) {
+            symbolManager.addDragListener(
+                object: OnSymbolDragListener {
+                    override fun onAnnotationDragStarted(annotation: Symbol?) {
+                        
+                    }
+
+                    override fun onAnnotationDrag(annotation: Symbol?) {
+                        if (annotation == symbol) {
+                            annotation?.let {
+                                onDrag(it.latLng)
+                            }
+                        }
+                    }
+
+                    override fun onAnnotationDragFinished(annotation: Symbol?) {
+
+                    }
+                }
+            )
+        }
+
         SymbolNode(symbolManager, symbol)
     }, update = {
         set(center) {

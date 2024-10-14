@@ -101,6 +101,7 @@ fun MapLibre(
     layers: List<Layer>? = null,
     images: List<Pair<String, Int>>? = null,
     renderMode: Int = RenderMode.NORMAL,
+    onMapClick: (LatLng) -> Unit = {},
     onMapLongClick: (LatLng) -> Unit = {},
     content: (@Composable @MapLibreComposable () -> Unit)? = null,
 ) {
@@ -150,6 +151,11 @@ fun MapLibre(
 
             maplibreMap.addOnMapLongClickListener { latLng ->
                 onMapLongClick(latLng)
+                true
+            }
+
+            maplibreMap.addOnMapClickListener { latLng ->
+                onMapClick(latLng)
                 true
             }
 

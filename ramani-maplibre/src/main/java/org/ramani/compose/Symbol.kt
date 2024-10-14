@@ -90,7 +90,7 @@ fun Symbol(
             symbolManager.addDragListener(
                 object: OnSymbolDragListener {
                     override fun onAnnotationDragStarted(annotation: Symbol?) {
-                        
+
                     }
 
                     override fun onAnnotationDrag(annotation: Symbol?) {

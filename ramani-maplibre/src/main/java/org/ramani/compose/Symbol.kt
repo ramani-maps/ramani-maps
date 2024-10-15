@@ -89,9 +89,7 @@ fun Symbol(
         if (isDraggable) {
             symbolManager.addDragListener(
                 object: OnSymbolDragListener {
-                    override fun onAnnotationDragStarted(annotation: Symbol?) {
-
-                    }
+                    override fun onAnnotationDragStarted(annotation: Symbol?) {}
 
                     override fun onAnnotationDrag(annotation: Symbol?) {
                         if (annotation == symbol) {

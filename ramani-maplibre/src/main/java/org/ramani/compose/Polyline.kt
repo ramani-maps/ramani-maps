@@ -16,16 +16,6 @@ import androidx.compose.runtime.currentComposer
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.plugins.annotation.LineOptions
 
-enum class PolylineDashType(val dashArray: Array<Float>?) {
-    NoDash(null),
-    Dash(arrayOf(2f, 1f)),
-    LongDash(arrayOf(3f, 1f));
-    
-    companion object {
-        fun fromInt(value: Int) = entries.firstOrNull { it.ordinal == value } ?: NoDash
-    }
-}
-
 @Composable
 @MapLibreComposable
 fun Polyline(
@@ -34,7 +24,7 @@ fun Polyline(
     lineWidth: Float,
     zIndex: Int = 0,
     isDraggable: Boolean = false,
-    dashType: Array<Float>? = PolylineDashType.NoDash.dashArray,
+    dashType: Array<Float>? = null,
 ) {
     val mapApplier = currentComposer.applier as MapApplier
 

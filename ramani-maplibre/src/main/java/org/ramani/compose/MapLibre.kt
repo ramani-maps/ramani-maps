@@ -103,6 +103,8 @@ fun MapLibre(
     renderMode: Int = RenderMode.NORMAL,
     onMapClick: (LatLng) -> Unit = {},
     onMapLongClick: (LatLng) -> Unit = {},
+    onMapMove: (MoveGestureDetector) -> Unit = {},
+    onMapZoom: (StandardScaleGestureDetector) -> Unit = {},
     content: (@Composable @MapLibreComposable () -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
@@ -149,15 +151,47 @@ fun MapLibre(
             maplibreMap.addSources(currentSources)
             maplibreMap.addLayers(currentLayers)
 
+            maplibreMap.addOnMapClickListener { latLng ->
+                onMapClick(latLng)
+                true
+            }
+            
             maplibreMap.addOnMapLongClickListener { latLng ->
                 onMapLongClick(latLng)
                 true
             }
 
-            maplibreMap.addOnMapClickListener { latLng ->
-                onMapClick(latLng)
-                true
-            }
+            maplibreMap.addOnMoveListener(
+                object : OnMoveListener {
+                    override fun onMoveBegin(detector: MoveGestureDetector) {
+                        onMapMove(detector)
+                    }
+
+                    override fun onMove(detector: MoveGestureDetector) {
+                        onMapMove(detector)
+                    }
+
+                    override fun onMoveEnd(detector: MoveGestureDetector) {
+                        onMapMove(detector)
+                    }
+                }
+            )
+
+            maplibreMap.addOnScaleListener(
+                object : OnScaleListener {
+                    override fun onScaleBegin(detector: StandardScaleGestureDetector) {
+                        onMapZoom(detector)
+                    }
+
+                    override fun onScale(detector: StandardScaleGestureDetector) {
+                        onMapZoom(detector)
+                    }
+
+                    override fun onScaleEnd(detector: StandardScaleGestureDetector) {
+                        onMapZoom(detector)
+                    }
+                }
+            )
 
             map.newComposition(parentComposition, style) {
                 CompositionLocalProvider {

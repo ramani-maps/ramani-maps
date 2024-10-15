@@ -99,9 +99,7 @@ fun Symbol(
                         }
                     }
 
-                    override fun onAnnotationDragFinished(annotation: Symbol?) {
-
-                    }
+                    override fun onAnnotationDragFinished(annotation: Symbol?) {}
                 }
             )
         }

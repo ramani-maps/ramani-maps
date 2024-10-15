@@ -24,7 +24,7 @@ fun Polyline(
     lineWidth: Float,
     zIndex: Int = 0,
     isDraggable: Boolean = false,
-    isDashed: Boolean = false,
+    dashType: Array<Float>? = null,
 ) {
     val mapApplier = currentComposer.applier as MapApplier
 
@@ -36,9 +36,7 @@ fun Polyline(
             .withLineWidth(lineWidth)
             .withDraggable(isDraggable)
 
-        if (isDashed) {
-            lineManager.lineDasharray = arrayOf(1.0f, 4.0f)
-        }
+        lineManager.lineDasharray = dashType
 
         val polyLine = lineManager.create(lineOptions)
         PolyLineNode(lineManager, polyLine)

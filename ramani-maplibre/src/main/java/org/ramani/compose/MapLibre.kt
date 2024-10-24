@@ -153,7 +153,7 @@ fun MapLibre(
                 onMapClick(latLng)
                 true
             }
-            
+
             maplibreMap.addOnMapLongClickListener { latLng ->
                 onMapLongClick(latLng)
                 true

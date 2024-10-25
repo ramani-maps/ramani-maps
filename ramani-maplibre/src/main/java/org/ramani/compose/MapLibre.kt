@@ -173,12 +173,47 @@ fun MapLibre(
 }
 
 private fun MapLibreMap.applyUiSettings(uiSettings: UiSettings) {
-    this.uiSettings.setCompassMargins(
-        uiSettings.compassMargins.left,
-        uiSettings.compassMargins.top,
-        uiSettings.compassMargins.right,
-        uiSettings.compassMargins.bottom
-    )
+    this.uiSettings.apply {
+        setAttributionMargins(
+            uiSettings.attributionsMargins.left,
+            uiSettings.attributionsMargins.top,
+            uiSettings.attributionsMargins.right,
+            uiSettings.attributionsMargins.bottom
+        )
+
+        setCompassMargins(
+            uiSettings.compassMargins.left,
+            uiSettings.compassMargins.top,
+            uiSettings.compassMargins.right,
+            uiSettings.compassMargins.bottom
+        )
+
+        setLogoMargins(
+            uiSettings.logoMargins.left,
+            uiSettings.logoMargins.top,
+            uiSettings.logoMargins.right,
+            uiSettings.logoMargins.bottom
+        )
+
+        flingAnimationBaseTime = uiSettings.flingAnimationBaseTime
+        flingThreshold = uiSettings.flingThreshold
+        isAttributionEnabled = uiSettings.isAttributionEnabled
+        isDeselectMarkersOnTap = uiSettings.deselectMarkersOnTap
+        isDisableRotateWhenScaling = uiSettings.disableRotateWhenScaling
+        isDoubleTapGesturesEnabled = uiSettings.doubleTapGesturesEnabled
+        isFlingVelocityAnimationEnabled = uiSettings.flingVelocityAnimationEnabled
+        isHorizontalScrollGesturesEnabled = uiSettings.horizontalScrollGesturesEnabled
+        isIncreaseScaleThresholdWhenRotating = uiSettings.increaseScaleThresholdWhenRotating
+        isLogoEnabled = uiSettings.isLogoEnabled
+        isQuickZoomGesturesEnabled = uiSettings.quickZoomGesturesEnabled
+        isRotateGesturesEnabled = uiSettings.rotateGesturesEnabled
+        isRotateVelocityAnimationEnabled = uiSettings.rotateVelocityAnimationEnabled
+        isScaleVelocityAnimationEnabled = uiSettings.scaleVelocityAnimationEnabled
+        isScrollGesturesEnabled = uiSettings.scrollGesturesEnabled
+        isTiltGesturesEnabled = uiSettings.tiltGesturesEnabled
+        isZoomGesturesEnabled = uiSettings.zoomGesturesEnabled
+        zoomRate = uiSettings.zoomRate
+    }
 }
 
 private fun MapLibreMap.applyProperties(properties: MapProperties) {

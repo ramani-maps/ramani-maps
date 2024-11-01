@@ -103,6 +103,7 @@ fun MapLibre(
     renderMode: Int = RenderMode.NORMAL,
     onMapClick: (LatLng) -> Unit = {},
     onMapLongClick: (LatLng) -> Unit = {},
+    onStyleLoaded: (Style) -> Unit = {},
     content: (@Composable @MapLibreComposable () -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
@@ -134,6 +135,7 @@ fun MapLibre(
         disposingComposition {
             val maplibreMap = map.awaitMap()
             val style = maplibreMap.awaitStyle(styleBuilder)
+            onStyleLoaded(style)
 
             maplibreMap.applyUiSettings(currentUiSettings)
             maplibreMap.applyProperties(currentMapProperties)

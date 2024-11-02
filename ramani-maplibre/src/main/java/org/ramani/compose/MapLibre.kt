@@ -43,6 +43,7 @@ import org.maplibre.android.location.engine.LocationEngineCallback
 import org.maplibre.android.location.engine.LocationEngineDefault
 import org.maplibre.android.location.engine.LocationEngineRequest
 import org.maplibre.android.location.engine.LocationEngineResult
+import org.maplibre.android.location.modes.CameraMode
 import org.maplibre.android.location.modes.RenderMode
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.MapLibreMap
@@ -85,6 +86,7 @@ annotation class MapLibreComposable
  * @param images Images to be added to the map and used by external layers (pairs of <id, drawable code>).
  * @param renderMode Ways the user location can be rendered on the map.
  * @param onMapLongClick Callback that is invoked when the map is long clicked
+ * @param cameraMode Set specific camera tracking modes as the device location changes.
  * @param content The content of the map.
  */
 @Composable
@@ -106,6 +108,7 @@ fun MapLibre(
     onMapClick: (LatLng) -> Unit = {},
     onMapLongClick: (LatLng) -> Unit = {},
     onStyleLoaded: (Style) -> Unit = {},
+    cameraMode: Int = CameraMode.NONE,
     content: (@Composable @MapLibreComposable () -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
@@ -147,6 +150,7 @@ fun MapLibre(
                 currentLocationStyling,
                 userLocation,
                 renderMode,
+                cameraMode
             )
             maplibreMap.addImages(context, currentImages)
             maplibreMap.addSources(currentSources)
@@ -236,7 +240,8 @@ private fun MapLibreMap.setupLocation(
     locationRequestProperties: LocationRequestProperties?,
     locationStyling: LocationStyling,
     userLocation: MutableState<Location>?,
-    renderMode: Int
+    renderMode: Int,
+    cameraMode: Int
 ) {
     if (locationRequestProperties == null) return
 
@@ -256,6 +261,7 @@ private fun MapLibreMap.setupLocation(
     }
 
     this.locationComponent.renderMode = renderMode
+    this.locationComponent.cameraMode = cameraMode
 }
 
 private fun isFineLocationGranted(context: Context): Boolean {

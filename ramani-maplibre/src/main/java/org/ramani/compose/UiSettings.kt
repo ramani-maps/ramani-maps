@@ -38,7 +38,29 @@ class UiSettings(
     val zoomGesturesEnabled: Boolean = true,
     val zoomRate: Float = 1.0f
 ) : Parcelable {
-    constructor(uiSettings: UiSettings) : this(uiSettings.compassMargins)
+    constructor(uiSettings: UiSettings) : this(
+        attributionsMargins = uiSettings.attributionsMargins,
+        compassMargins = uiSettings.compassMargins,
+        deselectMarkersOnTap = uiSettings.deselectMarkersOnTap,
+        disableRotateWhenScaling = uiSettings.disableRotateWhenScaling,
+        doubleTapGesturesEnabled = uiSettings.doubleTapGesturesEnabled,
+        flingAnimationBaseTime = uiSettings.flingAnimationBaseTime,
+        flingThreshold = uiSettings.flingThreshold,
+        flingVelocityAnimationEnabled = uiSettings.flingVelocityAnimationEnabled,
+        horizontalScrollGesturesEnabled = uiSettings.horizontalScrollGesturesEnabled,
+        increaseScaleThresholdWhenRotating = uiSettings.increaseScaleThresholdWhenRotating,
+        isAttributionEnabled = uiSettings.isAttributionEnabled,
+        isLogoEnabled = uiSettings.isLogoEnabled,
+        logoMargins = uiSettings.logoMargins,
+        quickZoomGesturesEnabled = uiSettings.quickZoomGesturesEnabled,
+        rotateGesturesEnabled = uiSettings.rotateGesturesEnabled,
+        rotateVelocityAnimationEnabled = uiSettings.rotateVelocityAnimationEnabled,
+        scaleVelocityAnimationEnabled = uiSettings.scaleVelocityAnimationEnabled,
+        scrollGesturesEnabled = uiSettings.scrollGesturesEnabled,
+        tiltGesturesEnabled = uiSettings.tiltGesturesEnabled,
+        zoomGesturesEnabled = uiSettings.zoomGesturesEnabled,
+        zoomRate = uiSettings.zoomRate
+    )
 
     fun copy(
         attributionsMargins: Margins = this.attributionsMargins,

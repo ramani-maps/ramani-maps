@@ -213,6 +213,9 @@ private fun MapLibreMap.applyUiSettings(uiSettings: UiSettings) {
         isTiltGesturesEnabled = uiSettings.tiltGesturesEnabled
         isZoomGesturesEnabled = uiSettings.zoomGesturesEnabled
         zoomRate = uiSettings.zoomRate
+
+        uiSettings.compassGravity?.let { compassGravity = it }
+        uiSettings.logoGravity?.let { logoGravity = it }
     }
 }
 

@@ -17,6 +17,7 @@ import org.maplibre.android.constants.MapLibreConstants
 @Parcelize
 class UiSettings(
     val attributionsMargins: Margins = Margins(),
+    val compassGravity: Int? = null,
     val compassMargins: Margins = Margins(),
     val deselectMarkersOnTap: Boolean = true,
     val disableRotateWhenScaling: Boolean = true,
@@ -28,6 +29,7 @@ class UiSettings(
     val increaseScaleThresholdWhenRotating: Boolean = true,
     val isAttributionEnabled: Boolean = true,
     val isLogoEnabled: Boolean = true,
+    val logoGravity: Int? = null,
     val logoMargins: Margins = Margins(),
     val quickZoomGesturesEnabled: Boolean = true,
     val rotateGesturesEnabled: Boolean = true,
@@ -40,6 +42,7 @@ class UiSettings(
 ) : Parcelable {
     constructor(uiSettings: UiSettings) : this(
         attributionsMargins = uiSettings.attributionsMargins,
+        compassGravity = uiSettings.compassGravity,
         compassMargins = uiSettings.compassMargins,
         deselectMarkersOnTap = uiSettings.deselectMarkersOnTap,
         disableRotateWhenScaling = uiSettings.disableRotateWhenScaling,
@@ -51,6 +54,7 @@ class UiSettings(
         increaseScaleThresholdWhenRotating = uiSettings.increaseScaleThresholdWhenRotating,
         isAttributionEnabled = uiSettings.isAttributionEnabled,
         isLogoEnabled = uiSettings.isLogoEnabled,
+        logoGravity = uiSettings.logoGravity,
         logoMargins = uiSettings.logoMargins,
         quickZoomGesturesEnabled = uiSettings.quickZoomGesturesEnabled,
         rotateGesturesEnabled = uiSettings.rotateGesturesEnabled,
@@ -64,6 +68,7 @@ class UiSettings(
 
     fun copy(
         attributionsMargins: Margins = this.attributionsMargins,
+        compassGravity: Int? = this.compassGravity,
         compassMargins: Margins = this.compassMargins,
         deselectMarkersOnTap: Boolean = this.deselectMarkersOnTap,
         disableRotateWhenScaling: Boolean = this.disableRotateWhenScaling,
@@ -75,6 +80,7 @@ class UiSettings(
         increaseScaleThresholdWhenRotating: Boolean = this.increaseScaleThresholdWhenRotating,
         isAttributionEnabled: Boolean = this.isAttributionEnabled,
         isLogoEnabled: Boolean = this.isLogoEnabled,
+        logoGravity: Int? = this.logoGravity,
         logoMargins: Margins = this.logoMargins,
         quickZoomGesturesEnabled: Boolean = this.quickZoomGesturesEnabled,
         rotateGesturesEnabled: Boolean = this.rotateGesturesEnabled,
@@ -87,6 +93,7 @@ class UiSettings(
     ): UiSettings {
         return UiSettings(
             attributionsMargins = attributionsMargins,
+            compassGravity = compassGravity,
             compassMargins = compassMargins,
             deselectMarkersOnTap = deselectMarkersOnTap,
             disableRotateWhenScaling = disableRotateWhenScaling,
@@ -98,6 +105,7 @@ class UiSettings(
             increaseScaleThresholdWhenRotating = increaseScaleThresholdWhenRotating,
             isAttributionEnabled = isAttributionEnabled,
             isLogoEnabled = isLogoEnabled,
+            logoGravity = logoGravity,
             logoMargins = logoMargins,
             quickZoomGesturesEnabled = quickZoomGesturesEnabled,
             rotateGesturesEnabled = rotateGesturesEnabled,
@@ -117,6 +125,8 @@ class UiSettings(
         other as UiSettings
 
         return attributionsMargins == other.attributionsMargins &&
+                compassGravity == other.compassGravity &&
+                compassMargins == other.compassMargins &&
                 deselectMarkersOnTap == other.deselectMarkersOnTap &&
                 disableRotateWhenScaling == other.disableRotateWhenScaling &&
                 doubleTapGesturesEnabled == other.doubleTapGesturesEnabled &&
@@ -127,6 +137,7 @@ class UiSettings(
                 increaseScaleThresholdWhenRotating == other.increaseScaleThresholdWhenRotating &&
                 isAttributionEnabled == other.isAttributionEnabled &&
                 isLogoEnabled == other.isLogoEnabled &&
+                logoGravity == other.logoGravity &&
                 logoMargins == other.logoMargins &&
                 quickZoomGesturesEnabled == other.quickZoomGesturesEnabled &&
                 rotateGesturesEnabled == other.rotateGesturesEnabled &&
@@ -135,12 +146,12 @@ class UiSettings(
                 scrollGesturesEnabled == other.scrollGesturesEnabled &&
                 tiltGesturesEnabled == other.tiltGesturesEnabled &&
                 zoomGesturesEnabled == other.zoomGesturesEnabled &&
-                zoomRate == other.zoomRate &&
-                compassMargins == other.compassMargins
+                zoomRate == other.zoomRate
     }
 
     override fun hashCode(): Int {
         var result = attributionsMargins.hashCode()
+        result = 31 * result + compassGravity.hashCode()
         result = 31 * result + compassMargins.hashCode()
         result = 31 * result + deselectMarkersOnTap.hashCode()
         result = 31 * result + disableRotateWhenScaling.hashCode()
@@ -152,6 +163,7 @@ class UiSettings(
         result = 31 * result + increaseScaleThresholdWhenRotating.hashCode()
         result = 31 * result + isAttributionEnabled.hashCode()
         result = 31 * result + isLogoEnabled.hashCode()
+        result = 31 * result + logoGravity.hashCode()
         result = 31 * result + logoMargins.hashCode()
         result = 31 * result + quickZoomGesturesEnabled.hashCode()
         result = 31 * result + rotateGesturesEnabled.hashCode()

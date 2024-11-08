@@ -290,7 +290,11 @@ private fun LocationStyling.toMapLibre(context: Context): LocationComponentOptio
     this.enablePulse?.let { builder.pulseEnabled(it) }
     this.enablePulseFade?.let { builder.pulseFadeEnabled(it) }
     this.pulseColor?.let { builder.pulseColor(it) }
-
+    this.bearingTintColor?.let { builder.bearingTintColor(it) }
+    this.foregroundTintColor?.let { builder.foregroundTintColor(it) }
+    this.backgroundTintColor?.let { builder.backgroundTintColor(it) }
+    this.foregroundStaleTintColor?.let { builder.foregroundStaleTintColor(it) }
+    this.backgroundStaleTintColor?.let { builder.backgroundStaleTintColor(it) }
     return builder.build()
 }
 

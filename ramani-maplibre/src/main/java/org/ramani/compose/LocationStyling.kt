@@ -19,6 +19,11 @@ import kotlinx.parcelize.Parcelize
  * @property enablePulse Enable the location pulsing circle.
  * @property enablePulseFade Enable the fading of the pulsing circle.
  * @property pulseColor Color of the pulsing circle.
+ * @property bearingTintColor Defines the bearing icon color as an integer (AARRGGBB).
+ * @property foregroundTintColor Defines the foreground color as an integer (AARRGGBB).
+ * @property backgroundTintColor Defines the background color as an integer (AARRGGBB).
+ * @property foregroundStaleTintColor Defines the foreground stale color as an integer (AARRGGBB).
+ * @property backgroundStaleTintColor Defines the background stale color as an integer (AARRGGBB).
  */
 @Parcelize
 class LocationStyling(
@@ -27,6 +32,11 @@ class LocationStyling(
     var enablePulse: Boolean? = null,
     var enablePulseFade: Boolean? = null,
     @ColorInt var pulseColor: Int? = null,
+    @ColorInt var bearingTintColor: Int? = null,
+    @ColorInt val foregroundTintColor: Int? = null,
+    @ColorInt val backgroundTintColor: Int? = null,
+    @ColorInt val foregroundStaleTintColor: Int? = null,
+    @ColorInt val backgroundStaleTintColor: Int? = null,
 ) : Parcelable {
     constructor(locationStyling: LocationStyling) : this(
         locationStyling.accuracyAlpha,
@@ -34,6 +44,11 @@ class LocationStyling(
         locationStyling.enablePulse,
         locationStyling.enablePulseFade,
         locationStyling.pulseColor,
+        locationStyling.bearingTintColor,
+        locationStyling.foregroundTintColor,
+        locationStyling.backgroundTintColor,
+        locationStyling.foregroundStaleTintColor,
+        locationStyling.backgroundStaleTintColor,
     )
 
     override fun equals(other: Any?): Boolean {
@@ -46,7 +61,13 @@ class LocationStyling(
         if (accuracyColor != other.accuracyColor) return false
         if (enablePulse != other.enablePulse) return false
         if (enablePulseFade != other.enablePulseFade) return false
-        return pulseColor == other.pulseColor
+        if (pulseColor == other.pulseColor) return false
+        if (bearingTintColor == other.bearingTintColor) return false
+        if (foregroundTintColor == other.foregroundTintColor) return false
+        if (backgroundTintColor == other.backgroundTintColor) return false
+        if (foregroundStaleTintColor == other.foregroundStaleTintColor) return false
+        if (backgroundStaleTintColor == other.backgroundStaleTintColor) return false
+        return true
     }
 
     override fun hashCode(): Int {
@@ -55,6 +76,11 @@ class LocationStyling(
         result = 31 * result + (enablePulse?.hashCode() ?: 0)
         result = 31 * result + (enablePulseFade?.hashCode() ?: 0)
         result = 31 * result + (pulseColor ?: 0)
+        result = 31 * result + (bearingTintColor ?: 0)
+        result = 31 * result + (foregroundTintColor ?: 0)
+        result = 31 * result + (backgroundTintColor ?: 0)
+        result = 31 * result + (foregroundStaleTintColor ?: 0)
+        result = 31 * result + (backgroundStaleTintColor ?: 0)
         return result
     }
 }

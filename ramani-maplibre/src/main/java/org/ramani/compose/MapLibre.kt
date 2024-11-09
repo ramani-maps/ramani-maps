@@ -221,6 +221,10 @@ private fun MapLibreMap.applyUiSettings(uiSettings: UiSettings) {
 
 private fun MapLibreMap.applyProperties(properties: MapProperties) {
     properties.maxZoom?.let { this.setMaxZoomPreference(it) }
+    properties.minZoom?.let { this.setMinZoomPreference(it) }
+    properties.maxPitch?.let { this.setMaxPitchPreference(it) }
+    properties.minPitch?.let { this.setMinPitchPreference(it) }
+    properties.latLngBounds?.let { this.setLatLngBoundsForCameraTarget(it) }
 }
 
 private fun MapLibreMap.setupLocation(

@@ -150,7 +150,7 @@ fun MapLibre(
                 currentLocationStyling,
                 userLocation,
                 renderMode,
-                cameraMode
+                cameraMode,
             )
             maplibreMap.addImages(context, currentImages)
             maplibreMap.addSources(currentSources)
@@ -241,7 +241,7 @@ private fun MapLibreMap.setupLocation(
     locationStyling: LocationStyling,
     userLocation: MutableState<Location>?,
     renderMode: Int,
-    cameraMode: Int
+    cameraMode: Int,
 ) {
     if (locationRequestProperties == null) return
 

@@ -44,6 +44,7 @@ import org.maplibre.android.location.engine.LocationEngineDefault
 import org.maplibre.android.location.engine.LocationEngineRequest
 import org.maplibre.android.location.engine.LocationEngineResult
 import org.maplibre.android.location.modes.RenderMode
+import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapLibreMap.OnMoveListener
 import org.maplibre.android.maps.MapLibreMap.OnRotateListener
@@ -100,6 +101,7 @@ fun MapLibre(
     sources: List<Source>? = null,
     layers: List<Layer>? = null,
     images: List<Pair<String, Int>>? = null,
+    mapView: MapView = rememberMapViewWithLifecycle(),
     renderMode: Int = RenderMode.NORMAL,
     onMapClick: (LatLng) -> Unit = {},
     onMapLongClick: (LatLng) -> Unit = {},
@@ -111,8 +113,7 @@ fun MapLibre(
         return
     }
 
-    val context = LocalContext.current
-    val map = rememberMapViewWithLifecycle()
+    val context = LocalContext.current 
     val currentCameraPosition by rememberUpdatedState(cameraPosition)
     val currentUiSettings by rememberUpdatedState(uiSettings)
     val currentMapProperties by rememberUpdatedState(properties)
@@ -125,7 +126,7 @@ fun MapLibre(
     val currentStyleBuilder by rememberUpdatedState(styleBuilder)
     val parentComposition = rememberCompositionContext()
 
-    AndroidView(modifier = modifier, factory = { map })
+    AndroidView(modifier = modifier, factory = { mapView })
     LaunchedEffect(
         currentUiSettings,
         currentMapProperties,
@@ -133,7 +134,7 @@ fun MapLibre(
         currentLocationStyling
     ) {
         disposingComposition {
-            val maplibreMap = map.awaitMap()
+            val maplibreMap = mapView.awaitMap()
             val style = maplibreMap.awaitStyle(styleBuilder)
             onStyleLoaded(style)
 
@@ -161,7 +162,7 @@ fun MapLibre(
                 true
             }
 
-            map.newComposition(parentComposition, style) {
+            mapView.newComposition(parentComposition, style) {
                 CompositionLocalProvider {
                     MapUpdater(
                         cameraPosition = currentCameraPosition,

@@ -134,7 +134,7 @@ fun MapLibre(
         currentLocationStyling
     ) {
         disposingComposition {
-            val maplibreMap = map.awaitMap()
+            val maplibreMap = mapView.awaitMap()
             val style = maplibreMap.awaitStyle(styleBuilder)
             onStyleLoaded(style)
 
@@ -162,7 +162,7 @@ fun MapLibre(
                 true
             }
 
-            map.newComposition(parentComposition, style) {
+            mapView.newComposition(parentComposition, style) {
                 CompositionLocalProvider {
                     MapUpdater(
                         cameraPosition = currentCameraPosition,

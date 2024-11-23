@@ -39,6 +39,7 @@ import org.maplibre.android.gestures.ShoveGestureDetector
 import org.maplibre.android.gestures.StandardScaleGestureDetector
 import org.maplibre.android.location.LocationComponentActivationOptions
 import org.maplibre.android.location.LocationComponentOptions
+import org.maplibre.android.location.engine.LocationEngine
 import org.maplibre.android.location.engine.LocationEngineCallback
 import org.maplibre.android.location.engine.LocationEngineDefault
 import org.maplibre.android.location.engine.LocationEngineRequest
@@ -96,6 +97,7 @@ fun MapLibre(
     uiSettings: UiSettings = UiSettings(),
     properties: MapProperties = MapProperties(),
     locationRequestProperties: LocationRequestProperties? = null,
+    locationEngine: LocationEngine? = null,
     locationStyling: LocationStyling = LocationStyling(),
     userLocation: MutableState<Location>? = null,
     sources: List<Source>? = null,
@@ -118,6 +120,7 @@ fun MapLibre(
     val currentUiSettings by rememberUpdatedState(uiSettings)
     val currentMapProperties by rememberUpdatedState(properties)
     val currentLocationRequestProperties by rememberUpdatedState(locationRequestProperties)
+    val currentLocationEngine by rememberUpdatedState(locationEngine)
     val currentLocationStyling by rememberUpdatedState(locationStyling)
     val currentSources by rememberUpdatedState(sources)
     val currentLayers by rememberUpdatedState(layers)
@@ -131,6 +134,7 @@ fun MapLibre(
         currentUiSettings,
         currentMapProperties,
         currentLocationRequestProperties,
+        currentLocationEngine,
         currentLocationStyling
     ) {
         disposingComposition {
@@ -141,12 +145,13 @@ fun MapLibre(
             maplibreMap.applyUiSettings(currentUiSettings)
             maplibreMap.applyProperties(currentMapProperties)
             maplibreMap.setupLocation(
-                context,
-                style,
-                currentLocationRequestProperties,
-                currentLocationStyling,
-                userLocation,
-                renderMode,
+                context = context,
+                style = style,
+                locationRequestProperties = currentLocationRequestProperties,
+                locationEngine = currentLocationEngine,
+                locationStyling = currentLocationStyling,
+                userLocation = userLocation,
+                renderMode = renderMode
             )
             maplibreMap.addImages(context, currentImages)
             maplibreMap.addSources(currentSources)
@@ -234,6 +239,7 @@ private fun MapLibreMap.setupLocation(
     context: Context,
     style: Style,
     locationRequestProperties: LocationRequestProperties?,
+    locationEngine: LocationEngine? = null,
     locationStyling: LocationStyling,
     userLocation: MutableState<Location>?,
     renderMode: Int
@@ -241,12 +247,18 @@ private fun MapLibreMap.setupLocation(
     if (locationRequestProperties == null) return
 
     val locationEngineRequest = locationRequestProperties.toMapLibre()
-    val locationActivationOptions = LocationComponentActivationOptions
+    val activationBuilder = LocationComponentActivationOptions
         .builder(context, style)
         .locationComponentOptions(locationStyling.toMapLibre(context))
-        .useDefaultLocationEngine(true)
         .locationEngineRequest(locationEngineRequest)
-        .build()
+
+    if (locationEngine != null) {
+        activationBuilder.locationEngine(locationEngine)
+    } else {
+        activationBuilder.useDefaultLocationEngine(true)
+    }
+
+    val locationActivationOptions = activationBuilder.build()
     this.locationComponent.activateLocationComponent(locationActivationOptions)
 
     if (isFineLocationGranted(context) || isCoarseLocationGranted(context)) {

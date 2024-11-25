@@ -39,6 +39,7 @@ import org.maplibre.android.gestures.ShoveGestureDetector
 import org.maplibre.android.gestures.StandardScaleGestureDetector
 import org.maplibre.android.location.LocationComponentActivationOptions
 import org.maplibre.android.location.LocationComponentOptions
+import org.maplibre.android.location.engine.LocationEngine
 import org.maplibre.android.location.engine.LocationEngineCallback
 import org.maplibre.android.location.engine.LocationEngineDefault
 import org.maplibre.android.location.engine.LocationEngineRequest
@@ -77,6 +78,8 @@ annotation class MapLibreComposable
  * @param locationRequestProperties Properties related to the location marker. If null (which is
  *        the default), then the location will not be enabled on the map. Enabling the location
  *        requires setting this field and getting the location permission in your app.
+ * @param locationEngine The location engine to use for the location marker. If null (which is
+ *        the default), then the default location engine will be used.
  * @param locationStyling Styling related to the location marker (color, pulse, etc).
  * @param userLocation If set and if the location is enabled (by setting [locationRequestProperties],
  *        it will be updated to contain the latest user location as known by the map.
@@ -96,6 +99,7 @@ fun MapLibre(
     uiSettings: UiSettings = UiSettings(),
     properties: MapProperties = MapProperties(),
     locationRequestProperties: LocationRequestProperties? = null,
+    locationEngine: LocationEngine? = null,
     locationStyling: LocationStyling = LocationStyling(),
     userLocation: MutableState<Location>? = null,
     sources: List<Source>? = null,
@@ -113,11 +117,12 @@ fun MapLibre(
         return
     }
 
-    val context = LocalContext.current 
+    val context = LocalContext.current
     val currentCameraPosition by rememberUpdatedState(cameraPosition)
     val currentUiSettings by rememberUpdatedState(uiSettings)
     val currentMapProperties by rememberUpdatedState(properties)
     val currentLocationRequestProperties by rememberUpdatedState(locationRequestProperties)
+    val currentLocationEngine by rememberUpdatedState(locationEngine)
     val currentLocationStyling by rememberUpdatedState(locationStyling)
     val currentSources by rememberUpdatedState(sources)
     val currentLayers by rememberUpdatedState(layers)
@@ -131,6 +136,7 @@ fun MapLibre(
         currentUiSettings,
         currentMapProperties,
         currentLocationRequestProperties,
+        currentLocationEngine,
         currentLocationStyling
     ) {
         disposingComposition {
@@ -141,12 +147,13 @@ fun MapLibre(
             maplibreMap.applyUiSettings(currentUiSettings)
             maplibreMap.applyProperties(currentMapProperties)
             maplibreMap.setupLocation(
-                context,
-                style,
-                currentLocationRequestProperties,
-                currentLocationStyling,
-                userLocation,
-                renderMode,
+                context = context,
+                style = style,
+                locationRequestProperties = currentLocationRequestProperties,
+                locationEngine = currentLocationEngine,
+                locationStyling = currentLocationStyling,
+                userLocation = userLocation,
+                renderMode = renderMode,
             )
             maplibreMap.addImages(context, currentImages)
             maplibreMap.addSources(currentSources)
@@ -234,6 +241,7 @@ private fun MapLibreMap.setupLocation(
     context: Context,
     style: Style,
     locationRequestProperties: LocationRequestProperties?,
+    locationEngine: LocationEngine? = null,
     locationStyling: LocationStyling,
     userLocation: MutableState<Location>?,
     renderMode: Int
@@ -241,12 +249,16 @@ private fun MapLibreMap.setupLocation(
     if (locationRequestProperties == null) return
 
     val locationEngineRequest = locationRequestProperties.toMapLibre()
-    val locationActivationOptions = LocationComponentActivationOptions
+    val activationBuilder = LocationComponentActivationOptions
         .builder(context, style)
         .locationComponentOptions(locationStyling.toMapLibre(context))
-        .useDefaultLocationEngine(true)
         .locationEngineRequest(locationEngineRequest)
-        .build()
+
+    locationEngine?.let {
+        activationBuilder.locationEngine(it)
+    } ?: activationBuilder.useDefaultLocationEngine(true)
+
+    val locationActivationOptions = activationBuilder.build()
     this.locationComponent.activateLocationComponent(locationActivationOptions)
 
     if (isFineLocationGranted(context) || isCoarseLocationGranted(context)) {

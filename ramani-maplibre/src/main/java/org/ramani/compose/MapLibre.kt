@@ -39,6 +39,7 @@ import org.maplibre.android.gestures.ShoveGestureDetector
 import org.maplibre.android.gestures.StandardScaleGestureDetector
 import org.maplibre.android.location.LocationComponentActivationOptions
 import org.maplibre.android.location.LocationComponentOptions
+import org.maplibre.android.location.OnCameraTrackingChangedListener
 import org.maplibre.android.location.engine.LocationEngineCallback
 import org.maplibre.android.location.engine.LocationEngineDefault
 import org.maplibre.android.location.engine.LocationEngineRequest
@@ -261,6 +262,20 @@ private fun MapLibreMap.setupLocation(
     }
 
     this.locationComponent.renderMode = renderMode
+
+    this.locationComponent.addOnCameraTrackingChangedListener(
+        object : OnCameraTrackingChangedListener {
+            override fun onCameraTrackingDismissed() {
+                // Do nothing
+            }
+
+            override fun onCameraTrackingChanged(currentMode: Int) {
+                if (currentMode != cameraMode) {
+                    locationComponent.cameraMode = cameraMode
+                }
+            }
+    })
+
     this.locationComponent.cameraMode = cameraMode
 }
 

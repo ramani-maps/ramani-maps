@@ -78,6 +78,8 @@ annotation class MapLibreComposable
  * @param locationRequestProperties Properties related to the location marker. If null (which is
  *        the default), then the location will not be enabled on the map. Enabling the location
  *        requires setting this field and getting the location permission in your app.
+ * @param locationEngine The location engine to use for the location marker. If null (which is
+ *        the default), then the default location engine will be used.
  * @param locationStyling Styling related to the location marker (color, pulse, etc).
  * @param userLocation If set and if the location is enabled (by setting [locationRequestProperties],
  *        it will be updated to contain the latest user location as known by the map.
@@ -115,7 +117,7 @@ fun MapLibre(
         return
     }
 
-    val context = LocalContext.current 
+    val context = LocalContext.current
     val currentCameraPosition by rememberUpdatedState(cameraPosition)
     val currentUiSettings by rememberUpdatedState(uiSettings)
     val currentMapProperties by rememberUpdatedState(properties)
@@ -151,7 +153,7 @@ fun MapLibre(
                 locationEngine = currentLocationEngine,
                 locationStyling = currentLocationStyling,
                 userLocation = userLocation,
-                renderMode = renderMode
+                renderMode = renderMode,
             )
             maplibreMap.addImages(context, currentImages)
             maplibreMap.addSources(currentSources)
@@ -252,11 +254,9 @@ private fun MapLibreMap.setupLocation(
         .locationComponentOptions(locationStyling.toMapLibre(context))
         .locationEngineRequest(locationEngineRequest)
 
-    if (locationEngine != null) {
-        activationBuilder.locationEngine(locationEngine)
-    } else {
-        activationBuilder.useDefaultLocationEngine(true)
-    }
+    locationEngine?.let {
+        activationBuilder.locationEngine(it)
+    } ?: activationBuilder.useDefaultLocationEngine(true)
 
     val locationActivationOptions = activationBuilder.build()
     this.locationComponent.activateLocationComponent(locationActivationOptions)

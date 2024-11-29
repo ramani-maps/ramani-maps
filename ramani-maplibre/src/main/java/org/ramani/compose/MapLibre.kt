@@ -137,7 +137,10 @@ fun MapLibre(
         currentMapProperties,
         currentLocationRequestProperties,
         currentLocationEngine,
-        currentLocationStyling
+        currentLocationStyling,
+        currentSources,
+        currentLayers,
+        currentImages,
     ) {
         disposingComposition {
             val maplibreMap = mapView.awaitMap()

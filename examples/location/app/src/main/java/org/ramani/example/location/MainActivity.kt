@@ -19,6 +19,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.location.modes.CameraMode
 import org.maplibre.android.maps.Style
 import org.ramani.compose.CameraPosition
 import org.ramani.compose.LocationRequestProperties
@@ -55,6 +56,7 @@ class MainActivity : ComponentActivity() {
                                 pulseColor = Color.YELLOW,
                             ),
                             userLocation = userLocation,
+                            cameraMode = CameraMode.TRACKING_GPS,
                         )
                     }
                     Button(

@@ -33,10 +33,10 @@ class LocationStyling(
     var enablePulseFade: Boolean? = null,
     @ColorInt var pulseColor: Int? = null,
     @ColorInt var bearingTintColor: Int? = null,
-    @ColorInt val foregroundTintColor: Int? = null,
-    @ColorInt val backgroundTintColor: Int? = null,
-    @ColorInt val foregroundStaleTintColor: Int? = null,
-    @ColorInt val backgroundStaleTintColor: Int? = null,
+    @ColorInt var foregroundTintColor: Int? = null,
+    @ColorInt var backgroundTintColor: Int? = null,
+    @ColorInt var foregroundStaleTintColor: Int? = null,
+    @ColorInt var backgroundStaleTintColor: Int? = null,
 ) : Parcelable {
     constructor(locationStyling: LocationStyling) : this(
         locationStyling.accuracyAlpha,
@@ -51,6 +51,32 @@ class LocationStyling(
         locationStyling.backgroundStaleTintColor,
     )
 
+    fun copy(
+        accuracyAlpha: Float? = this.accuracyAlpha,
+        @ColorInt accuracyColor: Int? = this.accuracyColor,
+        enablePulse: Boolean? = this.enablePulse,
+        enablePulseFade: Boolean? = this.enablePulseFade,
+        @ColorInt pulseColor: Int? = this.pulseColor,
+        @ColorInt bearingTintColor: Int? = this.bearingTintColor,
+        @ColorInt foregroundTintColor: Int? = this.foregroundTintColor,
+        @ColorInt backgroundTintColor: Int? = this.backgroundTintColor,
+        @ColorInt foregroundStaleTintColor: Int? = this.foregroundStaleTintColor,
+        @ColorInt backgroundStaleTintColor: Int? = this.backgroundStaleTintColor,
+    ): LocationStyling {
+        return LocationStyling(
+            accuracyAlpha = accuracyAlpha,
+            accuracyColor = accuracyColor,
+            enablePulse = enablePulse,
+            enablePulseFade = enablePulseFade,
+            pulseColor = pulseColor,
+            bearingTintColor = bearingTintColor,
+            foregroundTintColor = foregroundTintColor,
+            backgroundTintColor = backgroundTintColor,
+            foregroundStaleTintColor = foregroundStaleTintColor,
+            backgroundStaleTintColor = backgroundStaleTintColor,
+        )
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -61,12 +87,13 @@ class LocationStyling(
         if (accuracyColor != other.accuracyColor) return false
         if (enablePulse != other.enablePulse) return false
         if (enablePulseFade != other.enablePulseFade) return false
-        if (pulseColor == other.pulseColor) return false
-        if (bearingTintColor == other.bearingTintColor) return false
-        if (foregroundTintColor == other.foregroundTintColor) return false
-        if (backgroundTintColor == other.backgroundTintColor) return false
-        if (foregroundStaleTintColor == other.foregroundStaleTintColor) return false
-        if (backgroundStaleTintColor == other.backgroundStaleTintColor) return false
+        if (pulseColor != other.pulseColor) return false
+        if (bearingTintColor != other.bearingTintColor) return false
+        if (foregroundTintColor != other.foregroundTintColor) return false
+        if (backgroundTintColor != other.backgroundTintColor) return false
+        if (foregroundStaleTintColor != other.foregroundStaleTintColor) return false
+        if (backgroundStaleTintColor != other.backgroundStaleTintColor) return false
+
         return true
     }
 

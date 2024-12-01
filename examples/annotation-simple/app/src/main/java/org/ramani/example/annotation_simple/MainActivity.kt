@@ -19,6 +19,7 @@ import org.ramani.compose.CameraPosition
 import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
 import org.ramani.compose.Polyline
+import org.ramani.compose.Symbol
 import org.ramani.example.annotation_simple.ui.theme.AnnotationSimpleTheme
 
 class MainActivity : ComponentActivity() {
@@ -39,9 +40,11 @@ class MainActivity : ComponentActivity() {
                         )
                     )
                 }
+                val symbolCenter = rememberSaveable { mutableStateOf(LatLng(4.9, 46.1)) }
                 val circleCenter = rememberSaveable { mutableStateOf(LatLng(4.8, 46.0)) }
                 val isDefaultStyle = rememberSaveable { mutableStateOf(true) }
                 val styleUrl = rememberSaveable { mutableStateOf(DEFAULT_STYLE_URL) }
+                val styleBuilder = Style.Builder().fromUri(styleUrl.value)
 
                 Box {
                     Surface(
@@ -50,9 +53,14 @@ class MainActivity : ComponentActivity() {
                     ) {
                         MapLibre(
                             modifier = Modifier.fillMaxSize(),
-                            styleBuilder = Style.Builder().fromUri(styleUrl.value),
+                            styleBuilder = styleBuilder,
                             cameraPosition = cameraPosition.value,
                         ) {
+                            Symbol(
+                                center = symbolCenter.value,
+                                isDraggable = true,
+                                onSymbolDragged = { center -> symbolCenter.value = center }
+                            )
                             Circle(
                                 center = circleCenter.value,
                                 radius = 50F,
@@ -69,6 +77,7 @@ class MainActivity : ComponentActivity() {
                             styleUrl.value =
                                 if (!isDefaultStyle.value) DEFAULT_STYLE_URL
                                 else resources.getString(R.string.maplibre_style_url)
+
                             isDefaultStyle.value = !isDefaultStyle.value
                         }) {
                         Text("Swap style")

@@ -32,6 +32,7 @@ import org.maplibre.android.plugins.annotation.FillManager
 import org.maplibre.android.plugins.annotation.Line
 import org.maplibre.android.plugins.annotation.LineManager
 import org.maplibre.android.plugins.annotation.OnCircleDragListener
+import org.maplibre.android.plugins.annotation.OnSymbolDragListener
 import org.maplibre.android.plugins.annotation.Symbol
 import org.maplibre.android.plugins.annotation.SymbolManager
 import kotlin.coroutines.resume
@@ -49,10 +50,11 @@ internal suspend inline fun disposingComposition(factory: () -> Composition) {
 
 internal suspend fun MapView.newComposition(
     parent: CompositionContext,
-    style: Style,
+    styleBuilder: Style.Builder,
     content: @Composable () -> Unit,
 ): Composition {
     val map = awaitMap()
+    val style = map.awaitStyle(styleBuilder)
     return Composition(
         MapApplier(map, this, style), parent
     ).apply {
@@ -245,11 +247,35 @@ class MapApplier(
 
         symbolManager.iconAllowOverlap = true
 
+        symbolManagerMap[zIndex] = symbolManager
+
         if (!zIndexReferenceAnnotationManagerMap.containsKey(zIndex)) {
             zIndexReferenceAnnotationManagerMap[zIndex] = symbolManager
         }
 
-        symbolManagerMap[zIndex] = symbolManager
+        symbolManager.addDragListener(object : OnSymbolDragListener {
+            override fun onAnnotationDragStarted(annotation: Symbol?) {
+                decorations.findInputCallback<SymbolNode, Symbol, Unit>(
+                    nodeMatchPredicate = { it.symbol.id == annotation?.id && it.symbolManager.layerId == symbolManager.layerId },
+                    nodeInputCallback = { onSymbolDragged }
+                )?.invoke(annotation!!)
+            }
+
+            override fun onAnnotationDrag(annotation: Symbol?) {
+                decorations.findInputCallback<SymbolNode, Symbol, Unit>(
+                    nodeMatchPredicate = { it.symbol.id == annotation?.id && it.symbolManager.layerId == symbolManager.layerId },
+                    nodeInputCallback = { onSymbolDragged }
+                )?.invoke(annotation!!)
+            }
+
+            override fun onAnnotationDragFinished(annotation: Symbol?) {
+                decorations.findInputCallback<SymbolNode, Symbol, Unit>(
+                    nodeMatchPredicate = { it.symbol.id == annotation?.id && it.symbolManager.layerId == symbolManager.layerId },
+                    nodeInputCallback = { onSymbolDragStopped }
+                )?.invoke(annotation!!)
+            }
+        })
+
         return symbolManager
     }
 
@@ -337,7 +363,7 @@ internal class CircleNode(
     val circleManager: CircleManager,
     val circle: Circle,
     var onCircleDragged: (Circle) -> Unit,
-    var onCircleDragStopped: (Circle) -> Unit
+    var onCircleDragStopped: (Circle) -> Unit,
 ) : MapNode {
     override fun onRemoved() {
         circleManager.delete(circle)
@@ -351,6 +377,8 @@ internal class CircleNode(
 internal class SymbolNode(
     val symbolManager: SymbolManager,
     val symbol: Symbol,
+    var onSymbolDragged: (Symbol) -> Unit,
+    var onSymbolDragStopped: (Symbol) -> Unit,
 ) : MapNode {
     override fun onRemoved() {
         symbolManager.delete(symbol)

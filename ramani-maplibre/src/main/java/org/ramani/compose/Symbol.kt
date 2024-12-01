@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.res.imageResource
 import org.maplibre.android.geometry.LatLng
-import org.maplibre.android.plugins.annotation.Symbol
 import org.maplibre.android.plugins.annotation.SymbolOptions
 import org.maplibre.android.style.layers.Property.ICON_ANCHOR_CENTER
 import org.maplibre.android.style.layers.Property.TEXT_ANCHOR_CENTER
@@ -27,11 +26,11 @@ import org.maplibre.android.style.layers.Property.TEXT_JUSTIFY_CENTER
 @MapLibreComposable
 fun Symbol(
     center: LatLng,
-    size: Float,
-    color: String,
-    isDraggable: Boolean,
+    size: Float = 1F,
+    color: String = "",
+    isDraggable: Boolean = false,
     zIndex: Int = 0,
-    imageId: Int? = null,
+    imageId: Int? = org.maplibre.android.R.drawable.maplibre_marker_icon_default,
     imageAnchor: String = ICON_ANCHOR_CENTER,
     imageOffset: Array<Float> = arrayOf(0f, 0f),
     imageRotation: Float? = null,
@@ -41,7 +40,9 @@ fun Symbol(
     textOffset: Array<Float> = arrayOf(0f, 3f),
     textColor: String = "#000000",
     textHaloColor: String = "#000000",
-    textHaloWidth: Float = 0f
+    textHaloWidth: Float = 0f,
+    onSymbolDragged: (LatLng) -> Unit = {},
+    onDragFinished: (LatLng) -> Unit = {},
 ) {
     val mapApplier = currentComposer.applier as MapApplier
 
@@ -84,7 +85,12 @@ fun Symbol(
 
         val symbol = symbolManager.create(symbolOptions)
 
-        SymbolNode(symbolManager, symbol)
+        SymbolNode(
+            symbolManager,
+            symbol,
+            onSymbolDragged = { onSymbolDragged(it.latLng) },
+            onSymbolDragStopped = { onDragFinished(it.latLng) },
+        )
     }, update = {
         set(center) {
             symbol.latLng = center

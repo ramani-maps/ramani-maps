@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.align(Alignment.BottomCenter),
                         onClick = {
                             styleUrl.value =
-                                if (isDefaultStyle.value) DEFAULT_STYLE_URL
+                                if (!isDefaultStyle.value) DEFAULT_STYLE_URL
                                 else resources.getString(R.string.maplibre_style_url)
                             isDefaultStyle.value = !isDefaultStyle.value
                         }) {

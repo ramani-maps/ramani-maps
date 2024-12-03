@@ -47,12 +47,12 @@ import org.maplibre.android.location.engine.LocationEngineRequest
 import org.maplibre.android.location.engine.LocationEngineResult
 import org.maplibre.android.location.modes.CameraMode
 import org.maplibre.android.location.modes.RenderMode
-import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapLibreMap.OnMoveListener
 import org.maplibre.android.maps.MapLibreMap.OnRotateListener
 import org.maplibre.android.maps.MapLibreMap.OnScaleListener
 import org.maplibre.android.maps.MapLibreMap.OnShoveListener
+import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.layers.Layer
 import org.maplibre.android.style.sources.Source
@@ -145,6 +145,7 @@ fun MapLibre(
         currentSources,
         currentLayers,
         currentImages,
+        currentStyleBuilder,
     ) {
         disposingComposition {
             val maplibreMap = mapView.awaitMap()
@@ -177,7 +178,7 @@ fun MapLibre(
                 true
             }
 
-            mapView.newComposition(parentComposition, style) {
+            mapView.newComposition(parentComposition, currentStyleBuilder) {
                 CompositionLocalProvider {
                     MapUpdater(
                         cameraPosition = currentCameraPosition,
@@ -289,7 +290,7 @@ private fun MapLibreMap.setupLocation(
                     locationComponent.cameraMode = cameraMode
                 }
             }
-    })
+        })
 
     this.locationComponent.cameraMode = cameraMode
 }

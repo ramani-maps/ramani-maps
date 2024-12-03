@@ -90,7 +90,8 @@ fun CircleWithItem(
             isDraggable = false,
             text = text,
             size = itemSize,
-            zIndex = zIndex + 1
+            zIndex = zIndex + 1,
+            imageId = null
         )
     }
 }

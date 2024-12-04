@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +25,10 @@ import org.ramani.compose.Polygon
 import org.ramani.example.interactive_polygon.ui.theme.InteractivePolygonTheme
 
 class MainActivity : ComponentActivity() {
+    companion object {
+        const val DEFAULT_STYLE_URL = "https://demotiles.maplibre.org/style.json"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -34,6 +39,10 @@ class MainActivity : ComponentActivity() {
                     mutableStateOf(CameraPosition(target = polygonCenter, zoom = 15.0))
                 }
 
+                val isDefaultStyle = rememberSaveable { mutableStateOf(true) }
+                val styleUrl = rememberSaveable { mutableStateOf(DEFAULT_STYLE_URL) }
+                val styleBuilder = Style.Builder().fromUri(styleUrl.value)
+
                 Box {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
@@ -41,9 +50,8 @@ class MainActivity : ComponentActivity() {
                     ) {
                         MapLibre(
                             modifier = Modifier.fillMaxSize(),
-                            styleBuilder = Style.Builder()
-                                .fromUri(resources.getString(R.string.maplibre_style_url)),
-                            cameraPosition = cameraPosition.value
+                            styleBuilder = styleBuilder,
+                            cameraPosition = cameraPosition.value,
                         ) {
                             polygonState.forEachIndexed { index, vertex ->
                                 Circle(
@@ -72,15 +80,31 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
-                    Button(
+                    Column(
                         modifier = Modifier.align(Alignment.BottomCenter),
-                        onClick = {
-                            cameraPosition.value = CameraPosition(cameraPosition.value).apply {
-                                this.target = polygonCenter
-                            }
-                        },
                     ) {
-                        Text(text = "Center on polygon")
+                        Button(
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            onClick = {
+                                styleUrl.value =
+                                    if (!isDefaultStyle.value) DEFAULT_STYLE_URL
+                                    else resources.getString(R.string.maplibre_style_url)
+
+                                isDefaultStyle.value = !isDefaultStyle.value
+                            }) {
+                            Text("Swap style")
+                        }
+                        Button(
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            onClick = {
+                                cameraPosition.value = CameraPosition(cameraPosition.value).apply {
+                                    this.target = polygonCenter
+                                    this.animationDurationMs = 3000
+                                }
+                            },
+                        ) {
+                            Text(text = "Center on polygon")
+                        }
                     }
                 }
             }

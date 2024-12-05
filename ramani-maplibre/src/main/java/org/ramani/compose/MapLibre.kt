@@ -178,7 +178,7 @@ fun MapLibre(
                 true
             }
 
-            mapView.newComposition(parentComposition, currentStyleBuilder) {
+            mapView.newComposition(parentComposition, maplibreMap, style) {
                 CompositionLocalProvider {
                     MapUpdater(
                         cameraPosition = currentCameraPosition,

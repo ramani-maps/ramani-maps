@@ -48,13 +48,12 @@ internal suspend inline fun disposingComposition(factory: () -> Composition) {
     }
 }
 
-internal suspend fun MapView.newComposition(
+internal fun MapView.newComposition(
     parent: CompositionContext,
-    styleBuilder: Style.Builder,
+    map: MapLibreMap,
+    style: Style,
     content: @Composable () -> Unit,
 ): Composition {
-    val map = awaitMap()
-    val style = map.awaitStyle(styleBuilder)
     return Composition(
         MapApplier(map, this, style), parent
     ).apply {

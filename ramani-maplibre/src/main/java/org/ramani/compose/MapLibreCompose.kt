@@ -64,7 +64,9 @@ internal fun MapView.newComposition(
 internal suspend fun MapLibreMap.awaitStyle(styleBuilder: Style.Builder) =
     suspendCoroutine { continuation ->
         setStyle(styleBuilder) { style ->
-            continuation.resume(style)
+            if (style.isFullyLoaded) {
+                continuation.resume(style)
+            }
         }
     }
 

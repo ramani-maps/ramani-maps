@@ -47,8 +47,8 @@ fun Symbol(
     val mapApplier = currentComposer.applier as MapApplier
 
     imageId?.let {
-        if (mapApplier.style.getImage("$imageId") == null) {
-            mapApplier.style.addImage(
+        if (mapApplier.style.value!!.getImage("$imageId") == null) {
+            mapApplier.style.value!!.addImage(
                 "$imageId",
                 ImageBitmap.imageResource(it).asAndroidBitmap()
             )

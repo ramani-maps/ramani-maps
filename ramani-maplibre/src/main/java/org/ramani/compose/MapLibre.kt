@@ -22,8 +22,10 @@ import androidx.compose.runtime.ComposeNode
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCompositionContext
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -89,8 +91,8 @@ annotation class MapLibreComposable
  * @param layers External (user-defined) layers for the map.
  * @param images Images to be added to the map and used by external layers (pairs of <id, drawable code>).
  * @param renderMode Ways the user location can be rendered on the map.
- * @param onMapLongClick Callback that is invoked when the map is long clicked
  * @param cameraMode Set specific camera tracking modes as the device location changes.
+ * @param onMapLongClick Callback that is invoked when the map is long clicked
  * @param content The content of the map.
  */
 @Composable
@@ -101,19 +103,19 @@ fun MapLibre(
     cameraPosition: CameraPosition = rememberSaveable { CameraPosition() },
     uiSettings: UiSettings = UiSettings(),
     properties: MapProperties = MapProperties(),
-    locationRequestProperties: LocationRequestProperties? = null,
+    locationRequestProperties: LocationRequestProperties = LocationRequestProperties(),
     locationEngine: LocationEngine? = null,
     locationStyling: LocationStyling = LocationStyling(),
     userLocation: MutableState<Location>? = null,
-    sources: List<Source>? = null,
-    layers: List<Layer>? = null,
+    sources: List<() -> Source>? = null,
+    layers: List<() -> Layer>? = null,
     images: List<Pair<String, Int>>? = null,
     mapView: MapView = rememberMapViewWithLifecycle(),
     renderMode: Int = RenderMode.NORMAL,
+    cameraMode: MutableState<Int> = mutableIntStateOf(CameraMode.NONE),
     onMapClick: (LatLng) -> Unit = {},
     onMapLongClick: (LatLng) -> Unit = {},
     onStyleLoaded: (Style) -> Unit = {},
-    cameraMode: Int = CameraMode.NONE,
     content: (@Composable @MapLibreComposable () -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
@@ -122,6 +124,7 @@ fun MapLibre(
     }
 
     val context = LocalContext.current
+    val currentStyleBuilder by rememberUpdatedState(styleBuilder)
     val currentCameraPosition by rememberUpdatedState(cameraPosition)
     val currentUiSettings by rememberUpdatedState(uiSettings)
     val currentMapProperties by rememberUpdatedState(properties)
@@ -131,61 +134,62 @@ fun MapLibre(
     val currentSources by rememberUpdatedState(sources)
     val currentLayers by rememberUpdatedState(layers)
     val currentImages by rememberUpdatedState(images)
+    val currentRenderMode by rememberUpdatedState(renderMode)
     val currentContent by rememberUpdatedState(content)
-    val currentStyleBuilder by rememberUpdatedState(styleBuilder)
     val parentComposition = rememberCompositionContext()
 
+    val currentStyle = remember { mutableStateOf<Style?>(null) }
+    val currentMap = remember { mutableStateOf<MapLibreMap?>(null) }
+
+    LaunchedEffect(currentStyleBuilder) {
+        currentStyle.value = mapView.awaitMap().awaitStyle(currentStyleBuilder)
+
+        currentStyle.value?.let { style ->
+            currentSources?.forEach { style.addSource(it()) }
+            currentLayers?.forEach { style.addLayer(it()) }
+        }
+    }
+
     AndroidView(modifier = modifier, factory = { mapView })
-    LaunchedEffect(
-        currentUiSettings,
-        currentMapProperties,
-        currentLocationRequestProperties,
-        currentLocationEngine,
-        currentLocationStyling,
-        currentSources,
-        currentLayers,
-        currentImages,
-        currentStyleBuilder,
-    ) {
-        disposingComposition {
-            val maplibreMap = mapView.awaitMap()
-            val style = maplibreMap.awaitStyle(styleBuilder)
-            onStyleLoaded(style)
 
-            maplibreMap.applyUiSettings(currentUiSettings)
-            maplibreMap.applyProperties(currentMapProperties)
-            maplibreMap.setupLocation(
-                context = context,
-                style = style,
-                locationRequestProperties = currentLocationRequestProperties,
-                locationEngine = currentLocationEngine,
-                locationStyling = currentLocationStyling,
-                userLocation = userLocation,
-                renderMode = renderMode,
-                cameraMode = cameraMode,
-            )
-            maplibreMap.addImages(context, currentImages)
-            maplibreMap.addSources(currentSources)
-            maplibreMap.addLayers(currentLayers)
+    LaunchedEffect(null) {
+        val maplibreMap = mapView.awaitMap()
+        val style = maplibreMap.awaitStyle(currentStyleBuilder)
+        onStyleLoaded(style)
 
-            maplibreMap.addOnMapClickListener { latLng ->
-                onMapClick(latLng)
-                true
-            }
+        currentMap.value = maplibreMap
+        currentStyle.value = style
 
-            maplibreMap.addOnMapLongClickListener { latLng ->
-                onMapLongClick(latLng)
-                true
-            }
+        maplibreMap.addImages(context, currentImages)
+        maplibreMap.addSources(currentSources)
+        maplibreMap.addLayers(currentLayers)
 
-            mapView.newComposition(parentComposition, maplibreMap, style) {
-                CompositionLocalProvider {
-                    MapUpdater(
-                        cameraPosition = currentCameraPosition,
-                        styleBuilder = currentStyleBuilder,
-                    )
-                    currentContent?.invoke()
-                }
+        maplibreMap.addOnMapClickListener { latLng ->
+            onMapClick(latLng)
+            true
+        }
+
+        maplibreMap.addOnMapLongClickListener { latLng ->
+            onMapLongClick(latLng)
+            true
+        }
+
+        mapView.newComposition(parentComposition, maplibreMap, currentStyle) {
+            CompositionLocalProvider {
+                MapUpdater(
+                    map = currentMap.value!!,
+                    style = currentStyle,
+                    cameraPosition = currentCameraPosition,
+                    uiSettings = currentUiSettings,
+                    properties = currentMapProperties,
+                    locationRequestProperties = currentLocationRequestProperties,
+                    locationEngine = currentLocationEngine,
+                    locationStyling = currentLocationStyling,
+                    userLocation = userLocation,
+                    cameraMode = cameraMode,
+                    renderMode = currentRenderMode,
+                )
+                currentContent?.invoke()
             }
         }
     }
@@ -249,16 +253,15 @@ private fun MapLibreMap.applyProperties(properties: MapProperties) {
 private fun MapLibreMap.setupLocation(
     context: Context,
     style: Style,
-    locationRequestProperties: LocationRequestProperties?,
+    locationRequestProperties: LocationRequestProperties,
     locationEngine: LocationEngine? = null,
     locationStyling: LocationStyling,
     userLocation: MutableState<Location>?,
     renderMode: Int,
-    cameraMode: Int,
+    cameraMode: MutableState<Int>,
 ) {
-    if (locationRequestProperties == null) return
-
     val locationEngineRequest = locationRequestProperties.toMapLibre()
+
     val activationBuilder = LocationComponentActivationOptions
         .builder(context, style)
         .locationComponentOptions(locationStyling.toMapLibre(context))
@@ -274,7 +277,13 @@ private fun MapLibreMap.setupLocation(
     if (isFineLocationGranted(context) || isCoarseLocationGranted(context)) {
         @SuppressLint("MissingPermission")
         this.locationComponent.isLocationComponentEnabled = true
-        userLocation?.let { trackLocation(context, locationEngineRequest, userLocation) }
+        userLocation?.let {
+            trackLocation(
+                locationEngine ?: LocationEngineDefault.getDefaultLocationEngine(context),
+                locationEngineRequest,
+                userLocation,
+            )
+        }
     }
 
     this.locationComponent.renderMode = renderMode
@@ -282,17 +291,17 @@ private fun MapLibreMap.setupLocation(
     this.locationComponent.addOnCameraTrackingChangedListener(
         object : OnCameraTrackingChangedListener {
             override fun onCameraTrackingDismissed() {
-                // Do nothing
+                cameraMode.value = locationComponent.cameraMode
             }
 
             override fun onCameraTrackingChanged(currentMode: Int) {
-                if (currentMode != cameraMode) {
-                    locationComponent.cameraMode = cameraMode
+                if (cameraMode.value != currentMode) {
+                    locationComponent.cameraMode = cameraMode.value
                 }
             }
         })
 
-    this.locationComponent.cameraMode = cameraMode
+    this.locationComponent.cameraMode = cameraMode.value
 }
 
 private fun isFineLocationGranted(context: Context): Boolean {
@@ -305,13 +314,10 @@ private fun isCoarseLocationGranted(context: Context): Boolean {
 
 @SuppressLint("MissingPermission")
 private fun trackLocation(
-    context: Context,
+    locationEngine: LocationEngine,
     locationEngineRequest: LocationEngineRequest,
     userLocation: MutableState<Location>
 ) {
-    assert(isFineLocationGranted(context) || isCoarseLocationGranted(context))
-
-    val locationEngine = LocationEngineDefault.getDefaultLocationEngine(context)
     locationEngine.requestLocationUpdates(
         locationEngineRequest,
         object : LocationEngineCallback<LocationEngineResult> {
@@ -363,24 +369,37 @@ private fun MapLibreMap.addImages(context: Context, images: List<Pair<String, In
     }
 }
 
-private fun MapLibreMap.addSources(sources: List<Source>?) {
-    sources?.let { sources.forEach { style!!.addSource(it) } }
+private fun MapLibreMap.addSources(sources: List<() -> Source>?) {
+    sources?.let { sources.forEach { style!!.addSource(it()) } }
 }
 
-private fun MapLibreMap.addLayers(layers: List<Layer>?) {
-    layers?.let { layers.forEach { style!!.addLayer(it) } }
+private fun MapLibreMap.addLayers(layers: List<() -> Layer>?) {
+    layers?.let { layers.forEach { style!!.addLayer(it()) } }
 }
 
 @Composable
-internal fun MapUpdater(cameraPosition: CameraPosition, styleBuilder: Style.Builder) {
-    val mapApplier = currentComposer.applier as MapApplier
+internal fun MapUpdater(
+    map: MapLibreMap,
+    style: MutableState<Style?>,
+    cameraPosition: CameraPosition,
+    uiSettings: UiSettings,
+    properties: MapProperties,
+    locationRequestProperties: LocationRequestProperties,
+    locationEngine: LocationEngine?,
+    locationStyling: LocationStyling,
+    userLocation: MutableState<Location>?,
+    renderMode: Int,
+    cameraMode: MutableState<Int>,
+) {
+    val context = LocalContext.current
+    val currentCameraMode by rememberUpdatedState(cameraMode.value)
 
     fun observeZoom(cameraPosition: CameraPosition) {
-        mapApplier.map.addOnScaleListener(object : OnScaleListener {
+        map.addOnScaleListener(object : OnScaleListener {
             override fun onScaleBegin(detector: StandardScaleGestureDetector) {}
 
             override fun onScale(detector: StandardScaleGestureDetector) {
-                cameraPosition.zoom = mapApplier.map.cameraPosition.zoom
+                cameraPosition.zoom = map.cameraPosition.zoom
             }
 
             override fun onScaleEnd(detector: StandardScaleGestureDetector) {}
@@ -388,11 +407,11 @@ internal fun MapUpdater(cameraPosition: CameraPosition, styleBuilder: Style.Buil
     }
 
     fun observeCameraPosition(cameraPosition: CameraPosition) {
-        mapApplier.map.addOnMoveListener(object : OnMoveListener {
+        map.addOnMoveListener(object : OnMoveListener {
             override fun onMoveBegin(detector: MoveGestureDetector) {}
 
             override fun onMove(detector: MoveGestureDetector) {
-                cameraPosition.target = mapApplier.map.cameraPosition.target
+                cameraPosition.target = map.cameraPosition.target
             }
 
             override fun onMoveEnd(detector: MoveGestureDetector) {}
@@ -400,11 +419,11 @@ internal fun MapUpdater(cameraPosition: CameraPosition, styleBuilder: Style.Buil
     }
 
     fun observeBearing(cameraPosition: CameraPosition) {
-        mapApplier.map.addOnRotateListener(object : OnRotateListener {
+        map.addOnRotateListener(object : OnRotateListener {
             override fun onRotateBegin(detector: RotateGestureDetector) {}
 
             override fun onRotate(detector: RotateGestureDetector) {
-                cameraPosition.bearing = mapApplier.map.cameraPosition.bearing
+                cameraPosition.bearing = map.cameraPosition.bearing
             }
 
             override fun onRotateEnd(detector: RotateGestureDetector) {}
@@ -412,11 +431,11 @@ internal fun MapUpdater(cameraPosition: CameraPosition, styleBuilder: Style.Buil
     }
 
     fun observeTilt(cameraPosition: CameraPosition) {
-        mapApplier.map.addOnShoveListener(object : OnShoveListener {
+        map.addOnShoveListener(object : OnShoveListener {
             override fun onShoveBegin(detector: ShoveGestureDetector) {}
 
             override fun onShove(detector: ShoveGestureDetector) {
-                cameraPosition.tilt = mapApplier.map.cameraPosition.tilt
+                cameraPosition.tilt = map.cameraPosition.tilt
             }
 
             override fun onShoveEnd(detector: ShoveGestureDetector) {}
@@ -424,16 +443,28 @@ internal fun MapUpdater(cameraPosition: CameraPosition, styleBuilder: Style.Buil
     }
 
     fun observeIdle(cameraPosition: CameraPosition) {
-        mapApplier.map.addOnCameraIdleListener {
-            cameraPosition.zoom = mapApplier.map.cameraPosition.zoom
-            cameraPosition.target = mapApplier.map.cameraPosition.target
-            cameraPosition.bearing = mapApplier.map.cameraPosition.bearing
-            cameraPosition.tilt = mapApplier.map.cameraPosition.tilt
+        map.addOnCameraIdleListener {
+            cameraPosition.zoom = map.cameraPosition.zoom
+            cameraPosition.target = map.cameraPosition.target
+            cameraPosition.bearing = map.cameraPosition.bearing
+            cameraPosition.tilt = map.cameraPosition.tilt
         }
     }
 
     ComposeNode<MapPropertiesNode, MapApplier>(factory = {
-        MapPropertiesNode(mapApplier.map, cameraPosition, styleBuilder)
+        MapPropertiesNode(
+            context = context,
+            map = map,
+            style = style,
+            uiSettings = uiSettings,
+            cameraPosition = cameraPosition,
+            locationRequestProperties = locationRequestProperties,
+            locationEngine = locationEngine,
+            locationStyling = locationStyling,
+            userLocation = userLocation,
+            renderMode = renderMode,
+            cameraMode = cameraMode,
+        )
     }, update = {
         observeZoom(cameraPosition)
         observeCameraPosition(cameraPosition)
@@ -441,8 +472,32 @@ internal fun MapUpdater(cameraPosition: CameraPosition, styleBuilder: Style.Buil
         observeTilt(cameraPosition)
         observeIdle(cameraPosition)
 
-        update(styleBuilder) {
-            updateStyle(it)
+        update(uiSettings) {
+            map.applyUiSettings(uiSettings)
+        }
+
+        update(properties) {
+            map.applyProperties(properties)
+        }
+
+        update(locationRequestProperties) {
+            map.locationComponent.locationEngineRequest = locationRequestProperties.toMapLibre()
+        }
+
+        update(locationEngine) {
+            map.locationComponent.locationEngine = locationEngine
+        }
+
+        update(locationStyling) {
+            map.locationComponent.applyStyle(locationStyling.toMapLibre(context))
+        }
+
+        update(currentCameraMode) {
+            map.locationComponent.cameraMode = cameraMode.value
+        }
+
+        update(renderMode) {
+            map.locationComponent.renderMode = renderMode
         }
 
         update(cameraPosition) {
@@ -467,17 +522,32 @@ internal fun MapUpdater(cameraPosition: CameraPosition, styleBuilder: Style.Buil
 }
 
 internal class MapPropertiesNode(
+    val context: Context,
     val map: MapLibreMap,
+    val style: MutableState<Style?>,
+    val uiSettings: UiSettings,
     var cameraPosition: CameraPosition,
-    var styleBuilder: Style.Builder,
+    val locationRequestProperties: LocationRequestProperties,
+    val locationEngine: LocationEngine?,
+    val locationStyling: LocationStyling,
+    val userLocation: MutableState<Location>?,
+    val renderMode: Int,
+    val cameraMode: MutableState<Int>,
 ) : MapNode {
     override fun onAttached() {
+        map.applyUiSettings(uiSettings)
         map.cameraPosition = cameraPosition.toMapLibre()
-    }
 
-    fun updateStyle(styleBuilder: Style.Builder) {
-        map.setStyle(styleBuilder)
-        this.styleBuilder = styleBuilder
+        map.setupLocation(
+            context = context,
+            style = style.value!!,
+            locationRequestProperties = locationRequestProperties,
+            locationEngine = locationEngine,
+            locationStyling = locationStyling,
+            userLocation = userLocation,
+            renderMode = renderMode,
+            cameraMode = cameraMode,
+        )
     }
 }
 

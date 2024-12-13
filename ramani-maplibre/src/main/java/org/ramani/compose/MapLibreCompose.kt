@@ -14,6 +14,7 @@ import androidx.compose.runtime.AbstractApplier
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Composition
 import androidx.compose.runtime.CompositionContext
+import androidx.compose.runtime.MutableState
 import kotlinx.coroutines.awaitCancellation
 import org.maplibre.android.gestures.MoveGestureDetector
 import org.maplibre.android.gestures.RotateGestureDetector
@@ -51,7 +52,7 @@ internal suspend inline fun disposingComposition(factory: () -> Composition) {
 internal fun MapView.newComposition(
     parent: CompositionContext,
     map: MapLibreMap,
-    style: Style,
+    style: MutableState<Style?>,
     content: @Composable () -> Unit,
 ): Composition {
     return Composition(
@@ -79,7 +80,7 @@ private object MapNodeRoot : MapNode
 class MapApplier(
     val map: MapLibreMap,
     val mapView: MapView,
-    val style: Style
+    val style: MutableState<Style?>
 ) : AbstractApplier<MapNode>(MapNodeRoot) {
     private val decorations = mutableListOf<MapNode>()
 
@@ -170,12 +171,12 @@ class MapApplier(
             CircleManager(
                 mapView,
                 map,
-                style,
+                style.value!!,
                 if (it.insertPosition == LayerInsertMethod.INSERT_BELOW) it.referenceLayerId else null,
                 if (it.insertPosition == LayerInsertMethod.INSERT_ABOVE) it.referenceLayerId else null
             )
         } ?: run {
-            CircleManager(mapView, map, style)
+            CircleManager(mapView, map, style.value!!)
         }
 
         circleManagerMap[zIndex] = circleManager
@@ -235,13 +236,13 @@ class MapApplier(
             SymbolManager(
                 mapView,
                 map,
-                style,
+                style.value!!,
                 if (it.insertPosition == LayerInsertMethod.INSERT_BELOW) it.referenceLayerId else null,
                 if (it.insertPosition == LayerInsertMethod.INSERT_ABOVE) it.referenceLayerId else null,
                 null
             )
         } ?: run {
-            SymbolManager(mapView, map, style)
+            SymbolManager(mapView, map, style.value!!)
         }
 
         symbolManager.iconAllowOverlap = true
@@ -285,13 +286,13 @@ class MapApplier(
             FillManager(
                 mapView,
                 map,
-                style,
+                style.value!!,
                 if (it.insertPosition == LayerInsertMethod.INSERT_BELOW) it.referenceLayerId else null,
                 if (it.insertPosition == LayerInsertMethod.INSERT_ABOVE) it.referenceLayerId else null,
                 null
             )
         } ?: run {
-            FillManager(mapView, map, style)
+            FillManager(mapView, map, style.value!!)
         }
 
         if (!zIndexReferenceAnnotationManagerMap.containsKey(zIndex)) {
@@ -309,13 +310,13 @@ class MapApplier(
             LineManager(
                 mapView,
                 map,
-                style,
+                style.value!!,
                 if (it.insertPosition == LayerInsertMethod.INSERT_BELOW) it.referenceLayerId else null,
                 if (it.insertPosition == LayerInsertMethod.INSERT_ABOVE) it.referenceLayerId else null,
                 null
             )
         } ?: run {
-            LineManager(mapView, map, style)
+            LineManager(mapView, map, style.value!!)
         }
 
 

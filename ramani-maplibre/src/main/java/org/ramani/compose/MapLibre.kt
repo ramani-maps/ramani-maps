@@ -107,8 +107,8 @@ fun MapLibre(
     locationEngine: LocationEngine? = null,
     locationStyling: LocationStyling = LocationStyling(),
     userLocation: MutableState<Location>? = null,
-    sources: List<() -> Source>? = null,
-    layers: List<() -> Layer>? = null,
+    sources: List<Source>? = null,
+    layers: List<Layer>? = null,
     images: List<Pair<String, Int>>? = null,
     mapView: MapView = rememberMapViewWithLifecycle(),
     renderMode: Int = RenderMode.NORMAL,
@@ -142,12 +142,9 @@ fun MapLibre(
     val currentMap = remember { mutableStateOf<MapLibreMap?>(null) }
 
     LaunchedEffect(currentStyleBuilder) {
+        currentLayers?.forEach { currentStyle.value?.removeLayer(it) }
+        currentSources?.forEach { currentStyle.value?.removeSource(it) }
         currentStyle.value = mapView.awaitMap().awaitStyle(currentStyleBuilder)
-
-        currentStyle.value?.let { style ->
-            currentSources?.forEach { style.addSource(it()) }
-            currentLayers?.forEach { style.addLayer(it()) }
-        }
     }
 
     AndroidView(modifier = modifier, factory = { mapView })
@@ -161,6 +158,11 @@ fun MapLibre(
         currentStyle.value = style
 
         maplibreMap.addImages(context, currentImages)
+
+        mapView.addOnDidFinishLoadingStyleListener {
+            maplibreMap.addSources(currentSources)
+            maplibreMap.addLayers(currentLayers)
+        }
         maplibreMap.addSources(currentSources)
         maplibreMap.addLayers(currentLayers)
 
@@ -177,7 +179,7 @@ fun MapLibre(
         mapView.newComposition(parentComposition, maplibreMap, currentStyle) {
             CompositionLocalProvider {
                 MapUpdater(
-                    map = currentMap.value!!,
+                    map = checkNotNull(currentMap.value),
                     style = currentStyle,
                     cameraPosition = currentCameraPosition,
                     uiSettings = currentUiSettings,
@@ -369,12 +371,12 @@ private fun MapLibreMap.addImages(context: Context, images: List<Pair<String, In
     }
 }
 
-private fun MapLibreMap.addSources(sources: List<() -> Source>?) {
-    sources?.let { sources.forEach { style!!.addSource(it()) } }
+private fun MapLibreMap.addSources(sources: List<Source>?) {
+    sources?.let { sources.forEach { style!!.addSource(it) } }
 }
 
-private fun MapLibreMap.addLayers(layers: List<() -> Layer>?) {
-    layers?.let { layers.forEach { style!!.addLayer(it()) } }
+private fun MapLibreMap.addLayers(layers: List<Layer>?) {
+    layers?.let { layers.forEach { style!!.addLayer(it) } }
 }
 
 @Composable

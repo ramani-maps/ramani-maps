@@ -14,6 +14,7 @@ import androidx.compose.runtime.AbstractApplier
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Composition
 import androidx.compose.runtime.CompositionContext
+import androidx.compose.runtime.MutableState
 import kotlinx.coroutines.awaitCancellation
 import org.maplibre.android.gestures.MoveGestureDetector
 import org.maplibre.android.gestures.RotateGestureDetector
@@ -51,7 +52,7 @@ internal suspend inline fun disposingComposition(factory: () -> Composition) {
 internal fun MapView.newComposition(
     parent: CompositionContext,
     map: MapLibreMap,
-    style: Style,
+    style: MutableState<Style?>,
     content: @Composable () -> Unit,
 ): Composition {
     return Composition(
@@ -79,7 +80,7 @@ private object MapNodeRoot : MapNode
 class MapApplier(
     val map: MapLibreMap,
     val mapView: MapView,
-    val style: Style
+    val style: MutableState<Style?>
 ) : AbstractApplier<MapNode>(MapNodeRoot) {
     private val decorations = mutableListOf<MapNode>()
 
@@ -164,6 +165,7 @@ class MapApplier(
     fun getOrCreateCircleManagerForZIndex(zIndex: Int): CircleManager {
         circleManagerMap[zIndex]?.let { return it }
 
+        val style = checkNotNull(style.value)
         val layerInsertInfo = getLayerInsertInfoForZIndex(zIndex)
 
         val circleManager = layerInsertInfo?.let {
@@ -185,29 +187,29 @@ class MapApplier(
         }
 
         circleManager.addDragListener(object : OnCircleDragListener {
-            override fun onAnnotationDragStarted(annotation: Circle?) {
+            override fun onAnnotationDragStarted(annotation: Circle) {
                 decorations.findInputCallback<CircleNode, Circle, Unit>(
-                    nodeMatchPredicate = { it.circle.id == annotation?.id && it.circleManager.layerId == circleManager.layerId },
+                    nodeMatchPredicate = { it.circle.id == annotation.id && it.circleManager.layerId == circleManager.layerId },
                     nodeInputCallback = { onCircleDragged }
-                )?.invoke(annotation!!)
+                )?.invoke(annotation)
             }
 
-            override fun onAnnotationDrag(annotation: Circle?) {
+            override fun onAnnotationDrag(annotation: Circle) {
                 decorations.findInputCallback<CircleNode, Circle, Unit>(
-                    nodeMatchPredicate = { it.circle.id == annotation?.id && it.circleManager.layerId == circleManager.layerId },
+                    nodeMatchPredicate = { it.circle.id == annotation.id && it.circleManager.layerId == circleManager.layerId },
                     nodeInputCallback = { onCircleDragged }
-                )?.invoke(annotation!!)
+                )?.invoke(annotation)
             }
 
-            override fun onAnnotationDragFinished(annotation: Circle?) {
+            override fun onAnnotationDragFinished(annotation: Circle) {
                 decorations.findInputCallback<CircleNode, Circle, Unit>(
-                    nodeMatchPredicate = { it.circle.id == annotation?.id && it.circleManager.layerId == circleManager.layerId },
+                    nodeMatchPredicate = { it.circle.id == annotation.id && it.circleManager.layerId == circleManager.layerId },
                     nodeInputCallback = { onCircleDragStopped }
-                )?.invoke(annotation!!)
+                )?.invoke(annotation)
             }
         })
 
-        return circleManagerMap[zIndex]!!
+        return circleManager
     }
 
     private fun getLayerInsertInfoForZIndex(zIndex: Int): LayerInsertInfo? {
@@ -222,13 +224,15 @@ class MapApplier(
         }.withIndex().minBy { it.value }.index
 
         return LayerInsertInfo(
-            zIndexReferenceAnnotationManagerMap[keys[closestLayerIndex]]?.layerId!!,
+            checkNotNull(zIndexReferenceAnnotationManagerMap[keys[closestLayerIndex]]?.layerId),
             if (zIndex > keys[closestLayerIndex]) LayerInsertMethod.INSERT_ABOVE else LayerInsertMethod.INSERT_BELOW
         )
     }
 
     fun getOrCreateSymbolManagerForZIndex(zIndex: Int): SymbolManager {
         symbolManagerMap[zIndex]?.let { return it }
+
+        val style = checkNotNull(style.value)
         val layerInsertInfo = getLayerInsertInfoForZIndex(zIndex)
 
         val symbolManager = layerInsertInfo?.let {
@@ -253,25 +257,25 @@ class MapApplier(
         }
 
         symbolManager.addDragListener(object : OnSymbolDragListener {
-            override fun onAnnotationDragStarted(annotation: Symbol?) {
+            override fun onAnnotationDragStarted(annotation: Symbol) {
                 decorations.findInputCallback<SymbolNode, Symbol, Unit>(
-                    nodeMatchPredicate = { it.symbol.id == annotation?.id && it.symbolManager.layerId == symbolManager.layerId },
+                    nodeMatchPredicate = { it.symbol.id == annotation.id && it.symbolManager.layerId == symbolManager.layerId },
                     nodeInputCallback = { onSymbolDragged }
-                )?.invoke(annotation!!)
+                )?.invoke(annotation)
             }
 
-            override fun onAnnotationDrag(annotation: Symbol?) {
+            override fun onAnnotationDrag(annotation: Symbol) {
                 decorations.findInputCallback<SymbolNode, Symbol, Unit>(
-                    nodeMatchPredicate = { it.symbol.id == annotation?.id && it.symbolManager.layerId == symbolManager.layerId },
+                    nodeMatchPredicate = { it.symbol.id == annotation.id && it.symbolManager.layerId == symbolManager.layerId },
                     nodeInputCallback = { onSymbolDragged }
-                )?.invoke(annotation!!)
+                )?.invoke(annotation)
             }
 
-            override fun onAnnotationDragFinished(annotation: Symbol?) {
+            override fun onAnnotationDragFinished(annotation: Symbol) {
                 decorations.findInputCallback<SymbolNode, Symbol, Unit>(
-                    nodeMatchPredicate = { it.symbol.id == annotation?.id && it.symbolManager.layerId == symbolManager.layerId },
+                    nodeMatchPredicate = { it.symbol.id == annotation.id && it.symbolManager.layerId == symbolManager.layerId },
                     nodeInputCallback = { onSymbolDragStopped }
-                )?.invoke(annotation!!)
+                )?.invoke(annotation)
             }
         })
 
@@ -280,7 +284,10 @@ class MapApplier(
 
     fun getOrCreateFillManagerForZIndex(zIndex: Int): FillManager {
         fillManagerMap[zIndex]?.let { return it }
+
+        val style = checkNotNull(style.value)
         val layerInsertInfo = getLayerInsertInfoForZIndex(zIndex)
+
         val fillManager = layerInsertInfo?.let {
             FillManager(
                 mapView,
@@ -304,7 +311,10 @@ class MapApplier(
 
     fun getOrCreateLineManagerForZIndex(zIndex: Int): LineManager {
         lineManagerMap[zIndex]?.let { return it }
+
+        val style = checkNotNull(style.value)
         val layerInsertInfo = getLayerInsertInfoForZIndex(zIndex)
+
         val lineManager = layerInsertInfo?.let {
             LineManager(
                 mapView,
@@ -328,7 +338,7 @@ class MapApplier(
     }
 
     override fun insertBottomUp(index: Int, instance: MapNode) {
-        // TODO: implement properly
+        // Ignored
     }
 
     override fun insertTopDown(index: Int, instance: MapNode) {

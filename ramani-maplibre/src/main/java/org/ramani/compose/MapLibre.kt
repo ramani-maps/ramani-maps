@@ -459,6 +459,7 @@ internal fun MapUpdater(
             map = map,
             style = style,
             uiSettings = uiSettings,
+            properties = properties,
             cameraPosition = cameraPosition,
             locationRequestProperties = locationRequestProperties,
             locationEngine = locationEngine,
@@ -528,6 +529,7 @@ internal class MapPropertiesNode(
     val map: MapLibreMap,
     val style: MutableState<Style?>,
     val uiSettings: UiSettings,
+    val properties: MapProperties,
     var cameraPosition: CameraPosition,
     val locationRequestProperties: LocationRequestProperties,
     val locationEngine: LocationEngine?,
@@ -538,6 +540,7 @@ internal class MapPropertiesNode(
 ) : MapNode {
     override fun onAttached() {
         map.applyUiSettings(uiSettings)
+        map.applyProperties(properties)
         map.cameraPosition = cameraPosition.toMapLibre()
 
         map.setupLocation(

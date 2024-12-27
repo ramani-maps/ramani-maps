@@ -21,6 +21,7 @@ import androidx.compose.runtime.ComposableTargetMarker
 import androidx.compose.runtime.ComposeNode
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -112,7 +113,7 @@ fun MapLibre(
     images: List<Pair<String, Int>>? = null,
     mapView: MapView = rememberMapViewWithLifecycle(),
     renderMode: Int = RenderMode.NORMAL,
-    cameraMode: MutableState<Int> = mutableIntStateOf(CameraMode.NONE),
+    cameraMode: MutableIntState = mutableIntStateOf(CameraMode.NONE),
     onMapClick: (LatLng) -> Unit = {},
     onMapLongClick: (LatLng) -> Unit = {},
     onStyleLoaded: (Style) -> Unit = {},
@@ -260,7 +261,7 @@ private fun MapLibreMap.setupLocation(
     locationStyling: LocationStyling,
     userLocation: MutableState<Location>?,
     renderMode: Int,
-    cameraMode: MutableState<Int>,
+    cameraMode: MutableIntState,
 ) {
     val locationEngineRequest = locationRequestProperties.toMapLibre()
 
@@ -391,7 +392,7 @@ internal fun MapUpdater(
     locationStyling: LocationStyling,
     userLocation: MutableState<Location>?,
     renderMode: Int,
-    cameraMode: MutableState<Int>,
+    cameraMode: MutableIntState,
 ) {
     val context = LocalContext.current
     val currentCameraMode by rememberUpdatedState(cameraMode.value)
@@ -534,7 +535,7 @@ internal class MapPropertiesNode(
     val locationStyling: LocationStyling,
     val userLocation: MutableState<Location>?,
     val renderMode: Int,
-    val cameraMode: MutableState<Int>,
+    val cameraMode: MutableIntState,
 ) : MapNode {
     override fun onAttached() {
         map.applyUiSettings(uiSettings)

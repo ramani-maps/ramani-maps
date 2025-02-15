@@ -209,6 +209,22 @@ class MapApplier(
             }
         })
 
+        circleManager.addClickListener { annotation ->
+            decorations.findInputCallback<CircleNode, Circle, Unit>(
+                nodeMatchPredicate = { it.circle.id == annotation.id && it.circleManager.layerId == circleManager.layerId },
+                nodeInputCallback = { onCircleClicked }
+            )?.invoke(annotation)
+            true
+        }
+
+        circleManager.addLongClickListener { annotation ->
+            decorations.findInputCallback<CircleNode, Circle, Unit>(
+                nodeMatchPredicate = { it.circle.id == annotation.id && it.circleManager.layerId == circleManager.layerId },
+                nodeInputCallback = { onCircleLongClicked }
+            )?.invoke(annotation)
+            true
+        }
+
         return circleManager
     }
 
@@ -278,6 +294,22 @@ class MapApplier(
                 )?.invoke(annotation)
             }
         })
+
+        symbolManager.addClickListener { annotation ->
+            decorations.findInputCallback<SymbolNode, Symbol, Unit>(
+                nodeMatchPredicate = { it.symbol.id == annotation.id && it.symbolManager.layerId == symbolManager.layerId },
+                nodeInputCallback = { onSymbolClicked }
+            )?.invoke(annotation)
+            true
+        }
+
+        symbolManager.addLongClickListener { annotation ->
+            decorations.findInputCallback<SymbolNode, Symbol, Unit>(
+                nodeMatchPredicate = { it.symbol.id == annotation.id && it.symbolManager.layerId == symbolManager.layerId },
+                nodeInputCallback = { onSymbolLongClicked }
+            )?.invoke(annotation)
+            true
+        }
 
         return symbolManager
     }
@@ -373,6 +405,8 @@ internal class CircleNode(
     val circle: Circle,
     var onCircleDragged: (Circle) -> Unit,
     var onCircleDragStopped: (Circle) -> Unit,
+    var onCircleClicked: (Circle) -> Unit,
+    var onCircleLongClicked: (Circle) -> Unit
 ) : MapNode {
     override fun onRemoved() {
         circleManager.delete(circle)
@@ -388,6 +422,8 @@ internal class SymbolNode(
     val symbol: Symbol,
     var onSymbolDragged: (Symbol) -> Unit,
     var onSymbolDragStopped: (Symbol) -> Unit,
+    var onSymbolClicked: (Symbol) -> Unit,
+    var onSymbolLongClicked: (Symbol) -> Unit
 ) : MapNode {
     override fun onRemoved() {
         symbolManager.delete(symbol)

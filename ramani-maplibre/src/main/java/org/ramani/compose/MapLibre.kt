@@ -169,12 +169,12 @@ fun MapLibre(
 
         maplibreMap.addOnMapClickListener { latLng ->
             onMapClick(latLng)
-            true
+            false
         }
 
         maplibreMap.addOnMapLongClickListener { latLng ->
             onMapLongClick(latLng)
-            true
+            false
         }
 
         mapView.newComposition(parentComposition, maplibreMap, currentStyle) {

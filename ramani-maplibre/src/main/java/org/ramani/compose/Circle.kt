@@ -13,6 +13,8 @@ package org.ramani.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import androidx.compose.runtime.currentComposer
+import com.google.gson.JsonElement
+import com.google.gson.JsonNull
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.plugins.annotation.CircleOptions
 
@@ -27,8 +29,11 @@ fun Circle(
     borderColor: String = "Black",
     borderWidth: Float = 0.0F,
     zIndex: Int = 0,
+    data: JsonElement = JsonNull.INSTANCE,
     onCenterDragged: (LatLng) -> Unit = {},
     onDragFinished: (LatLng) -> Unit = {},
+    onClick: (JsonElement?) -> Unit = {},
+    onLongClick: (JsonElement?) -> Unit = {}
 ) {
     val mapApplier = currentComposer.applier as MapApplier
 
@@ -42,6 +47,7 @@ fun Circle(
             .withCircleStrokeColor(borderColor)
             .withCircleStrokeWidth(borderWidth)
             .withCircleOpacity(opacity)
+            .withData(data)
 
         val circle = circleManager.create(circleOptions)
 
@@ -50,6 +56,8 @@ fun Circle(
             circle,
             onCircleDragged = { onCenterDragged(it.latLng) },
             onCircleDragStopped = { onDragFinished(it.latLng) },
+            onCircleClicked = { onClick(it.data) },
+            onCircleLongClicked = { onLongClick(it.data) }
         )
     }, update = {
         update(onCenterDragged) {

@@ -24,7 +24,7 @@ try {
 
 android {
     namespace = "org.ramani.compose"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 25

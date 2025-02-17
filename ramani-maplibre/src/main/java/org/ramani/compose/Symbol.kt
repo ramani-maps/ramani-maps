@@ -16,6 +16,8 @@ import androidx.compose.runtime.currentComposer
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.res.imageResource
+import com.google.gson.JsonElement
+import com.google.gson.JsonNull
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.plugins.annotation.SymbolOptions
 import org.maplibre.android.style.layers.Property.ICON_ANCHOR_CENTER
@@ -41,8 +43,11 @@ fun Symbol(
     textColor: String = "#000000",
     textHaloColor: String = "#000000",
     textHaloWidth: Float = 0f,
+    data: JsonElement = JsonNull.INSTANCE,
     onSymbolDragged: (LatLng) -> Unit = {},
     onDragFinished: (LatLng) -> Unit = {},
+    onClick: (JsonElement?) -> Unit = {},
+    onLongClick: (JsonElement?) -> Unit = {}
 ) {
     val mapApplier = currentComposer.applier as MapApplier
 
@@ -60,6 +65,7 @@ fun Symbol(
         var symbolOptions = SymbolOptions()
             .withDraggable(isDraggable)
             .withLatLng(center)
+            .withData(data)
 
         imageId?.let {
             symbolOptions = symbolOptions
@@ -90,6 +96,8 @@ fun Symbol(
             symbol,
             onSymbolDragged = { onSymbolDragged(it.latLng) },
             onSymbolDragStopped = { onDragFinished(it.latLng) },
+            onSymbolClicked = { onClick(it.data) },
+            onSymbolLongClicked = { onLongClick(it.data) }
         )
     }, update = {
         set(center) {

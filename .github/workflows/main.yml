@@ -31,11 +31,13 @@ jobs:
       - name: Print github values
         run: echo "github.event_name=${{ github.event_name }}, github.event.action=${{ github.event.action }}, github.ref_name=${{ github.ref_name }}"
       - name: Publish (Maven)
-        if: ${{ github.event_name == 'release' && github.event.action == 'created' && startsWith(github.ref_name, 'maplibre') }}
         working-directory: ./ramani-maplibre
         run: |
             echo -n "${{ secrets.MAVEN_SIGNING_KEY }}" | base64 --decode | gpg --import
-            ./gradlew publish
+            ./gradlew -Prelease -PcentralUsername=${{ secrets.CENTRAL_USERNAME }} -PcentralPassword=${{ secrets.CENTRAL_PASSWORD }} -PgpgPass="gpg-pass" publish
+            ls build
+            ls build/target
+            ls ..
             ./gradlew -Prelease -PcentralUsername=${{ secrets.CENTRAL_USERNAME }} -PcentralPassword=${{ secrets.CENTRAL_PASSWORD }} -PgpgPass="gpg-pass" jreleaserDeploy
 
   annotation-simple:

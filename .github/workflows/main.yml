@@ -35,7 +35,8 @@ jobs:
         working-directory: ./ramani-maplibre
         run: |
             echo -n "${{ secrets.MAVEN_SIGNING_KEY }}" | base64 --decode | gpg --import
-            ./gradlew -Prelease -PossrhUsername=${{ secrets.OSSRH_USERNAME }} -PossrhPassword=${{ secrets.OSSRH_PASSWORD }} publish
+            ./gradlew publish
+            ./gradlew -Prelease -PcentralUsername=${{ secrets.CENTRAL_USERNAME }} -PcentralPassword=${{ secrets.CENTRAL_PASSWORD }} -PgpgPass="gpg-pass" jreleaserDeploy
 
   annotation-simple:
     name: "Build and test example: AnnotationSimple"

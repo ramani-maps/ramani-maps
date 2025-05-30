@@ -2,6 +2,7 @@
 android-gradle-plugin = "8.6.1"
 androidx-core-ktx = "1.15.0"
 compose-ui = "1.7.5"
+jreleaser-plugin = "1.18.0"
 kotlin = "2.0.20"
 kotlin-parcelize = "2.0.20-RC"
 kotlin-gradle-plugin = "2.0.0"
@@ -25,5 +26,6 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 [plugins]
 android-library = { id = "com.android.library", version.ref = "android-gradle-plugin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin-gradle-plugin" }
+jreleaser = { id = "org.jreleaser", version.ref = "jreleaser-plugin" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin-gradle-plugin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin-parcelize" }

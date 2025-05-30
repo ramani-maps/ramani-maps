@@ -7,8 +7,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.jreleaser)
     `maven-publish`
-    signing
 }
 
 // Load file "keystore.properties" where we keep our keys
@@ -18,8 +18,9 @@ val keystoreProperties = Properties()
 try {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 } catch (ignored: IOException) {
-    if (project.hasProperty("ossrhUsername")) keystoreProperties["ossrhUsername"] = property("ossrhUsername")
-    if (project.hasProperty("ossrhPassword")) keystoreProperties["ossrhPassword"] = property("ossrhPassword")
+    if (project.hasProperty("centralUsername")) keystoreProperties["centralUsername"] = property("centralUsername")
+    if (project.hasProperty("centralPassword")) keystoreProperties["centralPassword"] = property("centralPassword")
+    if (project.hasProperty("gpgPass")) keystoreProperties["gpgPass"] = property("gpgPass")
 }
 
 android {
@@ -61,7 +62,7 @@ dependencies {
     testImplementation(libs.junit)
 }
 
-if (keystoreProperties.containsKey("ossrhUsername") && keystoreProperties.containsKey("ossrhPassword")) {
+if (keystoreProperties.containsKey("centralUsername") && keystoreProperties.containsKey("centralPassword")) {
     afterEvaluate {
         publishing {
             publications {
@@ -104,22 +105,38 @@ if (keystoreProperties.containsKey("ossrhUsername") && keystoreProperties.contai
             }
             repositories {
                 maven {
-                    val releasesUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-                    val snapshotsUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-                    url = uri(if (project.hasProperty("release")) releasesUrl else snapshotsUrl)
+                   url = uri(layout.buildDirectory.dir("target/staging-deploy"))
+                }
+            }
+        }
+    }
 
-                    credentials {
-                        username = keystoreProperties["ossrhUsername"] as String
-                        password = keystoreProperties["ossrhPassword"] as String
+    jreleaser {
+        signing {
+            setActive("RELEASE")
+            armored.set(true)
+            setMode("COMMAND")
+            passphrase.set(keystoreProperties["gpgPass"] as String)
+        }
+        deploy {
+            release {
+                github {
+                    skipRelease = true
+                    skipTag = true
+                }
+            }
+            maven {
+                mavenCentral {
+                    create("sonatype") {
+                        verifyPom = false
+                        setActive("RELEASE")
+                        username = keystoreProperties["centralUsername"] as String
+                        password = keystoreProperties["centralPassword"] as String
+                        url = "https://central.sonatype.com/api/v1/publisher"
+                        stagingRepository("build/target/staging-deploy")
                     }
                 }
             }
         }
-
-        signing {
-            useGpgCmd()
-            sign(publishing.publications["release"])
-        }
     }
 }
-

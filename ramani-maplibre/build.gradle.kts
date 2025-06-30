@@ -31,7 +31,7 @@ android {
         minSdk = 25
 
         group = "org.ramani-maps"
-        version = "0.9.1"
+        version = "0.9.2-SNAPSHOT"
     }
 
     buildTypes {
@@ -113,10 +113,12 @@ if (keystoreProperties.containsKey("centralUsername") && keystoreProperties.cont
 
     jreleaser {
         signing {
-            setActive("RELEASE")
+            setActive("ALWAYS")
             armored.set(true)
             setMode("COMMAND")
-            passphrase.set(keystoreProperties["gpgPass"] as String)
+            keystoreProperties["gpgPass"]?.let {
+                passphrase.set(it as String)
+            }
         }
         deploy {
             release {
@@ -133,6 +135,19 @@ if (keystoreProperties.containsKey("centralUsername") && keystoreProperties.cont
                         username = keystoreProperties["centralUsername"] as String
                         password = keystoreProperties["centralPassword"] as String
                         url = "https://central.sonatype.com/api/v1/publisher"
+                        stagingRepository("build/target/staging-deploy")
+                    }
+                }
+                nexus2 {
+                    create("snapshot-deploy") {
+                        verifyPom = false
+                        setActive("SNAPSHOT")
+                        snapshotUrl.set("https://central.sonatype.com/repository/maven-snapshots")
+                        url = "https://central.sonatype.com/repository/maven-snapshots"
+                        applyMavenCentralRules = true
+                        snapshotSupported = true
+                        username = keystoreProperties["centralUsername"] as String
+                        password = keystoreProperties["centralPassword"] as String
                         stagingRepository("build/target/staging-deploy")
                     }
                 }

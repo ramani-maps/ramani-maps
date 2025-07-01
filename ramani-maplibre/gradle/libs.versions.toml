@@ -7,7 +7,7 @@ kotlin = "2.0.20"
 kotlin-parcelize = "2.0.20-RC"
 kotlin-gradle-plugin = "2.0.0"
 kotlinx-coroutines-android = "1.8.0"
-maplibre-android-sdk = "11.8.8"
+maplibre-android-sdk = "11.11.0"
 maplibre-android-plugin-annotation = "3.0.2"
 junit = "4.13.2"
 

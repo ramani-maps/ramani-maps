@@ -19,7 +19,7 @@ but the idea is this:
 Add the dependency to `build.gradle`:
 
 ```gradle
-implementation 'org.ramani-maps:ramani-maplibre:0.9.0'
+implementation 'org.ramani-maps:ramani-maplibre:0.9.2'
 ```
 
 Insert the map composable:
@@ -31,16 +31,18 @@ MapLibre(modifier = Modifier.fillMaxSize())
 A map will now appear in your app!
 
 If you want to do anything useful though (the free maps are not very detailed),
-you'll either need a commercial tile provider or your own tile hosting.
+you'll either need a commercial tile provider, a free tile provider, or your own tile hosting.
 Several tile providers offer vector tiles with support for MapLibre:
 
 * [MapTiler](https://cloud.maptiler.com/account/keys)
 * [Stadia Maps](https://client.stadiamaps.com/)
+* [OpenFreeMap](https://openfreemap.org)
 
 Note that most vendors require an API key in order to authenticate requests.
 For MapTiler, you must add `?key=YOUR-API-KEY` at the end of the URL,
 and for Stadia Maps, you must add `?api_key=YOUR-API-KEY`.
-Consult your tile provider's documentation for details.
+Consult your tile provider's documentation for details; OpenFreeMap does not
+require an API key.
 
 ## Quick Start with Mapbox
 
@@ -49,6 +51,12 @@ support. There is no plan to work further in that direction. You can still find
 Ramani-Mapbox in the corresponding [release
 tag](https://github.com/ramani-maps/ramani-maps/tree/mapbox-0.1.0), but note
 that it probably won't work with newer versions of Mapbox.
+
+## Quick Start with OpenFreeMap
+
+[OpenFreeMap](https://openfreemap.org) provides completely free map tiles based on [OpenStreetMap](https://openstreetmap.org) data. There are no usage limits and no registration or API key is needed. One important caveat with OpenFreeMap is that if you are using MapLibre Native 11.8.0+ (and by extension, Ramani 0.9.0+) on an *Android emulator* you must use Vulkan as a back end, as otherwise, text and symbols will not be rendered correctly. Please see [the documentation on using Vulkan](README.vulkan.md).
+
+The style URLs to use are documented [on OpenFreeMap](https://openfreemap.org/quick_start).
 
 ## Examples
 

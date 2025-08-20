@@ -17,7 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.maplibre.android.geometry.LatLng
-import org.maplibre.android.maps.Style
 import org.ramani.compose.CameraPosition
 import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
@@ -41,7 +40,6 @@ class MainActivity : ComponentActivity() {
 
                 val isDefaultStyle = rememberSaveable { mutableStateOf(true) }
                 val styleUrl = rememberSaveable { mutableStateOf(DEFAULT_STYLE_URL) }
-                val styleBuilder = Style.Builder().fromUri(styleUrl.value)
 
                 Box {
                     Surface(
@@ -50,7 +48,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         MapLibre(
                             modifier = Modifier.fillMaxSize(),
-                            styleBuilder = styleBuilder,
+                            styleUri = styleUrl.value,
                             cameraPosition = cameraPosition.value,
                         ) {
                             polygonState.forEachIndexed { index, vertex ->

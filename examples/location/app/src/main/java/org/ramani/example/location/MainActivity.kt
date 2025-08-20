@@ -19,6 +19,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,8 +50,10 @@ class MainActivity : ComponentActivity() {
                 val cameraMode = rememberSaveable { mutableIntStateOf(CameraMode.TRACKING) }
                 val renderMode = rememberSaveable { mutableIntStateOf(RenderMode.COMPASS) }
 
-                val styleBuilder =
+                // ✅ CORRECT: Remember the styleBuilder to avoid unnecessary recompositions
+                val styleBuilder = remember {
                     Style.Builder().fromUri(resources.getString(R.string.maplibre_style_url))
+                }
 
                 Box {
                     Surface(

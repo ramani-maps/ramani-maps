@@ -12,6 +12,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -41,7 +42,8 @@ class MainActivity : ComponentActivity() {
 
                 val isDefaultStyle = rememberSaveable { mutableStateOf(true) }
                 val styleUrl = rememberSaveable { mutableStateOf(DEFAULT_STYLE_URL) }
-                val styleBuilder = Style.Builder().fromUri(styleUrl.value)
+                // ✅ CORRECT: Remember the styleBuilder to avoid unnecessary recompositions
+                val styleBuilder = remember(styleUrl.value) { Style.Builder().fromUri(styleUrl.value) }
 
                 Box {
                     Surface(

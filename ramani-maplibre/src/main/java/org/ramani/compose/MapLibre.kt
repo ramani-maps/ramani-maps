@@ -73,6 +73,48 @@ import org.maplibre.android.utils.BitmapUtils
 annotation class MapLibreComposable
 
 /**
+ * A wrapper around Style.Builder that provides stable equality semantics for Compose.
+ * 
+ * This wrapper helps prevent unnecessary recompositions by providing stable equality
+ * when the same Style.Builder configuration is used across recompositions.
+ * 
+ * Usage example:
+ * ```
+ * @Composable
+ * fun MyMapScreen() {
+ *     val styleUrl by rememberSaveable { mutableStateOf("https://example.com/style.json") }
+ *     
+ *     // Create a stable Style.Builder that only changes when styleUrl changes
+ *     val styleBuilder = remember(styleUrl) { 
+ *         Style.Builder().fromUri(styleUrl) 
+ *     }
+ *     
+ *     MapLibre(styleBuilder = styleBuilder)
+ * }
+ * ```
+ */
+data class StyleConfiguration(
+    private val builder: Style.Builder
+) {
+    /**
+     * Get the Style.Builder for this configuration.
+     */
+    fun getBuilder(): Style.Builder = builder
+    
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is StyleConfiguration) return false
+        // Use reference equality for the builder - this encourages users to properly
+        // remember their Style.Builder instances
+        return builder === other.builder
+    }
+    
+    override fun hashCode(): Int {
+        return System.identityHashCode(builder)
+    }
+}
+
+/**
  * A composable representing a MapLibre map.
  *
  * @param modifier The modifier applied to the map.
@@ -125,7 +167,9 @@ fun MapLibre(
     }
 
     val context = LocalContext.current
-    val currentStyleBuilder by rememberUpdatedState(styleBuilder)
+    // Wrap the Style.Builder in our StyleConfiguration for stable equality semantics
+    val currentStyleConfig = remember(styleBuilder) { StyleConfiguration(styleBuilder) }
+    val currentStyleBuilder = currentStyleConfig.getBuilder()
     val currentCameraPosition by rememberUpdatedState(cameraPosition)
     val currentUiSettings by rememberUpdatedState(uiSettings)
     val currentMapProperties by rememberUpdatedState(properties)
@@ -142,7 +186,7 @@ fun MapLibre(
     val currentStyle = remember { mutableStateOf<Style?>(null) }
     val currentMap = remember { mutableStateOf<MapLibreMap?>(null) }
 
-    LaunchedEffect(currentStyleBuilder) {
+    LaunchedEffect(currentStyleConfig) {
         currentLayers?.forEach { currentStyle.value?.removeLayer(it) }
         currentSources?.forEach { currentStyle.value?.removeSource(it) }
         currentStyle.value = mapView.awaitMap().awaitStyle(currentStyleBuilder)

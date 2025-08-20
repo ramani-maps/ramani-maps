@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.maplibre.android.MapLibre
 import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.maps.Style
 import org.maplibre.android.style.expressions.Expression
 import org.maplibre.android.style.layers.FillLayer
 import org.maplibre.android.style.layers.LineLayer
@@ -124,6 +125,7 @@ class MainActivity : ComponentActivity() {
             }
             val isDefaultStyle = rememberSaveable { mutableStateOf(true) }
             val styleUrl = rememberSaveable { mutableStateOf(DEFAULT_STYLE_URL) }
+            val styleBuilder = Style.Builder().fromUri(styleUrl.value)
             val uiSettings = rememberSaveable {
                 mutableStateOf(
                     UiSettings(rotateGesturesEnabled = false)
@@ -138,7 +140,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         MapLibre(
                             modifier = Modifier.fillMaxSize(),
-                            styleUri = styleUrl.value,
+                            styleBuilder = styleBuilder,
                             uiSettings = uiSettings.value,
                             cameraPosition = cameraPosition.value,
                             sources = listOf(

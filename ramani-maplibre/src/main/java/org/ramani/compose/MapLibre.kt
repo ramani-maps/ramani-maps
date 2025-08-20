@@ -73,146 +73,52 @@ import org.maplibre.android.utils.BitmapUtils
 annotation class MapLibreComposable
 
 /**
- * A composable representing a MapLibre map.
- *
- * @param modifier The modifier applied to the map.
- * @param styleUri The URI of the map style. Defaults to a demo tile provider.
- * @param cameraPosition The position of the map camera.
- * @param uiSettings Settings related to the map UI.
- * @param properties Properties being applied to the map.
- * @param locationRequestProperties Properties related to the location marker. If null (which is
- *        the default), then the location will not be enabled on the map. Enabling the location
- *        requires setting this field and getting the location permission in your app.
- * @param locationEngine The location engine to use for the location marker. If null (which is
- *        the default), then the default location engine will be used.
- * @param locationStyling Styling related to the location marker (color, pulse, etc).
- * @param userLocation If set and if the location is enabled (by setting [locationRequestProperties],
- *        it will be updated to contain the latest user location as known by the map.
- * @param sources External (user-defined) sources for the map.
- * @param layers External (user-defined) layers for the map.
- * @param images Images to be added to the map and used by external layers (pairs of <id, drawable code>).
- * @param renderMode Ways the user location can be rendered on the map.
- * @param cameraMode Set specific camera tracking modes as the device location changes.
- * @param onMapLongClick Callback that is invoked when the map is long clicked
- * @param content The content of the map.
+ * A wrapper around Style.Builder that provides stable equality semantics for Compose.
+ * 
+ * This wrapper helps prevent unnecessary recompositions by providing stable equality
+ * when the same Style.Builder configuration is used across recompositions.
+ * 
+ * Usage example:
+ * ```
+ * @Composable
+ * fun MyMapScreen() {
+ *     val styleUrl by rememberSaveable { mutableStateOf("https://example.com/style.json") }
+ *     
+ *     // Create a stable Style.Builder that only changes when styleUrl changes
+ *     val styleBuilder = remember(styleUrl) { 
+ *         Style.Builder().fromUri(styleUrl) 
+ *     }
+ *     
+ *     MapLibre(styleBuilder = styleBuilder)
+ * }
+ * ```
  */
-@Composable
-fun MapLibre(
-    modifier: Modifier,
-    styleUri: String = "https://demotiles.maplibre.org/style.json",
-    cameraPosition: CameraPosition = rememberSaveable { CameraPosition() },
-    uiSettings: UiSettings = UiSettings(),
-    properties: MapProperties = MapProperties(),
-    locationRequestProperties: LocationRequestProperties = LocationRequestProperties(),
-    locationEngine: LocationEngine? = null,
-    locationStyling: LocationStyling = LocationStyling(),
-    userLocation: MutableState<Location>? = null,
-    sources: List<Source>? = null,
-    layers: List<Layer>? = null,
-    images: List<Pair<String, Int>>? = null,
-    mapView: MapView = rememberMapViewWithLifecycle(),
-    renderMode: Int = RenderMode.NORMAL,
-    cameraMode: MutableIntState = mutableIntStateOf(CameraMode.NONE),
-    onMapClick: (LatLng) -> Unit = {},
-    onMapLongClick: (LatLng) -> Unit = {},
-    onStyleLoaded: (Style) -> Unit = {},
-    content: (@Composable @MapLibreComposable () -> Unit)? = null,
+data class StyleConfiguration(
+    private val builder: Style.Builder
 ) {
-    if (LocalInspectionMode.current) {
-        Box(modifier = modifier)
-        return
+    /**
+     * Get the Style.Builder for this configuration.
+     */
+    fun getBuilder(): Style.Builder = builder
+    
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is StyleConfiguration) return false
+        // Use reference equality for the builder - this encourages users to properly
+        // remember their Style.Builder instances
+        return builder === other.builder
     }
-
-    val context = LocalContext.current
-    val currentStyleBuilder = remember(styleUri) { Style.Builder().fromUri(styleUri) }
-    val currentCameraPosition by rememberUpdatedState(cameraPosition)
-    val currentUiSettings by rememberUpdatedState(uiSettings)
-    val currentMapProperties by rememberUpdatedState(properties)
-    val currentLocationRequestProperties by rememberUpdatedState(locationRequestProperties)
-    val currentLocationEngine by rememberUpdatedState(locationEngine)
-    val currentLocationStyling by rememberUpdatedState(locationStyling)
-    val currentSources by rememberUpdatedState(sources)
-    val currentLayers by rememberUpdatedState(layers)
-    val currentImages by rememberUpdatedState(images)
-    val currentRenderMode by rememberUpdatedState(renderMode)
-    val currentContent by rememberUpdatedState(content)
-    val parentComposition = rememberCompositionContext()
-
-    val currentStyle = remember { mutableStateOf<Style?>(null) }
-    val currentMap = remember { mutableStateOf<MapLibreMap?>(null) }
-
-    LaunchedEffect(currentStyleBuilder) {
-        currentLayers?.forEach { currentStyle.value?.removeLayer(it) }
-        currentSources?.forEach { currentStyle.value?.removeSource(it) }
-        currentStyle.value = mapView.awaitMap().awaitStyle(currentStyleBuilder)
-    }
-
-    AndroidView(modifier = modifier, factory = { mapView })
-
-    LaunchedEffect(null) {
-        val maplibreMap = mapView.awaitMap()
-        val style = maplibreMap.awaitStyle(currentStyleBuilder)
-        onStyleLoaded(style)
-
-        currentMap.value = maplibreMap
-        currentStyle.value = style
-
-        maplibreMap.addImages(context, currentImages)
-
-        mapView.addOnDidFinishLoadingStyleListener {
-            maplibreMap.addSources(currentSources)
-            maplibreMap.addLayers(currentLayers)
-        }
-        maplibreMap.addSources(currentSources)
-        maplibreMap.addLayers(currentLayers)
-
-        maplibreMap.addOnMapClickListener { latLng ->
-            onMapClick(latLng)
-            false
-        }
-
-        maplibreMap.addOnMapLongClickListener { latLng ->
-            onMapLongClick(latLng)
-            false
-        }
-
-        mapView.newComposition(parentComposition, maplibreMap, currentStyle) {
-            CompositionLocalProvider {
-                MapUpdater(
-                    map = checkNotNull(currentMap.value),
-                    style = currentStyle,
-                    cameraPosition = currentCameraPosition,
-                    uiSettings = currentUiSettings,
-                    properties = currentMapProperties,
-                    locationRequestProperties = currentLocationRequestProperties,
-                    locationEngine = currentLocationEngine,
-                    locationStyling = currentLocationStyling,
-                    userLocation = userLocation,
-                    cameraMode = cameraMode,
-                    renderMode = currentRenderMode,
-                )
-                currentContent?.invoke()
-            }
-        }
+    
+    override fun hashCode(): Int {
+        return System.identityHashCode(builder)
     }
 }
 
 /**
- * A composable representing a MapLibre map with advanced style configuration.
- *
- * Use this overload when you need to configure the Style.Builder beyond just setting a URI.
- * Make sure to remember your styleBuilder properly to avoid unnecessary recompositions:
- * 
- * ```
- * val styleBuilder = remember(styleUri) { 
- *     Style.Builder().fromUri(styleUri).apply {
- *         // your custom configuration
- *     }
- * }
- * ```
+ * A composable representing a MapLibre map.
  *
  * @param modifier The modifier applied to the map.
- * @param styleBuilder The style builder to access the tile provider. Must be properly remembered!
+ * @param styleBuilder The style builder to access the tile provider. Defaults to a demo tile provider.
  * @param cameraPosition The position of the map camera.
  * @param uiSettings Settings related to the map UI.
  * @param properties Properties being applied to the map.
@@ -235,7 +141,8 @@ fun MapLibre(
 @Composable
 fun MapLibre(
     modifier: Modifier,
-    styleBuilder: Style.Builder,
+    styleBuilder: Style.Builder = Style.Builder()
+        .fromUri("https://demotiles.maplibre.org/style.json"),
     cameraPosition: CameraPosition = rememberSaveable { CameraPosition() },
     uiSettings: UiSettings = UiSettings(),
     properties: MapProperties = MapProperties(),
@@ -260,7 +167,9 @@ fun MapLibre(
     }
 
     val context = LocalContext.current
-    val currentStyleBuilder = styleBuilder // Use the provided styleBuilder directly
+    // Wrap the Style.Builder in our StyleConfiguration for stable equality semantics
+    val currentStyleConfig = remember(styleBuilder) { StyleConfiguration(styleBuilder) }
+    val currentStyleBuilder = currentStyleConfig.getBuilder()
     val currentCameraPosition by rememberUpdatedState(cameraPosition)
     val currentUiSettings by rememberUpdatedState(uiSettings)
     val currentMapProperties by rememberUpdatedState(properties)
@@ -277,7 +186,7 @@ fun MapLibre(
     val currentStyle = remember { mutableStateOf<Style?>(null) }
     val currentMap = remember { mutableStateOf<MapLibreMap?>(null) }
 
-    LaunchedEffect(currentStyleBuilder) {
+    LaunchedEffect(currentStyleConfig) {
         currentLayers?.forEach { currentStyle.value?.removeLayer(it) }
         currentSources?.forEach { currentStyle.value?.removeSource(it) }
         currentStyle.value = mapView.awaitMap().awaitStyle(currentStyleBuilder)

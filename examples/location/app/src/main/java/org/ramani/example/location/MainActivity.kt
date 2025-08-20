@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.location.modes.CameraMode
 import org.maplibre.android.location.modes.RenderMode
+import org.maplibre.android.maps.Style
 import org.ramani.compose.CameraPosition
 import org.ramani.compose.LocationRequestProperties
 import org.ramani.compose.LocationStyling
@@ -48,6 +49,9 @@ class MainActivity : ComponentActivity() {
                 val cameraMode = rememberSaveable { mutableIntStateOf(CameraMode.TRACKING) }
                 val renderMode = rememberSaveable { mutableIntStateOf(RenderMode.COMPASS) }
 
+                val styleBuilder =
+                    Style.Builder().fromUri(resources.getString(R.string.maplibre_style_url))
+
                 Box {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
@@ -55,7 +59,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         MapLibre(
                             modifier = Modifier.fillMaxSize(),
-                            styleUri = resources.getString(R.string.maplibre_style_url),
+                            styleBuilder = styleBuilder,
                             cameraPosition = cameraPosition.value,
                             locationRequestProperties = locationProperties.value,
                             locationStyling = LocationStyling(

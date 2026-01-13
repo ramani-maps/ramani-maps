@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.viewinterop.AndroidView
+import okhttp3.OkHttpClient
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.gestures.MoveGestureDetector
@@ -57,6 +58,7 @@ import org.maplibre.android.maps.MapLibreMap.OnScaleListener
 import org.maplibre.android.maps.MapLibreMap.OnShoveListener
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
+import org.maplibre.android.module.http.HttpRequestUtil
 import org.maplibre.android.style.layers.Layer
 import org.maplibre.android.style.sources.Source
 import org.maplibre.android.utils.BitmapUtils
@@ -93,6 +95,7 @@ annotation class MapLibreComposable
  * @param images Images to be added to the map and used by external layers (pairs of <id, drawable code>).
  * @param renderMode Ways the user location can be rendered on the map.
  * @param cameraMode Set specific camera tracking modes as the device location changes.
+ * @param httpClient The HTTP client to use for all requests.
  * @param onMapLongClick Callback that is invoked when the map is long clicked
  * @param content The content of the map.
  */
@@ -114,6 +117,7 @@ fun MapLibre(
     mapView: MapView = rememberMapViewWithLifecycle(),
     renderMode: Int = RenderMode.NORMAL,
     cameraMode: MutableIntState = mutableIntStateOf(CameraMode.NONE),
+    httpClient: OkHttpClient? = null,
     onMapClick: (LatLng) -> Unit = {},
     onMapLongClick: (LatLng) -> Unit = {},
     onStyleLoaded: (Style) -> Unit = {},
@@ -136,11 +140,18 @@ fun MapLibre(
     val currentLayers by rememberUpdatedState(layers)
     val currentImages by rememberUpdatedState(images)
     val currentRenderMode by rememberUpdatedState(renderMode)
+    val currentHttpClient by rememberUpdatedState(httpClient)
     val currentContent by rememberUpdatedState(content)
     val parentComposition = rememberCompositionContext()
 
     val currentStyle = remember { mutableStateOf<Style?>(null) }
     val currentMap = remember { mutableStateOf<MapLibreMap?>(null) }
+
+    LaunchedEffect(currentHttpClient) {
+        currentHttpClient?.let {
+            HttpRequestUtil.setOkHttpClient(it)
+        }
+    }
 
     LaunchedEffect(currentStyleBuilder) {
         currentLayers?.forEach { currentStyle.value?.removeLayer(it) }

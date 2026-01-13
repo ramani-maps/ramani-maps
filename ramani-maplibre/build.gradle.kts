@@ -58,6 +58,7 @@ dependencies {
 
     api(libs.maplibre.android.sdk)
     api(libs.maplibre.android.plugin.annotation)
+    api(libs.okhttp)
 
     testImplementation(libs.junit)
 }

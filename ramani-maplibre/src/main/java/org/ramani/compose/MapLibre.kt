@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.viewinterop.AndroidView
+import okhttp3.Call
 import okhttp3.OkHttpClient
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
@@ -117,7 +118,7 @@ fun MapLibre(
     mapView: MapView = rememberMapViewWithLifecycle(),
     renderMode: Int = RenderMode.NORMAL,
     cameraMode: MutableIntState = mutableIntStateOf(CameraMode.NONE),
-    httpClient: OkHttpClient? = null,
+    httpClient: Call.Factory? = null,
     onMapClick: (LatLng) -> Unit = {},
     onMapLongClick: (LatLng) -> Unit = {},
     onStyleLoaded: (Style) -> Unit = {},

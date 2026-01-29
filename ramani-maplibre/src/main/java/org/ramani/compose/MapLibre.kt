@@ -158,6 +158,7 @@ fun MapLibre(
         currentLayers?.forEach { currentStyle.value?.removeLayer(it) }
         currentSources?.forEach { currentStyle.value?.removeSource(it) }
         currentStyle.value = mapView.awaitMap().awaitStyle(currentStyleBuilder)
+        currentStyle.value?.let { onStyleLoaded(it) }
     }
 
     AndroidView(modifier = modifier, factory = { mapView })

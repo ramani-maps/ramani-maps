@@ -11,6 +11,8 @@ maplibre-android-sdk = "11.11.0"
 maplibre-android-plugin-annotation = "3.0.2"
 junit = "4.13.2"
 okhttp = "4.12.0"
+androidx-test = "1.6.1"
+androidx-test-ext-junit = "1.2.1"
 
 [libraries]
 android-gradle-plugin = { group = "com.android.tools.build", name = "gradle", version.ref = "android-gradle-plugin" }
@@ -24,6 +26,9 @@ maplibre-android-sdk = { group = "org.maplibre.gl", name = "android-sdk", versio
 maplibre-android-plugin-annotation = { group = "org.maplibre.gl", name = "android-plugin-annotation-v9", version.ref = "maplibre-android-plugin-annotation" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidx-test" }
+androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinx-coroutines-android" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "android-gradle-plugin" }

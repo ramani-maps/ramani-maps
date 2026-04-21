@@ -25,13 +25,16 @@ try {
 
 android {
     namespace = "org.ramani.compose"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 25
+        targetSdk = 36
 
         group = "org.ramani-maps"
         version = "0.10.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -61,6 +64,10 @@ dependencies {
     api(libs.okhttp)
 
     testImplementation(libs.junit)
+
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
 }
 
 if (keystoreProperties.containsKey("centralUsername") && keystoreProperties.containsKey("centralPassword")) {

@@ -159,4 +159,48 @@ class MapApplierLayerOrderTest {
         assertTrue("border should be above area", borderIndex > areaIndex)
         assertTrue("vertex should be above border", vertexIndex > borderIndex)
     }
+
+    @Test
+    fun transitiveForwardReferences_allLayersDeclaredInReverseOrder() = withApplier { applier, style ->
+        // All declared in reverse dependency order — C above B, B above A, but A declared last.
+        val cManager = applier.getOrCreateCircleManagerForLayerId("C", aboveLayerId = "B", belowLayerId = null)
+        val bManager = applier.getOrCreateLineManagerForLayerId("B", aboveLayerId = "A", belowLayerId = null)
+        val aManager = applier.getOrCreateFillManagerForLayerId("A", null, null)
+
+        applier.onEndChanges()
+
+        val aIndex = style.layerIndex(aManager.layerId)
+        val bIndex = style.layerIndex(bManager.layerId)
+        val cIndex = style.layerIndex(cManager.layerId)
+
+        assertTrue("A < B < C: A=$aIndex, B=$bIndex, C=$cIndex", aIndex < bIndex && bIndex < cIndex)
+    }
+
+    @Test
+    fun onEndChanges_idempotent_callingTwiceDoesNotCorruptOrdering() = withApplier { applier, style ->
+        val routeManager = applier.getOrCreateLineManagerForLayerId("route", null, null)
+        val dotManager = applier.getOrCreateCircleManagerForLayerId("dot", aboveLayerId = "route", belowLayerId = null)
+
+        // Forward ref case — second call should be a no-op (pendingOrders cleared after first call)
+        applier.onEndChanges()
+        applier.onEndChanges()
+
+        val routeIndex = style.layerIndex(routeManager.layerId)
+        val dotIndex = style.layerIndex(dotManager.layerId)
+
+        assertTrue("dot should still be above route after double onEndChanges", dotIndex > routeIndex)
+    }
+
+    @Test
+    fun sametype_circleLayersCanChain() = withApplier { applier, style ->
+        val baseCircles = applier.getOrCreateCircleManagerForLayerId("base-circles", null, null)
+        val topCircles = applier.getOrCreateCircleManagerForLayerId("top-circles", aboveLayerId = "base-circles", belowLayerId = null)
+
+        applier.onEndChanges()
+
+        val baseIndex = style.layerIndex(baseCircles.layerId)
+        val topIndex = style.layerIndex(topCircles.layerId)
+
+        assertTrue("top-circles should be above base-circles", topIndex > baseIndex)
+    }
 }

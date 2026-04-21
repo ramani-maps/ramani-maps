@@ -544,7 +544,11 @@ class MapApplier(
 
         val style = style.value ?: return
 
-        for (order in pendingOrders) {
+        // Topological sort: process dependencies before dependents so that moving
+        // layer B above A before moving C above B leaves C in the right place.
+        val sorted = topologicalSort(pendingOrders)
+
+        for (order in sorted) {
             val manager = namedLayerRegistry[order.layerId] ?: continue
             val managerLayerId = manager.layerId
 
@@ -564,6 +568,25 @@ class MapApplier(
             }
         }
         pendingOrders.clear()
+    }
+
+    private fun topologicalSort(orders: List<PendingLayerOrder>): List<PendingLayerOrder> {
+        val orderByLayerId = orders.associateBy { it.layerId }
+        val result = mutableListOf<PendingLayerOrder>()
+        val visited = mutableSetOf<String>()
+
+        fun visit(order: PendingLayerOrder) {
+            if (order.layerId in visited) return
+            visited.add(order.layerId)
+            val depLayerId = order.aboveLayerId ?: order.belowLayerId
+            if (depLayerId != null) {
+                orderByLayerId[depLayerId]?.let { visit(it) }
+            }
+            result.add(order)
+        }
+
+        for (order in orders) visit(order)
+        return result
     }
 
     override fun insertBottomUp(index: Int, instance: MapNode) {

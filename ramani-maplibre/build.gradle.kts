@@ -17,7 +17,7 @@ val keystoreProperties = Properties()
 
 try {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-} catch (ignored: IOException) {
+} catch (_: IOException) {
     if (project.hasProperty("centralUsername")) keystoreProperties["centralUsername"] = property("centralUsername")
     if (project.hasProperty("centralPassword")) keystoreProperties["centralPassword"] = property("centralPassword")
     if (project.hasProperty("gpgPass")) keystoreProperties["gpgPass"] = property("gpgPass")
@@ -29,7 +29,6 @@ android {
 
     defaultConfig {
         minSdk = 25
-        targetSdk = 36
 
         group = "org.ramani-maps"
         version = "0.10.0"
@@ -37,17 +36,15 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+
     buildTypes {
         release {
             isMinifyEnabled = false
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = "17"
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 }
 

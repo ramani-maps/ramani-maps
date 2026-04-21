@@ -1,5 +1,5 @@
 [versions]
-android-gradle-plugin = "8.6.1"
+android-gradle-plugin = "8.13.2"
 androidx-core-ktx = "1.15.0"
 compose-ui = "1.7.5"
 jreleaser-plugin = "1.19.0"

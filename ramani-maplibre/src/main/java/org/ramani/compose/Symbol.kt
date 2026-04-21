@@ -32,6 +32,9 @@ fun Symbol(
     color: String = "",
     isDraggable: Boolean = false,
     zIndex: Int = 0,
+    layerId: String? = null,
+    aboveLayerId: String? = null,
+    belowLayerId: String? = null,
     imageId: Int? = org.maplibre.android.R.drawable.maplibre_marker_icon_default,
     imageAnchor: String = ICON_ANCHOR_CENTER,
     imageOffset: Array<Float> = arrayOf(0f, 0f),
@@ -61,7 +64,11 @@ fun Symbol(
     }
 
     ComposeNode<SymbolNode, MapApplier>(factory = {
-        val symbolManager = mapApplier.getOrCreateSymbolManagerForZIndex(zIndex)
+        val symbolManager = if (layerId != null) {
+            mapApplier.getOrCreateSymbolManagerForLayerId(layerId, aboveLayerId, belowLayerId)
+        } else {
+            mapApplier.getOrCreateSymbolManagerForZIndex(zIndex)
+        }
         var symbolOptions = SymbolOptions()
             .withDraggable(isDraggable)
             .withLatLng(center)

@@ -23,12 +23,19 @@ fun Fill(
     fillColor: String = "Transparent",
     opacity: Float = 1.0f,
     zIndex: Int = 0,
+    layerId: String? = null,
+    aboveLayerId: String? = null,
+    belowLayerId: String? = null,
     isDraggable: Boolean = false,
 ) {
     val mapApplier = currentComposer.applier as MapApplier
 
     ComposeNode<FillNode, MapApplier>(factory = {
-        val fillManager = mapApplier.getOrCreateFillManagerForZIndex(zIndex)
+        val fillManager = if (layerId != null) {
+            mapApplier.getOrCreateFillManagerForLayerId(layerId, aboveLayerId, belowLayerId)
+        } else {
+            mapApplier.getOrCreateFillManagerForZIndex(zIndex)
+        }
         val fillOptions = FillOptions()
             .withLatLngs(mutableListOf(points))
             .withFillColor(fillColor)

@@ -29,6 +29,9 @@ fun Circle(
     borderColor: String = "Black",
     borderWidth: Float = 0.0F,
     zIndex: Int = 0,
+    layerId: String? = null,
+    aboveLayerId: String? = null,
+    belowLayerId: String? = null,
     data: JsonElement = JsonNull.INSTANCE,
     onCenterDragged: (LatLng) -> Unit = {},
     onDragFinished: (LatLng) -> Unit = {},
@@ -38,7 +41,11 @@ fun Circle(
     val mapApplier = currentComposer.applier as MapApplier
 
     ComposeNode<CircleNode, MapApplier>(factory = {
-        val circleManager = mapApplier.getOrCreateCircleManagerForZIndex(zIndex)
+        val circleManager = if (layerId != null) {
+            mapApplier.getOrCreateCircleManagerForLayerId(layerId, aboveLayerId, belowLayerId)
+        } else {
+            mapApplier.getOrCreateCircleManagerForZIndex(zIndex)
+        }
 
         val circleOptions = CircleOptions()
             .withCircleRadius(radius)

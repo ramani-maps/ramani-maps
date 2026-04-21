@@ -92,6 +92,21 @@ class MapApplier(
     private val zIndexReferenceAnnotationManagerMap =
         mutableMapOf<Int, AnnotationManager<*, *, *, *, *, *>>()
 
+    private val circleManagerByLayerId = mutableMapOf<String, CircleManager>()
+    private val fillManagerByLayerId = mutableMapOf<String, FillManager>()
+    private val symbolManagerByLayerId = mutableMapOf<String, SymbolManager>()
+    private val lineManagerByLayerId = mutableMapOf<String, LineManager>()
+
+    private val namedLayerRegistry = mutableMapOf<String, AnnotationManager<*, *, *, *, *, *>>()
+
+    private data class PendingLayerOrder(
+        val layerId: String,
+        val aboveLayerId: String?,
+        val belowLayerId: String?
+    )
+
+    private val pendingOrders = mutableListOf<PendingLayerOrder>()
+
     init {
         attachMapListeners()
     }
@@ -186,6 +201,45 @@ class MapApplier(
             zIndexReferenceAnnotationManagerMap[zIndex] = circleManager
         }
 
+        attachCircleManagerListeners(circleManager)
+
+        return circleManager
+    }
+
+    fun getOrCreateCircleManagerForLayerId(
+        layerId: String,
+        aboveLayerId: String?,
+        belowLayerId: String?
+    ): CircleManager {
+        circleManagerByLayerId[layerId]?.let { return it }
+
+        val style = checkNotNull(style.value)
+        val insertInfo = getLayerInsertInfoForNamedLayer(aboveLayerId, belowLayerId)
+
+        val circleManager = if (insertInfo != null) {
+            CircleManager(
+                mapView,
+                map,
+                style,
+                if (insertInfo.insertPosition == LayerInsertMethod.INSERT_BELOW) insertInfo.referenceLayerId else null,
+                if (insertInfo.insertPosition == LayerInsertMethod.INSERT_ABOVE) insertInfo.referenceLayerId else null
+            )
+        } else {
+            if (aboveLayerId != null || belowLayerId != null) {
+                pendingOrders.add(PendingLayerOrder(layerId, aboveLayerId, belowLayerId))
+            }
+            CircleManager(mapView, map, style)
+        }
+
+        circleManagerByLayerId[layerId] = circleManager
+        namedLayerRegistry[layerId] = circleManager
+
+        attachCircleManagerListeners(circleManager)
+
+        return circleManager
+    }
+
+    private fun attachCircleManagerListeners(circleManager: CircleManager) {
         circleManager.addDragListener(object : OnCircleDragListener {
             override fun onAnnotationDragStarted(annotation: Circle) {
                 decorations.findInputCallback<CircleNode, Circle, Unit>(
@@ -224,8 +278,6 @@ class MapApplier(
             )?.invoke(annotation)
             true
         }
-
-        return circleManager
     }
 
     private fun getLayerInsertInfoForZIndex(zIndex: Int): LayerInsertInfo? {
@@ -272,6 +324,48 @@ class MapApplier(
             zIndexReferenceAnnotationManagerMap[zIndex] = symbolManager
         }
 
+        attachSymbolManagerListeners(symbolManager)
+
+        return symbolManager
+    }
+
+    fun getOrCreateSymbolManagerForLayerId(
+        layerId: String,
+        aboveLayerId: String?,
+        belowLayerId: String?
+    ): SymbolManager {
+        symbolManagerByLayerId[layerId]?.let { return it }
+
+        val style = checkNotNull(style.value)
+        val insertInfo = getLayerInsertInfoForNamedLayer(aboveLayerId, belowLayerId)
+
+        val symbolManager = if (insertInfo != null) {
+            SymbolManager(
+                mapView,
+                map,
+                style,
+                if (insertInfo.insertPosition == LayerInsertMethod.INSERT_BELOW) insertInfo.referenceLayerId else null,
+                if (insertInfo.insertPosition == LayerInsertMethod.INSERT_ABOVE) insertInfo.referenceLayerId else null,
+                null
+            )
+        } else {
+            if (aboveLayerId != null || belowLayerId != null) {
+                pendingOrders.add(PendingLayerOrder(layerId, aboveLayerId, belowLayerId))
+            }
+            SymbolManager(mapView, map, style)
+        }
+
+        symbolManager.iconAllowOverlap = true
+
+        symbolManagerByLayerId[layerId] = symbolManager
+        namedLayerRegistry[layerId] = symbolManager
+
+        attachSymbolManagerListeners(symbolManager)
+
+        return symbolManager
+    }
+
+    private fun attachSymbolManagerListeners(symbolManager: SymbolManager) {
         symbolManager.addDragListener(object : OnSymbolDragListener {
             override fun onAnnotationDragStarted(annotation: Symbol) {
                 decorations.findInputCallback<SymbolNode, Symbol, Unit>(
@@ -310,8 +404,6 @@ class MapApplier(
             )?.invoke(annotation)
             true
         }
-
-        return symbolManager
     }
 
     fun getOrCreateFillManagerForZIndex(zIndex: Int): FillManager {
@@ -341,6 +433,38 @@ class MapApplier(
         return fillManager
     }
 
+    fun getOrCreateFillManagerForLayerId(
+        layerId: String,
+        aboveLayerId: String?,
+        belowLayerId: String?
+    ): FillManager {
+        fillManagerByLayerId[layerId]?.let { return it }
+
+        val style = checkNotNull(style.value)
+        val insertInfo = getLayerInsertInfoForNamedLayer(aboveLayerId, belowLayerId)
+
+        val fillManager = if (insertInfo != null) {
+            FillManager(
+                mapView,
+                map,
+                style,
+                if (insertInfo.insertPosition == LayerInsertMethod.INSERT_BELOW) insertInfo.referenceLayerId else null,
+                if (insertInfo.insertPosition == LayerInsertMethod.INSERT_ABOVE) insertInfo.referenceLayerId else null,
+                null
+            )
+        } else {
+            if (aboveLayerId != null || belowLayerId != null) {
+                pendingOrders.add(PendingLayerOrder(layerId, aboveLayerId, belowLayerId))
+            }
+            FillManager(mapView, map, style)
+        }
+
+        fillManagerByLayerId[layerId] = fillManager
+        namedLayerRegistry[layerId] = fillManager
+
+        return fillManager
+    }
+
     fun getOrCreateLineManagerForZIndex(zIndex: Int): LineManager {
         lineManagerMap[zIndex]?.let { return it }
 
@@ -367,6 +491,79 @@ class MapApplier(
 
         lineManagerMap[zIndex] = lineManager
         return lineManager
+    }
+
+    fun getOrCreateLineManagerForLayerId(
+        layerId: String,
+        aboveLayerId: String?,
+        belowLayerId: String?
+    ): LineManager {
+        lineManagerByLayerId[layerId]?.let { return it }
+
+        val style = checkNotNull(style.value)
+        val insertInfo = getLayerInsertInfoForNamedLayer(aboveLayerId, belowLayerId)
+
+        val lineManager = if (insertInfo != null) {
+            LineManager(
+                mapView,
+                map,
+                style,
+                if (insertInfo.insertPosition == LayerInsertMethod.INSERT_BELOW) insertInfo.referenceLayerId else null,
+                if (insertInfo.insertPosition == LayerInsertMethod.INSERT_ABOVE) insertInfo.referenceLayerId else null,
+                null
+            )
+        } else {
+            if (aboveLayerId != null || belowLayerId != null) {
+                pendingOrders.add(PendingLayerOrder(layerId, aboveLayerId, belowLayerId))
+            }
+            LineManager(mapView, map, style)
+        }
+
+        lineManagerByLayerId[layerId] = lineManager
+        namedLayerRegistry[layerId] = lineManager
+
+        return lineManager
+    }
+
+    private fun getLayerInsertInfoForNamedLayer(
+        aboveLayerId: String?,
+        belowLayerId: String?
+    ): LayerInsertInfo? = when {
+        aboveLayerId != null -> namedLayerRegistry[aboveLayerId]?.let {
+            LayerInsertInfo(it.layerId, LayerInsertMethod.INSERT_ABOVE)
+        }
+        belowLayerId != null -> namedLayerRegistry[belowLayerId]?.let {
+            LayerInsertInfo(it.layerId, LayerInsertMethod.INSERT_BELOW)
+        }
+        else -> null
+    }
+
+    override fun onEndChanges() {
+        super.onEndChanges()
+        if (pendingOrders.isEmpty()) return
+
+        val style = style.value ?: return
+
+        for (order in pendingOrders) {
+            val manager = namedLayerRegistry[order.layerId] ?: continue
+            val managerLayerId = manager.layerId
+
+            val targetManager = when {
+                order.aboveLayerId != null -> namedLayerRegistry[order.aboveLayerId]
+                order.belowLayerId != null -> namedLayerRegistry[order.belowLayerId]
+                else -> null
+            } ?: continue
+
+            val layer = style.getLayer(managerLayerId) ?: continue
+            style.removeLayer(layer)
+
+            if (order.aboveLayerId != null) {
+                style.addLayerAbove(layer, targetManager.layerId)
+            } else {
+                style.addLayerBelow(layer, targetManager.layerId)
+            }
+        }
+        pendingOrders.clear()
     }
 
     override fun insertBottomUp(index: Int, instance: MapNode) {

@@ -23,13 +23,20 @@ fun Polyline(
     color: String,
     lineWidth: Float,
     zIndex: Int = 0,
+    layerId: String? = null,
+    aboveLayerId: String? = null,
+    belowLayerId: String? = null,
     isDraggable: Boolean = false,
     dashType: Array<Float>? = null,
 ) {
     val mapApplier = currentComposer.applier as MapApplier
 
     ComposeNode<PolyLineNode, MapApplier>(factory = {
-        val lineManager = mapApplier.getOrCreateLineManagerForZIndex(zIndex)
+        val lineManager = if (layerId != null) {
+            mapApplier.getOrCreateLineManagerForLayerId(layerId, aboveLayerId, belowLayerId)
+        } else {
+            mapApplier.getOrCreateLineManagerForZIndex(zIndex)
+        }
         val lineOptions = LineOptions()
             .withLatLngs(points)
             .withLineColor(color)

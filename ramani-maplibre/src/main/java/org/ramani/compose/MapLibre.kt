@@ -17,7 +17,6 @@ import android.content.pm.PackageManager
 import android.location.Location
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ComposableTargetMarker
 import androidx.compose.runtime.ComposeNode
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -64,16 +63,6 @@ import org.maplibre.android.style.layers.Layer
 import org.maplibre.android.style.sources.Source
 import org.maplibre.android.utils.BitmapUtils
 
-@Retention(AnnotationRetention.BINARY)
-@ComposableTargetMarker(description = "Maplibre Composable")
-@Target(
-    AnnotationTarget.FILE,
-    AnnotationTarget.FUNCTION,
-    AnnotationTarget.PROPERTY_GETTER,
-    AnnotationTarget.TYPE,
-    AnnotationTarget.TYPE_PARAMETER,
-)
-annotation class MapLibreComposable
 
 /**
  * A composable representing a MapLibre map.
@@ -122,7 +111,7 @@ fun MapLibre(
     onMapClick: (LatLng) -> Unit = {},
     onMapLongClick: (LatLng) -> Unit = {},
     onStyleLoaded: (Style) -> Unit = {},
-    content: (@Composable @MapLibreComposable () -> Unit)? = null,
+    content: (@Composable () -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
         Box(modifier = modifier)

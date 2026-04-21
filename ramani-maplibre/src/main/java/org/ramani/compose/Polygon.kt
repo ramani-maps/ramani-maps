@@ -195,7 +195,6 @@ private fun PolygonDragHandle(
     }
 }
 
-@MapLibreComposable
 @Composable
 fun Polygon(
     vertices: List<LatLng>,

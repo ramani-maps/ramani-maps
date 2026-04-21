@@ -13,7 +13,6 @@ package org.ramani.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 
-@MapLibreComposable
 @Composable
 fun MapObserver(
     onMapMoved: () -> Unit = {},

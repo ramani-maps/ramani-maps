@@ -17,7 +17,6 @@ import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.plugins.annotation.FillOptions
 
 @Composable
-@MapLibreComposable
 fun Fill(
     points: List<LatLng>,
     fillColor: String = "Transparent",

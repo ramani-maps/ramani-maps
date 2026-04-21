@@ -19,7 +19,6 @@ import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.plugins.annotation.CircleOptions
 
 @Composable
-@MapLibreComposable
 fun Circle(
     center: LatLng,
     radius: Float,

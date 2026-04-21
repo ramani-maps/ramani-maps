@@ -17,7 +17,6 @@ import androidx.core.graphics.minus
 import androidx.core.graphics.plus
 import org.maplibre.android.geometry.LatLng
 
-@MapLibreComposable
 @Composable
 fun VertexInsertCalculator(
     vertices: List<LatLng>,

@@ -25,7 +25,6 @@ import org.maplibre.android.style.layers.Property.TEXT_ANCHOR_CENTER
 import org.maplibre.android.style.layers.Property.TEXT_JUSTIFY_CENTER
 
 @Composable
-@MapLibreComposable
 fun Symbol(
     center: LatLng,
     size: Float = 1F,

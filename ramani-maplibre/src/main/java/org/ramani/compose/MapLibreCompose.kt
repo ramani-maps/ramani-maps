@@ -488,6 +488,12 @@ class MapApplier(
         // layer B above A before moving C above B leaves C in the right place.
         val sorted = topologicalSort(pendingOrders)
 
+        // When multiple layers share the same belowLayerId, each addLayerBelow
+        // inserts just below the reference, pushing earlier siblings further down and
+        // inverting declaration order.  Track the deepest sibling so far and insert
+        // below *it* instead, keeping declaration order intact.
+        val lastPlacedBelow = mutableMapOf<String, String>()
+
         for (order in sorted) {
             val manager = namedLayerRegistry[order.layerId] ?: continue
             val managerLayerId = manager.layerId
@@ -504,7 +510,9 @@ class MapApplier(
             if (order.aboveLayerId != null) {
                 style.addLayerAbove(layer, targetManager.layerId)
             } else {
-                style.addLayerBelow(layer, targetManager.layerId)
+                val effectiveTarget = lastPlacedBelow[order.belowLayerId] ?: targetManager.layerId
+                style.addLayerBelow(layer, effectiveTarget)
+                lastPlacedBelow[order.belowLayerId!!] = managerLayerId
             }
         }
         pendingOrders.clear()

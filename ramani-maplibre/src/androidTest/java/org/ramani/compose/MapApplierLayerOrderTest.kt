@@ -233,6 +233,73 @@ class MapApplierLayerOrderTest {
     }
 
     @Test
+    fun siblings_belowLayerId_declarationOrderIsPreserved() = withApplier { applier, style ->
+        // Both polyline and symbol declare belowLayerId = "circle".
+        // Expected final order (bottom to top): polyline -> symbol -> circle (declaration order).
+        val circleManager = applier.getOrCreateCircleManagerForLayerId("circle", null, null)
+        val lineManager = applier.getOrCreateLineManagerForLayerId("polyline", aboveLayerId = null, belowLayerId = "circle")
+        val symbolManager = applier.getOrCreateSymbolManagerForLayerId("symbol", aboveLayerId = null, belowLayerId = "circle")
+
+        applier.onEndChanges()
+
+        val circleIndex = style.layerIndex(circleManager.layerId)
+        val polylineIndex = style.layerIndex(lineManager.layerId)
+        val symbolIndex = style.layerIndex(symbolManager.layerId)
+
+        assertTrue("all layers should be valid", circleIndex >= 0 && polylineIndex >= 0 && symbolIndex >= 0)
+        assertTrue("polyline should be below symbol", polylineIndex < symbolIndex)
+        assertTrue("symbol should be below circle", symbolIndex < circleIndex)
+    }
+
+    @Test
+    fun mixed_aboveAndBelow_differentAnchors_bothBetweenAnchors() = withApplier { applier, style ->
+        // symbol says aboveLayerId = "circle1", polyline says belowLayerId = "circle2".
+        // "above circle1" anchors symbol just above circle1 (bottom of gap).
+        // "below circle2" anchors polyline just below circle2 (top of gap).
+        // Result: circle1 -> symbol -> polyline -> circle2, regardless of declaration order.
+        val circle1 = applier.getOrCreateCircleManagerForLayerId("circle1", null, null)
+        val symbolManager = applier.getOrCreateSymbolManagerForLayerId("symbol", aboveLayerId = "circle1", belowLayerId = null)
+        val lineManager = applier.getOrCreateLineManagerForLayerId("polyline", aboveLayerId = null, belowLayerId = "circle2")
+        val circle2 = applier.getOrCreateCircleManagerForLayerId("circle2", null, null)
+
+        applier.onEndChanges()
+
+        val c1 = style.layerIndex(circle1.layerId)
+        val sym = style.layerIndex(symbolManager.layerId)
+        val line = style.layerIndex(lineManager.layerId)
+        val c2 = style.layerIndex(circle2.layerId)
+
+        assertTrue("all layers should be valid", c1 >= 0 && sym >= 0 && line >= 0 && c2 >= 0)
+        assertTrue("symbol should be above circle1", sym > c1)
+        assertTrue("symbol should be below circle2", sym < c2)
+        assertTrue("polyline should be above circle1", line > c1)
+        assertTrue("polyline should be below circle2", line < c2)
+    }
+
+    @Test
+    fun mixed_aboveAndBelow_reversedDeclaration_bothBetweenAnchors() = withApplier { applier, style ->
+        // Same constraints as above but polyline declared before symbol.
+        // Result should still have both between circle1 and circle2.
+        val circle1 = applier.getOrCreateCircleManagerForLayerId("circle1", null, null)
+        val lineManager = applier.getOrCreateLineManagerForLayerId("polyline", aboveLayerId = null, belowLayerId = "circle2")
+        val symbolManager = applier.getOrCreateSymbolManagerForLayerId("symbol", aboveLayerId = "circle1", belowLayerId = null)
+        val circle2 = applier.getOrCreateCircleManagerForLayerId("circle2", null, null)
+
+        applier.onEndChanges()
+
+        val c1 = style.layerIndex(circle1.layerId)
+        val sym = style.layerIndex(symbolManager.layerId)
+        val line = style.layerIndex(lineManager.layerId)
+        val c2 = style.layerIndex(circle2.layerId)
+
+        assertTrue("all layers should be valid", c1 >= 0 && sym >= 0 && line >= 0 && c2 >= 0)
+        assertTrue("symbol should be above circle1", sym > c1)
+        assertTrue("symbol should be below circle2", sym < c2)
+        assertTrue("polyline should be above circle1", line > c1)
+        assertTrue("polyline should be below circle2", line < c2)
+    }
+
+    @Test
     fun sametype_circleLayersCanChain() = withApplier { applier, style ->
         val baseCircles = applier.getOrCreateCircleManagerForLayerId("base-circles", null, null)
         val topCircles = applier.getOrCreateCircleManagerForLayerId("top-circles", aboveLayerId = "base-circles", belowLayerId = null)

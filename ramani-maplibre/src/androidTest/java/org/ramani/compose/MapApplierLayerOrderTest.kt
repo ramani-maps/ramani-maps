@@ -192,6 +192,47 @@ class MapApplierLayerOrderTest {
     }
 
     @Test
+    fun backwardRef_whenTargetHasPendingOrder_followsTargetAfterReorder() = withApplier { applier, style ->
+        // Reproduces the bug: circle has a forward-ref to polyline (goes to pending orders),
+        // symbol has a backward-ref to circle (circle already in registry).
+        // Before the fix, symbol was placed immediately above circle's original position,
+        // then circle was moved above polyline — leaving symbol stranded below polyline.
+        val circleManager = applier.getOrCreateCircleManagerForLayerId("circle", aboveLayerId = "polyline", belowLayerId = null)
+        val symbolManager = applier.getOrCreateSymbolManagerForLayerId("symbol", aboveLayerId = "circle", belowLayerId = null)
+        val lineManager = applier.getOrCreateLineManagerForLayerId("polyline", null, null)
+
+        applier.onEndChanges()
+
+        val polylineIndex = style.layerIndex(lineManager.layerId)
+        val circleIndex = style.layerIndex(circleManager.layerId)
+        val symbolIndex = style.layerIndex(symbolManager.layerId)
+
+        assertTrue("polyline ($polylineIndex), circle ($circleIndex), symbol ($symbolIndex) should all be valid",
+            polylineIndex >= 0 && circleIndex >= 0 && symbolIndex >= 0)
+        assertTrue("circle should be above polyline", circleIndex > polylineIndex)
+        assertTrue("symbol should be above circle", symbolIndex > circleIndex)
+    }
+
+    @Test
+    fun siblings_declarationOrderIsPreserved() = withApplier { applier, style ->
+        // Both polyline and symbol declare aboveLayerId = "circle".
+        // Expected final order (bottom to top): circle -> polyline -> symbol (declaration order).
+        val circleManager = applier.getOrCreateCircleManagerForLayerId("circle", null, null)
+        val lineManager = applier.getOrCreateLineManagerForLayerId("polyline", aboveLayerId = "circle", belowLayerId = null)
+        val symbolManager = applier.getOrCreateSymbolManagerForLayerId("symbol", aboveLayerId = "circle", belowLayerId = null)
+
+        applier.onEndChanges()
+
+        val circleIndex = style.layerIndex(circleManager.layerId)
+        val polylineIndex = style.layerIndex(lineManager.layerId)
+        val symbolIndex = style.layerIndex(symbolManager.layerId)
+
+        assertTrue("all layers should be valid", circleIndex >= 0 && polylineIndex >= 0 && symbolIndex >= 0)
+        assertTrue("polyline should be above circle", polylineIndex > circleIndex)
+        assertTrue("symbol should be above polyline", symbolIndex > polylineIndex)
+    }
+
+    @Test
     fun sametype_circleLayersCanChain() = withApplier { applier, style ->
         val baseCircles = applier.getOrCreateCircleManagerForLayerId("base-circles", null, null)
         val topCircles = applier.getOrCreateCircleManagerForLayerId("top-circles", aboveLayerId = "base-circles", belowLayerId = null)

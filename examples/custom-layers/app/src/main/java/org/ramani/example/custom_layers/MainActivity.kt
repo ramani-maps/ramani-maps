@@ -44,80 +44,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // This is usually done in the MapLibre composable, but in this case we need to initialize
-        // the map earlier in order to define the sources and layers.
         MapLibre.getInstance(this)
 
-        // Define the source GeoJson:
-        //    "Geographical UAS zones of Switzerland"
-        //    Federal Office of Civil Aviation (FOCA)
-        //    https://opendata.swiss/en/dataset/geografische-uas-gebiete-der-schweiz
-        val nfzSource = GeoJsonSource(
-            "no-fly-zones",
-            URI("https://data.geo.admin.ch/ch.bazl.einschraenkungen-drohnen/einschraenkungen-drohnen/einschraenkungen-drohnen_4326.geojson"),
-        )
-
-        val nfzPoly = LineLayer("nfz-poly", "no-fly-zones")
-        nfzPoly.setProperties(
-            PropertyFactory.lineColor(
-                Expression.switchCase(
-                    Expression.has("stroke"),
-                    Expression.get("stroke"),
-                    Expression.color(Color.BLUE),
-                )
-            ),
-            PropertyFactory.lineWidth(
-                Expression.switchCase(
-                    Expression.has("stroke-width"),
-                    Expression.get("stroke-width"),
-                    Expression.literal(2),
-                )
-            ),
-            PropertyFactory.lineOpacity(
-                Expression.switchCase(
-                    Expression.has("stroke-opacity"),
-                    Expression.get("stroke-opacity"),
-                    Expression.literal(0.4F),
-                )
-            ),
-        )
-
-        val nfzFill = FillLayer("nfz-fill", "no-fly-zones")
-        nfzFill.setProperties(
-            PropertyFactory.fillColor(
-                Expression.switchCase(
-                    Expression.has("fill"),
-                    Expression.get("fill"),
-                    Expression.color(Color.BLUE),
-                )
-            ),
-            PropertyFactory.fillOpacity(
-                Expression.switchCase(
-                    Expression.has("fill-opacity"),
-                    Expression.get("fill-opacity"),
-                    Expression.literal(0.4F),
-                )
-            ),
-        )
-
-        // Show the contour lines coming from thunderforest.com
-        val thunder_key = resources.getString(R.string.thunderforest_api_key)
-        val contourSource = VectorSource(
-            "contours",
-            "https://tile.thunderforest.com/thunderforest.outdoors-v2.json?apikey=$thunder_key",
-        )
-
-        val contourLayer = LineLayer("contour", "contours")
-        contourLayer.sourceLayer = "elevation"
-
-        // Show the hillshades coming from maptiler.com
-        val maptiler_key = resources.getString(R.string.maptiler_api_key)
-        val hillShadeSource = RasterSource(
-            "hillshades",
-            "https://api.maptiler.com/tiles/hillshade/tiles.json?key=$maptiler_key",
-        )
-
-        val hillshadeLayer = RasterLayer("hillshades-layer", "hillshades")
+        val thunderKey = resources.getString(R.string.thunderforest_api_key)
+        val maptilerKey = resources.getString(R.string.maptiler_api_key)
 
         setContent {
             val cameraPosition = rememberSaveable {
@@ -145,19 +75,85 @@ class MainActivity : ComponentActivity() {
                             uiSettings = uiSettings.value,
                             cameraPosition = cameraPosition.value,
                         ) {
-                            MapSource(source = nfzSource)
-                            MapSource(source = contourSource)
-                            MapSource(source = hillShadeSource)
-                            MapLayer(layer = nfzFill)
-                            MapLayer(layer = nfzPoly)
-                            MapLayer(layer = hillshadeLayer)
-                            MapLayer(layer = contourLayer)
-                            Symbol(center = LatLng(46.5, 6.4))
+                            MapSource {
+                                GeoJsonSource(
+                                    "no-fly-zones",
+                                    URI("https://data.geo.admin.ch/ch.bazl.einschraenkungen-drohnen/einschraenkungen-drohnen/einschraenkungen-drohnen_4326.geojson"),
+                                )
+                            }
+                            MapSource {
+                                VectorSource(
+                                    "contours",
+                                    "https://tile.thunderforest.com/thunderforest.outdoors-v2.json?apikey=$thunderKey",
+                                )
+                            }
+                            MapSource {
+                                RasterSource(
+                                    "hillshades",
+                                    "https://api.maptiler.com/tiles/hillshade/tiles.json?key=$maptilerKey",
+                                )
+                            }
+                            MapLayer {
+                                FillLayer("nfz-fill", "no-fly-zones").apply {
+                                    setProperties(
+                                        PropertyFactory.fillColor(
+                                            Expression.switchCase(
+                                                Expression.has("fill"),
+                                                Expression.get("fill"),
+                                                Expression.color(Color.BLUE),
+                                            )
+                                        ),
+                                        PropertyFactory.fillOpacity(
+                                            Expression.switchCase(
+                                                Expression.has("fill-opacity"),
+                                                Expression.get("fill-opacity"),
+                                                Expression.literal(0.4F),
+                                            )
+                                        ),
+                                    )
+                                }
+                            }
+                            MapLayer {
+                                LineLayer("nfz-poly", "no-fly-zones").apply {
+                                    setProperties(
+                                        PropertyFactory.lineColor(
+                                            Expression.switchCase(
+                                                Expression.has("stroke"),
+                                                Expression.get("stroke"),
+                                                Expression.color(Color.BLUE),
+                                            )
+                                        ),
+                                        PropertyFactory.lineWidth(
+                                            Expression.switchCase(
+                                                Expression.has("stroke-width"),
+                                                Expression.get("stroke-width"),
+                                                Expression.literal(2),
+                                            )
+                                        ),
+                                        PropertyFactory.lineOpacity(
+                                            Expression.switchCase(
+                                                Expression.has("stroke-opacity"),
+                                                Expression.get("stroke-opacity"),
+                                                Expression.literal(0.4F),
+                                            )
+                                        ),
+                                    )
+                                }
+                            }
+                            MapLayer {
+                                RasterLayer("hillshades-layer", "hillshades")
+                            }
+                            MapLayer {
+                                LineLayer("contour", "contours").apply {
+                                    sourceLayer = "elevation"
+                                }
+                            }
                             Circle(
                                 center = LatLng(46.5, 6.4),
                                 radius = 40F,
                                 isDraggable = true,
                             )
+                            Symbol(center = LatLng(46.5, 6.4))
                         }
                     }
                     Column(

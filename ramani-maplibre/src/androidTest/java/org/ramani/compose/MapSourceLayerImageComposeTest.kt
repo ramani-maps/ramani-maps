@@ -35,7 +35,6 @@ class MapSourceLayerImageComposeTest {
 
     private val blankStyleJson = """{"version": 8, "sources": {}, "layers": []}"""
 
-    // Runs a block on the UI thread and waits for it to complete
     private fun runOnUiThread(block: () -> Unit) {
         val latch = CountDownLatch(1)
         var error: Throwable? = null
@@ -60,7 +59,6 @@ class MapSourceLayerImageComposeTest {
         var loadedStyle: Style? = null
 
         activityRule.scenario.onActivity { activity ->
-            val source = GeoJsonSource("compose-source")
             activity.setContent {
                 MapLibre(
                     modifier = Modifier.fillMaxSize(),
@@ -70,7 +68,7 @@ class MapSourceLayerImageComposeTest {
                         styleLatch.countDown()
                     },
                 ) {
-                    MapSource(source = source)
+                    MapSource { GeoJsonSource("compose-source") }
                 }
             }
         }
@@ -89,7 +87,6 @@ class MapSourceLayerImageComposeTest {
         var loadedStyle: Style? = null
 
         activityRule.scenario.onActivity { activity ->
-            val layer = BackgroundLayer("compose-layer")
             activity.setContent {
                 MapLibre(
                     modifier = Modifier.fillMaxSize(),
@@ -99,7 +96,7 @@ class MapSourceLayerImageComposeTest {
                         styleLatch.countDown()
                     },
                 ) {
-                    MapLayer(layer = layer)
+                    MapLayer { BackgroundLayer("compose-layer") }
                 }
             }
         }
@@ -118,8 +115,6 @@ class MapSourceLayerImageComposeTest {
         var loadedStyle: Style? = null
 
         activityRule.scenario.onActivity { activity ->
-            val source = GeoJsonSource("combined-source")
-            val layer = BackgroundLayer("combined-layer")
             activity.setContent {
                 MapLibre(
                     modifier = Modifier.fillMaxSize(),
@@ -129,8 +124,8 @@ class MapSourceLayerImageComposeTest {
                         styleLatch.countDown()
                     },
                 ) {
-                    MapSource(source = source)
-                    MapLayer(layer = layer)
+                    MapSource { GeoJsonSource("combined-source") }
+                    MapLayer { BackgroundLayer("combined-layer") }
                 }
             }
         }
@@ -151,7 +146,6 @@ class MapSourceLayerImageComposeTest {
         var loadedStyle: Style? = null
 
         activityRule.scenario.onActivity { activity ->
-            val source = GeoJsonSource("conditional-source")
             activity.setContent {
                 MapLibre(
                     modifier = Modifier.fillMaxSize(),
@@ -162,7 +156,7 @@ class MapSourceLayerImageComposeTest {
                     },
                 ) {
                     if (showSource.value) {
-                        MapSource(source = source)
+                        MapSource { GeoJsonSource("conditional-source") }
                     }
                 }
             }

@@ -104,6 +104,26 @@ class MapApplier(
 
     init {
         attachMapListeners()
+
+        // Registered before any annotation managers, so this fires first on style change.
+        // Sources and layers are re-added before annotation managers recreate their layers,
+        // preserving declaration order (MapLayer below annotations).
+        mapView.addOnDidFinishLoadingStyleListener {
+            map.getStyle { newStyle ->
+                style.value = newStyle
+                reattachStyleNodes()
+            }
+        }
+    }
+
+    fun reattachStyleNodes() {
+        decorations.forEach { node ->
+            when (node) {
+                is SourceNode -> node.reattach()
+                is LayerNode -> node.reattach()
+                is ImageNode -> node.reattach()
+            }
+        }
     }
 
     private fun attachMapListeners() {
@@ -513,20 +533,76 @@ internal class MapObserverNode(
 
 internal class SourceNode(
     val style: MutableState<Style?>,
-    val source: Source,
+    val factory: () -> Source,
 ) : MapNode {
-    override fun onAttached() { style.value?.addSource(source) }
-    override fun onRemoved() { style.value?.removeSource(source) }
-    override fun onCleared() { style.value?.removeSource(source) }
+    var source: Source? = null
+        private set
+
+    fun attach() {
+        source = factory()
+        style.value?.addSource(source!!)
+    }
+
+    override fun onAttached() {
+        // Source is added in attach(), called from the ComposeNode factory,
+        // to run during composition and preserve declaration order.
+    }
+
+    override fun onRemoved() {
+        source?.let { style.value?.removeSource(it) }
+        source = null
+    }
+
+    override fun onCleared() {
+        source?.let { style.value?.removeSource(it) }
+        source = null
+    }
+
+    fun reattach() {
+        try {
+            source = factory()
+            style.value?.addSource(source!!)
+        } catch (_: IllegalStateException) {
+            // Style is being replaced and will be re-added after the new style loads
+        }
+    }
 }
 
 internal class LayerNode(
     val style: MutableState<Style?>,
-    val layer: Layer,
+    val factory: () -> Layer,
 ) : MapNode {
-    override fun onAttached() { style.value?.addLayer(layer) }
-    override fun onRemoved() { style.value?.removeLayer(layer) }
-    override fun onCleared() { style.value?.removeLayer(layer) }
+    var layer: Layer? = null
+        private set
+
+    fun attach() {
+        layer = factory()
+        style.value?.addLayer(layer!!)
+    }
+
+    override fun onAttached() {
+        // Layer is added in attach(), called from the ComposeNode factory,
+        // to run during composition and preserve declaration order.
+    }
+
+    override fun onRemoved() {
+        layer?.let { style.value?.removeLayer(it) }
+        layer = null
+    }
+
+    override fun onCleared() {
+        layer?.let { style.value?.removeLayer(it) }
+        layer = null
+    }
+
+    fun reattach() {
+        try {
+            layer = factory()
+            style.value?.addLayer(layer!!)
+        } catch (_: IllegalStateException) {
+            // Style is being replaced and will be re-added after the new style loads
+        }
+    }
 }
 
 internal class ImageNode(
@@ -536,12 +612,27 @@ internal class ImageNode(
     val drawableRes: Int,
 ) : MapNode {
     override fun onAttached() {
-        val drawable = context.getDrawable(drawableRes)
-        val bitmap = BitmapUtils.getBitmapFromDrawable(drawable)
-        bitmap?.let { style.value?.addImage(id, it) }
+        try {
+            val drawable = context.getDrawable(drawableRes)
+            val bitmap = BitmapUtils.getBitmapFromDrawable(drawable)
+            bitmap?.let { style.value?.addImage(id, it) }
+        } catch (_: IllegalStateException) {
+            // Style is being replaced and will be re-added after the new style loads
+        }
     }
+
     override fun onRemoved() { style.value?.removeImage(id) }
     override fun onCleared() { style.value?.removeImage(id) }
+
+    fun reattach() {
+        try {
+            val drawable = context.getDrawable(drawableRes)
+            val bitmap = BitmapUtils.getBitmapFromDrawable(drawable)
+            bitmap?.let { style.value?.addImage(id, it) }
+        } catch (_: IllegalStateException) {
+            // Style is being replaced and will be re-added after the new style loads
+        }
+    }
 }
 
 private inline fun <reified NodeT : MapNode, I, O> Iterable<MapNode>.findInputCallback(

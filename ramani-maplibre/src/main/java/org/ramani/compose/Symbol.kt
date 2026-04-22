@@ -55,11 +55,14 @@ fun Symbol(
     val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
 
     imageId?.let {
-        if (mapApplier.style.value!!.getImage("$imageId") == null) {
-            mapApplier.style.value!!.addImage(
-                "$imageId",
-                ImageBitmap.imageResource(it).asAndroidBitmap()
-            )
+        val bitmap = ImageBitmap.imageResource(it).asAndroidBitmap()
+        try {
+            val style = mapApplier.style.value
+            if (style != null && style.getImage("$imageId") == null) {
+                style.addImage("$imageId", bitmap)
+            }
+        } catch (_: IllegalStateException) {
+            // Style is being replaced — image will be re-added after the new style loads
         }
     }
 

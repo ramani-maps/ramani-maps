@@ -55,7 +55,6 @@ class SourceLayerImageNodeTest {
         error?.let { throw it }
     }
 
-    // Runs a block on the UI thread (needed for MapLibre native objects)
     private fun onUiThread(block: () -> Unit) {
         val latch = CountDownLatch(1)
         var error: Throwable? = null
@@ -77,20 +76,18 @@ class SourceLayerImageNodeTest {
     // --- SourceNode ---
 
     @Test
-    fun sourceNode_onAttached_addsSourceToStyle() = withStyle { style ->
-        val source = GeoJsonSource("test-source")
-        val node = SourceNode(mutableStateOf(style), source)
+    fun sourceNode_attach_addsSourceToStyle() = withStyle { style ->
+        val node = SourceNode(mutableStateOf(style)) { GeoJsonSource("test-source") }
 
-        node.onAttached()
+        node.attach()
 
-        assertNotNull("Source should exist in style after onAttached", style.getSource("test-source"))
+        assertNotNull("Source should exist in style after attach", style.getSource("test-source"))
     }
 
     @Test
     fun sourceNode_onRemoved_removesSourceFromStyle() = withStyle { style ->
-        val source = GeoJsonSource("test-source")
-        val node = SourceNode(mutableStateOf(style), source)
-        node.onAttached()
+        val node = SourceNode(mutableStateOf(style)) { GeoJsonSource("test-source") }
+        node.attach()
 
         node.onRemoved()
 
@@ -99,9 +96,8 @@ class SourceLayerImageNodeTest {
 
     @Test
     fun sourceNode_onCleared_removesSourceFromStyle() = withStyle { style ->
-        val source = GeoJsonSource("test-source")
-        val node = SourceNode(mutableStateOf(style), source)
-        node.onAttached()
+        val node = SourceNode(mutableStateOf(style)) { GeoJsonSource("test-source") }
+        node.attach()
 
         node.onCleared()
 
@@ -109,11 +105,23 @@ class SourceLayerImageNodeTest {
     }
 
     @Test
-    fun sourceNode_nullStyle_doesNotCrash() = onUiThread {
-        val source = GeoJsonSource("test-source")
-        val node = SourceNode(mutableStateOf(null), source)
+    fun sourceNode_reattach_recreatesSource() = withStyle { style ->
+        val node = SourceNode(mutableStateOf(style)) { GeoJsonSource("test-source") }
+        node.attach()
+        val firstSource = node.source
 
-        node.onAttached()
+        node.onRemoved()
+        node.reattach()
+
+        assertNotNull("Source should exist after reattach", style.getSource("test-source"))
+        assertTrue("Reattach should create a new instance", node.source !== firstSource)
+    }
+
+    @Test
+    fun sourceNode_nullStyle_doesNotCrash() = onUiThread {
+        val node = SourceNode(mutableStateOf(null)) { GeoJsonSource("test-source") }
+
+        node.attach()
         node.onRemoved()
         node.onCleared()
     }
@@ -121,20 +129,18 @@ class SourceLayerImageNodeTest {
     // --- LayerNode ---
 
     @Test
-    fun layerNode_onAttached_addsLayerToStyle() = withStyle { style ->
-        val layer = BackgroundLayer("test-layer")
-        val node = LayerNode(mutableStateOf(style), layer)
+    fun layerNode_attach_addsLayerToStyle() = withStyle { style ->
+        val node = LayerNode(mutableStateOf(style)) { BackgroundLayer("test-layer") }
 
-        node.onAttached()
+        node.attach()
 
-        assertNotNull("Layer should exist in style after onAttached", style.getLayer("test-layer"))
+        assertNotNull("Layer should exist in style after attach", style.getLayer("test-layer"))
     }
 
     @Test
     fun layerNode_onRemoved_removesLayerFromStyle() = withStyle { style ->
-        val layer = BackgroundLayer("test-layer")
-        val node = LayerNode(mutableStateOf(style), layer)
-        node.onAttached()
+        val node = LayerNode(mutableStateOf(style)) { BackgroundLayer("test-layer") }
+        node.attach()
 
         node.onRemoved()
 
@@ -143,9 +149,8 @@ class SourceLayerImageNodeTest {
 
     @Test
     fun layerNode_onCleared_removesLayerFromStyle() = withStyle { style ->
-        val layer = BackgroundLayer("test-layer")
-        val node = LayerNode(mutableStateOf(style), layer)
-        node.onAttached()
+        val node = LayerNode(mutableStateOf(style)) { BackgroundLayer("test-layer") }
+        node.attach()
 
         node.onCleared()
 
@@ -153,11 +158,23 @@ class SourceLayerImageNodeTest {
     }
 
     @Test
-    fun layerNode_nullStyle_doesNotCrash() = onUiThread {
-        val layer = BackgroundLayer("test-layer")
-        val node = LayerNode(mutableStateOf(null), layer)
+    fun layerNode_reattach_recreatesLayer() = withStyle { style ->
+        val node = LayerNode(mutableStateOf(style)) { BackgroundLayer("test-layer") }
+        node.attach()
+        val firstLayer = node.layer
 
-        node.onAttached()
+        node.onRemoved()
+        node.reattach()
+
+        assertNotNull("Layer should exist after reattach", style.getLayer("test-layer"))
+        assertTrue("Reattach should create a new instance", node.layer !== firstLayer)
+    }
+
+    @Test
+    fun layerNode_nullStyle_doesNotCrash() = onUiThread {
+        val node = LayerNode(mutableStateOf(null)) { BackgroundLayer("test-layer") }
+
+        node.attach()
         node.onRemoved()
         node.onCleared()
     }

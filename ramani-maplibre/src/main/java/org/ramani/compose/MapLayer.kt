@@ -16,10 +16,10 @@ import androidx.compose.runtime.currentComposer
 import org.maplibre.android.style.layers.Layer
 
 @Composable
-fun MapLayer(layer: Layer) {
+fun MapLayer(factory: () -> Layer) {
     val mapApplier = currentComposer.applier as MapApplier
     ComposeNode<LayerNode, MapApplier>(
-        factory = { LayerNode(mapApplier.style, layer) },
+        factory = { LayerNode(mapApplier.style, factory).apply { attach() } },
         update = {}
     )
 }

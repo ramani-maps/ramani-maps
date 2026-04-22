@@ -480,10 +480,6 @@ internal class MapPropertiesNode(
     val cameraMode: MutableIntState,
 ) : MapNode {
     override fun onAttached() {
-        map.applyUiSettings(uiSettings)
-        map.applyProperties(properties)
-        map.cameraPosition = cameraPosition.toMapLibre()
-
         map.setupLocation(
             context = context,
             style = style.value!!,

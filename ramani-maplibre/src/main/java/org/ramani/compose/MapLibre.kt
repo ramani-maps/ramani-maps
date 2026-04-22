@@ -29,6 +29,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCompositionContext
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.first
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -143,30 +145,26 @@ fun MapLibre(
     }
 
     LaunchedEffect(currentStyle) {
+        val maplibreMap = mapView.awaitMap()
         currentLayers?.forEach { loadedStyle.value?.removeLayer(it) }
         currentSources?.forEach { loadedStyle.value?.removeSource(it) }
-        loadedStyle.value = mapView.awaitMap().awaitStyle(currentStyle.toBuilder())
+        loadedStyle.value = maplibreMap.awaitStyle(currentStyle.toBuilder())
         loadedStyle.value?.let { onStyleLoaded(it) }
+        maplibreMap.addImages(context, currentImages)
+        maplibreMap.addSources(currentSources)
+        maplibreMap.addLayers(currentLayers)
     }
 
     AndroidView(modifier = modifier, factory = { mapView })
 
-    LaunchedEffect(null) {
+    LaunchedEffect(Unit) {
         val maplibreMap = mapView.awaitMap()
-        val maplibreStyle = maplibreMap.awaitStyle(currentStyle.toBuilder())
-        onStyleLoaded(maplibreStyle)
-
         currentMap.value = maplibreMap
-        loadedStyle.value = maplibreStyle
-
-        maplibreMap.addImages(context, currentImages)
 
         mapView.addOnDidFinishLoadingStyleListener {
             maplibreMap.addSources(currentSources)
             maplibreMap.addLayers(currentLayers)
         }
-        maplibreMap.addSources(currentSources)
-        maplibreMap.addLayers(currentLayers)
 
         maplibreMap.addOnMapClickListener { latLng ->
             onMapClick(latLng)
@@ -177,6 +175,10 @@ fun MapLibre(
             onMapLongClick(latLng)
             false
         }
+
+        // Wait for the style effect to finish loading the initial style
+        snapshotFlow { loadedStyle.value }
+            .first { it != null }
 
         mapView.newComposition(parentComposition, maplibreMap, loadedStyle) {
             CompositionLocalProvider {

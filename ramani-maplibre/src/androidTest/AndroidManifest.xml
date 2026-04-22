@@ -3,5 +3,7 @@
     <application>
         <activity android:name="org.ramani.compose.TestActivity"
             android:exported="false" />
+        <activity android:name="org.ramani.compose.ComposeTestActivity"
+            android:exported="false" />
     </application>
 </manifest>

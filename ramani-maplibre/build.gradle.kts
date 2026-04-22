@@ -68,6 +68,7 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.androidx.activity.compose)
 }
 
 if (keystoreProperties.containsKey("centralUsername") && keystoreProperties.containsKey("centralPassword")) {

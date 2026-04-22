@@ -13,6 +13,7 @@ package org.ramani.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import androidx.compose.runtime.currentComposer
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.res.imageResource
@@ -30,7 +31,6 @@ fun Symbol(
     size: Float = 1F,
     color: String = "",
     isDraggable: Boolean = false,
-    zIndex: Int = 0,
     layerId: String? = null,
     aboveLayerId: String? = null,
     belowLayerId: String? = null,
@@ -52,6 +52,7 @@ fun Symbol(
     onLongClick: (JsonElement?) -> Unit = {}
 ) {
     val mapApplier = currentComposer.applier as MapApplier
+    val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
 
     imageId?.let {
         if (mapApplier.style.value!!.getImage("$imageId") == null) {
@@ -63,11 +64,7 @@ fun Symbol(
     }
 
     ComposeNode<SymbolNode, MapApplier>(factory = {
-        val symbolManager = if (layerId != null) {
-            mapApplier.getOrCreateSymbolManagerForLayerId(layerId, aboveLayerId, belowLayerId)
-        } else {
-            mapApplier.getOrCreateSymbolManagerForZIndex(zIndex)
-        }
+        val symbolManager = mapApplier.getOrCreateSymbolManagerForLayerId(resolvedLayerId, aboveLayerId, belowLayerId)
         var symbolOptions = SymbolOptions()
             .withDraggable(isDraggable)
             .withLatLng(center)

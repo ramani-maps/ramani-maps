@@ -13,6 +13,7 @@ package org.ramani.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import androidx.compose.runtime.currentComposer
+import androidx.compose.runtime.remember
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.plugins.annotation.LineOptions
 
@@ -21,7 +22,6 @@ fun Polyline(
     points: List<LatLng>,
     color: String,
     lineWidth: Float,
-    zIndex: Int = 0,
     layerId: String? = null,
     aboveLayerId: String? = null,
     belowLayerId: String? = null,
@@ -29,13 +29,10 @@ fun Polyline(
     dashType: Array<Float>? = null,
 ) {
     val mapApplier = currentComposer.applier as MapApplier
+    val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
 
     ComposeNode<PolyLineNode, MapApplier>(factory = {
-        val lineManager = if (layerId != null) {
-            mapApplier.getOrCreateLineManagerForLayerId(layerId, aboveLayerId, belowLayerId)
-        } else {
-            mapApplier.getOrCreateLineManagerForZIndex(zIndex)
-        }
+        val lineManager = mapApplier.getOrCreateLineManagerForLayerId(resolvedLayerId, aboveLayerId, belowLayerId)
         val lineOptions = LineOptions()
             .withLatLngs(points)
             .withLineColor(color)

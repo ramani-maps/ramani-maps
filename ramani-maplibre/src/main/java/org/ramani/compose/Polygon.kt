@@ -75,9 +75,8 @@ private fun VertexDragger(
 @Composable
 private fun PolygonDragHandle(
     vertices: List<LatLng>,
+    layerId: String,
     imageId: Int? = null,
-    zIndexDragHandle: Int = 0,
-    zIndexRotationHandle: Int = zIndexDragHandle,
     azimuth: Float,
     onCenterChanged: (LatLng) -> Unit = {},
     onVerticesChanged: (List<LatLng>) -> Unit = {},
@@ -149,7 +148,8 @@ private fun PolygonDragHandle(
         radius = 20.0f,
         isDraggable = true,
         color = "Transparent",
-        zIndex = zIndexDragHandle + 2,
+        layerId = "${layerId}_drag_handle",
+        aboveLayerId = "${layerId}_rotation_handle",
         onCenterDragged = {
             isDragActive.value = true
             inputDragCoord.value = it
@@ -163,7 +163,8 @@ private fun PolygonDragHandle(
         radius = 50.0f,
         isDraggable = true,
         color = "Transparent",
-        zIndex = zIndexRotationHandle,
+        layerId = "${layerId}_rotation_handle",
+        aboveLayerId = layerId,
         onCenterDragged = {
             if (!isAzimuthDragActive.value && counter.value > 0) {
                 startAzimuth.value = azimuth
@@ -190,7 +191,7 @@ private fun PolygonDragHandle(
             borderWidth = 1.0f,
             imageId = imageId,
             itemSize = 1.0f,
-            zIndex = zIndexDragHandle
+            layerId = "${layerId}_drag_icon",
         )
     }
 }
@@ -204,14 +205,13 @@ fun Polygon(
     borderWidth: Float = 1.0F,
     borderColor: String = "Black",
     opacity: Float = 1.0F,
-    zIndex: Int = 0,
-    zIndexDragHandle: Int = zIndex + 1,
-    zIndexRotationHandle: Int = zIndex + 1,
+    layerId: String? = null,
     isDraggable: Boolean = false,
     onCenterChanged: (LatLng) -> Unit = {},
     onVerticesChanged: (List<LatLng>) -> Unit = {},
     onAzimuthChanged: (Float) -> Unit = {},
 ) {
+    val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
     val borderPath = vertices.toMutableList().apply { this.add(this[0]) }
 
     Fill(
@@ -219,7 +219,7 @@ fun Polygon(
         fillColor = fillColor,
         opacity = opacity,
         isDraggable = false,
-        zIndex = zIndex
+        layerId = "${resolvedLayerId}_fill",
     )
 
     if (borderWidth > 0) {
@@ -227,16 +227,16 @@ fun Polygon(
             points = borderPath,
             color = borderColor,
             lineWidth = borderWidth,
-            zIndex = zIndex + 1,
+            layerId = "${resolvedLayerId}_border",
+            aboveLayerId = "${resolvedLayerId}_fill",
         )
     }
 
     if (isDraggable) {
         PolygonDragHandle(
             vertices = vertices,
+            layerId = resolvedLayerId,
             imageId = draggerImageId,
-            zIndexDragHandle = zIndexDragHandle,
-            zIndexRotationHandle = zIndexRotationHandle,
             azimuth = azimuth,
             onCenterChanged = { onCenterChanged(it) },
             onVerticesChanged = { onVerticesChanged(it) },

@@ -13,6 +13,7 @@ package org.ramani.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import androidx.compose.runtime.currentComposer
+import androidx.compose.runtime.remember
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.plugins.annotation.FillOptions
 
@@ -21,20 +22,16 @@ fun Fill(
     points: List<LatLng>,
     fillColor: String = "Transparent",
     opacity: Float = 1.0f,
-    zIndex: Int = 0,
     layerId: String? = null,
     aboveLayerId: String? = null,
     belowLayerId: String? = null,
     isDraggable: Boolean = false,
 ) {
     val mapApplier = currentComposer.applier as MapApplier
+    val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
 
     ComposeNode<FillNode, MapApplier>(factory = {
-        val fillManager = if (layerId != null) {
-            mapApplier.getOrCreateFillManagerForLayerId(layerId, aboveLayerId, belowLayerId)
-        } else {
-            mapApplier.getOrCreateFillManagerForZIndex(zIndex)
-        }
+        val fillManager = mapApplier.getOrCreateFillManagerForLayerId(resolvedLayerId, aboveLayerId, belowLayerId)
         val fillOptions = FillOptions()
             .withLatLngs(mutableListOf(points))
             .withFillColor(fillColor)

@@ -24,8 +24,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 /**
- * Verifies that the zIndex path and the named-layer path in MapApplier are independent,
- * and that manager caching within each path works correctly.
+ * Verifies that manager caching within the named-layer path works correctly.
  */
 @RunWith(AndroidJUnit4::class)
 class MapApplierIsolationTest {
@@ -60,13 +59,6 @@ class MapApplierIsolationTest {
     // --- Manager caching: same call returns same instance ---
 
     @Test
-    fun zIndex_sameIndexReturnsSameCircleManager() = withApplier { applier ->
-        val a = applier.getOrCreateCircleManagerForZIndex(3)
-        val b = applier.getOrCreateCircleManagerForZIndex(3)
-        assertSame("Same zIndex should return the same CircleManager", a, b)
-    }
-
-    @Test
     fun namedLayer_sameIdReturnsSameCircleManager() = withApplier { applier ->
         val a = applier.getOrCreateCircleManagerForLayerId("dots", null, null)
         val b = applier.getOrCreateCircleManagerForLayerId("dots", null, null)
@@ -94,22 +86,6 @@ class MapApplierIsolationTest {
         assertSame("Same layerId should return the same FillManager", a, b)
     }
 
-    // --- zIndex and named-layer paths are isolated ---
-
-    @Test
-    fun zIndexAndNamedLayer_zeroAndNamedAreDistinctCircleManagers() = withApplier { applier ->
-        val byZIndex = applier.getOrCreateCircleManagerForZIndex(0)
-        val byName = applier.getOrCreateCircleManagerForLayerId("circles", null, null)
-        assertNotSame("zIndex=0 and layerId='circles' must be different managers", byZIndex, byName)
-    }
-
-    @Test
-    fun zIndexAndNamedLayer_doNotShareSymbolManagers() = withApplier { applier ->
-        val byZIndex = applier.getOrCreateSymbolManagerForZIndex(0)
-        val byName = applier.getOrCreateSymbolManagerForLayerId("symbols", null, null)
-        assertNotSame("zIndex and named-layer symbol managers must be distinct", byZIndex, byName)
-    }
-
     // --- Different IDs produce different managers ---
 
     @Test
@@ -119,28 +95,4 @@ class MapApplierIsolationTest {
         assertNotSame("Different layerIds should produce different CircleManagers", a, b)
     }
 
-    @Test
-    fun differentZIndexes_produceDifferentCircleManagers() = withApplier { applier ->
-        val low = applier.getOrCreateCircleManagerForZIndex(1)
-        val high = applier.getOrCreateCircleManagerForZIndex(5)
-        assertNotSame("Different zIndexes should produce different CircleManagers", low, high)
-    }
-
-    // --- Mixed usage: zIndex ordering unaffected by named layers ---
-
-    @Test
-    fun zIndexOrdering_unaffectedByNamedLayerCreation() = withApplier { applier ->
-        // Create a named layer between the two zIndex layers
-        val low = applier.getOrCreateCircleManagerForZIndex(1)
-        applier.getOrCreateLineManagerForLayerId("named", null, null)
-        val high = applier.getOrCreateCircleManagerForZIndex(5)
-
-        // zIndex ordering should still hold
-        val style = applier.style.value!!
-        val lowIdx = style.layers.indexOfFirst { it.id == low.layerId }
-        val highIdx = style.layers.indexOfFirst { it.id == high.layerId }
-
-        assertTrue("zIndex=5 should be above zIndex=1 regardless of named layer creation",
-            highIdx > lowIdx)
-    }
 }

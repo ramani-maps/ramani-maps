@@ -38,7 +38,6 @@ import org.maplibre.android.plugins.annotation.Symbol
 import org.maplibre.android.plugins.annotation.SymbolManager
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-import kotlin.math.abs
 
 internal suspend inline fun disposingComposition(factory: () -> Composition) {
     val composition = factory()
@@ -83,14 +82,6 @@ class MapApplier(
     val style: MutableState<Style?>
 ) : AbstractApplier<MapNode>(MapNodeRoot) {
     private val decorations = mutableListOf<MapNode>()
-
-    private val circleManagerMap = mutableMapOf<Int, CircleManager>()
-    private val fillManagerMap = mutableMapOf<Int, FillManager>()
-    private val symbolManagerMap = mutableMapOf<Int, SymbolManager>()
-    private val lineManagerMap = mutableMapOf<Int, LineManager>()
-
-    private val zIndexReferenceAnnotationManagerMap =
-        mutableMapOf<Int, AnnotationManager<*, *, *, *, *, *>>()
 
     private val circleManagerByLayerId = mutableMapOf<String, CircleManager>()
     private val fillManagerByLayerId = mutableMapOf<String, FillManager>()
@@ -177,35 +168,6 @@ class MapApplier(
         })
     }
 
-    fun getOrCreateCircleManagerForZIndex(zIndex: Int): CircleManager {
-        circleManagerMap[zIndex]?.let { return it }
-
-        val style = checkNotNull(style.value)
-        val layerInsertInfo = getLayerInsertInfoForZIndex(zIndex)
-
-        val circleManager = layerInsertInfo?.let {
-            CircleManager(
-                mapView,
-                map,
-                style,
-                if (it.insertPosition == LayerInsertMethod.INSERT_BELOW) it.referenceLayerId else null,
-                if (it.insertPosition == LayerInsertMethod.INSERT_ABOVE) it.referenceLayerId else null
-            )
-        } ?: run {
-            CircleManager(mapView, map, style)
-        }
-
-        circleManagerMap[zIndex] = circleManager
-
-        if (!zIndexReferenceAnnotationManagerMap.containsKey(zIndex)) {
-            zIndexReferenceAnnotationManagerMap[zIndex] = circleManager
-        }
-
-        attachCircleManagerListeners(circleManager)
-
-        return circleManager
-    }
-
     fun getOrCreateCircleManagerForLayerId(
         layerId: String,
         aboveLayerId: String?,
@@ -267,55 +229,6 @@ class MapApplier(
             )?.invoke(annotation)
             true
         }
-    }
-
-    private fun getLayerInsertInfoForZIndex(zIndex: Int): LayerInsertInfo? {
-        val keys = zIndexReferenceAnnotationManagerMap.keys.sorted()
-
-        if (keys.isEmpty()) {
-            return null
-        }
-
-        val closestLayerIndex = keys.map {
-            abs(it - zIndex)
-        }.withIndex().minBy { it.value }.index
-
-        return LayerInsertInfo(
-            checkNotNull(zIndexReferenceAnnotationManagerMap[keys[closestLayerIndex]]?.layerId),
-            if (zIndex > keys[closestLayerIndex]) LayerInsertMethod.INSERT_ABOVE else LayerInsertMethod.INSERT_BELOW
-        )
-    }
-
-    fun getOrCreateSymbolManagerForZIndex(zIndex: Int): SymbolManager {
-        symbolManagerMap[zIndex]?.let { return it }
-
-        val style = checkNotNull(style.value)
-        val layerInsertInfo = getLayerInsertInfoForZIndex(zIndex)
-
-        val symbolManager = layerInsertInfo?.let {
-            SymbolManager(
-                mapView,
-                map,
-                style,
-                if (it.insertPosition == LayerInsertMethod.INSERT_BELOW) it.referenceLayerId else null,
-                if (it.insertPosition == LayerInsertMethod.INSERT_ABOVE) it.referenceLayerId else null,
-                null
-            )
-        } ?: run {
-            SymbolManager(mapView, map, style)
-        }
-
-        symbolManager.iconAllowOverlap = true
-
-        symbolManagerMap[zIndex] = symbolManager
-
-        if (!zIndexReferenceAnnotationManagerMap.containsKey(zIndex)) {
-            zIndexReferenceAnnotationManagerMap[zIndex] = symbolManager
-        }
-
-        attachSymbolManagerListeners(symbolManager)
-
-        return symbolManager
     }
 
     fun getOrCreateSymbolManagerForLayerId(
@@ -383,33 +296,6 @@ class MapApplier(
         }
     }
 
-    fun getOrCreateFillManagerForZIndex(zIndex: Int): FillManager {
-        fillManagerMap[zIndex]?.let { return it }
-
-        val style = checkNotNull(style.value)
-        val layerInsertInfo = getLayerInsertInfoForZIndex(zIndex)
-
-        val fillManager = layerInsertInfo?.let {
-            FillManager(
-                mapView,
-                map,
-                style,
-                if (it.insertPosition == LayerInsertMethod.INSERT_BELOW) it.referenceLayerId else null,
-                if (it.insertPosition == LayerInsertMethod.INSERT_ABOVE) it.referenceLayerId else null,
-                null
-            )
-        } ?: run {
-            FillManager(mapView, map, style)
-        }
-
-        if (!zIndexReferenceAnnotationManagerMap.containsKey(zIndex)) {
-            zIndexReferenceAnnotationManagerMap[zIndex] = fillManager
-        }
-
-        fillManagerMap[zIndex] = fillManager
-        return fillManager
-    }
-
     fun getOrCreateFillManagerForLayerId(
         layerId: String,
         aboveLayerId: String?,
@@ -428,34 +314,6 @@ class MapApplier(
         namedLayerRegistry[layerId] = fillManager
 
         return fillManager
-    }
-
-    fun getOrCreateLineManagerForZIndex(zIndex: Int): LineManager {
-        lineManagerMap[zIndex]?.let { return it }
-
-        val style = checkNotNull(style.value)
-        val layerInsertInfo = getLayerInsertInfoForZIndex(zIndex)
-
-        val lineManager = layerInsertInfo?.let {
-            LineManager(
-                mapView,
-                map,
-                style,
-                if (it.insertPosition == LayerInsertMethod.INSERT_BELOW) it.referenceLayerId else null,
-                if (it.insertPosition == LayerInsertMethod.INSERT_ABOVE) it.referenceLayerId else null,
-                null
-            )
-        } ?: run {
-            LineManager(mapView, map, style)
-        }
-
-
-        if (!zIndexReferenceAnnotationManagerMap.containsKey(zIndex)) {
-            zIndexReferenceAnnotationManagerMap[zIndex] = lineManager
-        }
-
-        lineManagerMap[zIndex] = lineManager
-        return lineManager
     }
 
     fun getOrCreateLineManagerForLayerId(
@@ -578,13 +436,6 @@ class MapApplier(
         toRemove.forEach { it.onRemoved() }
         toRemove.clear()
     }
-}
-
-data class LayerInsertInfo(val referenceLayerId: String, val insertPosition: LayerInsertMethod)
-
-enum class LayerInsertMethod {
-    INSERT_BELOW,
-    INSERT_ABOVE
 }
 
 internal class CircleNode(

@@ -131,18 +131,6 @@ class MapApplierLayerOrderTest {
     }
 
     @Test
-    fun zIndex_backwardCompatibility() = withApplier { applier, style ->
-        // Old zIndex API must continue to work unchanged.
-        val low = applier.getOrCreateCircleManagerForZIndex(1)
-        val high = applier.getOrCreateCircleManagerForZIndex(5)
-
-        val lowIndex = style.layerIndex(low.layerId)
-        val highIndex = style.layerIndex(high.layerId)
-
-        assertTrue("zIndex=5 layer should be above zIndex=1 layer", highIndex > lowIndex)
-    }
-
-    @Test
     fun multipleLayerTypes_canReferenceEachOther() = withApplier { applier, style ->
         val fillManager = applier.getOrCreateFillManagerForLayerId("area", null, null)
         val lineManager = applier.getOrCreateLineManagerForLayerId("border", aboveLayerId = "area", belowLayerId = null)

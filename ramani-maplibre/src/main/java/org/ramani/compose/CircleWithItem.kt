@@ -30,13 +30,14 @@ fun CircleWithItem(
     borderColor: String = "Black",
     borderWidth: Float = 0.0f,
     opacity: Float = 1.0f,
-    zIndex: Int = 0,
+    layerId: String? = null,
     imageId: Int? = null,
     itemSize: Float = 0.0f,
     text: String? = null,
     onCenterChanged: (LatLng) -> Unit = {},
     onDragStopped: () -> Unit = {},
 ) {
+    val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
     val draggableCenterState = remember { mutableStateOf(center) }
 
     UpdateCenter(coord = center, centerUpdated = { draggableCenterState.value = it })
@@ -49,7 +50,8 @@ fun CircleWithItem(
         color = "Transparent",
         borderColor = borderColor,
         borderWidth = 0.0f,
-        zIndex = zIndex + 1,
+        layerId = "${resolvedLayerId}_drag",
+        aboveLayerId = resolvedLayerId,
         onCenterDragged = {
             onCenterChanged(it)
         },
@@ -66,7 +68,7 @@ fun CircleWithItem(
         isDraggable = false,
         color = color,
         opacity = opacity,
-        zIndex = zIndex,
+        layerId = resolvedLayerId,
         borderColor = borderColor,
         borderWidth = borderWidth,
         onCenterDragged = {}
@@ -79,7 +81,8 @@ fun CircleWithItem(
             isDraggable = false,
             imageId = imageId,
             size = itemSize,
-            zIndex = zIndex + 1,
+            layerId = "${resolvedLayerId}_image",
+            aboveLayerId = resolvedLayerId,
         )
     }
 
@@ -90,7 +93,8 @@ fun CircleWithItem(
             isDraggable = false,
             text = text,
             size = itemSize,
-            zIndex = zIndex + 1,
+            layerId = "${resolvedLayerId}_text",
+            aboveLayerId = resolvedLayerId,
             imageId = null
         )
     }

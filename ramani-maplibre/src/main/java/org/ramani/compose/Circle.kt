@@ -13,6 +13,7 @@ package org.ramani.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import androidx.compose.runtime.currentComposer
+import androidx.compose.runtime.remember
 import com.google.gson.JsonElement
 import com.google.gson.JsonNull
 import org.maplibre.android.geometry.LatLng
@@ -27,7 +28,6 @@ fun Circle(
     opacity: Float = 1.0f,
     borderColor: String = "Black",
     borderWidth: Float = 0.0F,
-    zIndex: Int = 0,
     layerId: String? = null,
     aboveLayerId: String? = null,
     belowLayerId: String? = null,
@@ -38,13 +38,10 @@ fun Circle(
     onLongClick: (JsonElement?) -> Unit = {}
 ) {
     val mapApplier = currentComposer.applier as MapApplier
+    val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
 
     ComposeNode<CircleNode, MapApplier>(factory = {
-        val circleManager = if (layerId != null) {
-            mapApplier.getOrCreateCircleManagerForLayerId(layerId, aboveLayerId, belowLayerId)
-        } else {
-            mapApplier.getOrCreateCircleManagerForZIndex(zIndex)
-        }
+        val circleManager = mapApplier.getOrCreateCircleManagerForLayerId(resolvedLayerId, aboveLayerId, belowLayerId)
 
         val circleOptions = CircleOptions()
             .withCircleRadius(radius)

@@ -484,57 +484,76 @@ class MapApplier(
 
         val style = style.value ?: return
 
-        // Topological sort: process dependencies before dependents so that moving
-        // layer B above A before moving C above B leaves C in the right place.
-        val sorted = topologicalSort(pendingOrders)
+        // Collect every layer that participates in ordering (subjects + references).
+        val involvedLayerIds = mutableSetOf<String>()
+        for (order in pendingOrders) {
+            involvedLayerIds.add(order.layerId)
+            order.aboveLayerId?.let { involvedLayerIds.add(it) }
+            order.belowLayerId?.let { involvedLayerIds.add(it) }
+        }
+        involvedLayerIds.retainAll(namedLayerRegistry.keys)
 
-        // When multiple layers share the same belowLayerId, each addLayerBelow
-        // inserts just below the reference, pushing earlier siblings further down and
-        // inverting declaration order.  Track the deepest sibling so far and insert
-        // below *it* instead, keeping declaration order intact.
-        val lastPlacedBelow = mutableMapOf<String, String>()
+        // Declaration index derived from namedLayerRegistry insertion order
+        // (LinkedHashMap preserves insertion order, matching the compose tree).
+        val declarationOrder = namedLayerRegistry.keys.withIndex()
+            .associate { (index, key) -> key to index }
 
-        for (order in sorted) {
-            val manager = namedLayerRegistry[order.layerId] ?: continue
-            val managerLayerId = manager.layerId
+        // Build a DAG: edge A → B means "A must be below B in the final stack".
+        val adj = involvedLayerIds.associateWith { mutableListOf<String>() }
+        val inDegree = involvedLayerIds.associateWithTo(mutableMapOf()) { 0 }
 
-            val targetManager = when {
-                order.aboveLayerId != null -> namedLayerRegistry[order.aboveLayerId]
-                order.belowLayerId != null -> namedLayerRegistry[order.belowLayerId]
-                else -> null
-            } ?: continue
+        for (order in pendingOrders) {
+            val layerId = order.layerId
+            val above = order.aboveLayerId
+            val below = order.belowLayerId
 
-            val layer = style.getLayer(managerLayerId) ?: continue
-            style.removeLayer(layer)
-
-            if (order.aboveLayerId != null) {
-                style.addLayerAbove(layer, targetManager.layerId)
-            } else {
-                val effectiveTarget = lastPlacedBelow[order.belowLayerId] ?: targetManager.layerId
-                style.addLayerBelow(layer, effectiveTarget)
-                lastPlacedBelow[order.belowLayerId!!] = managerLayerId
+            if (above != null && above in involvedLayerIds && layerId in involvedLayerIds) {
+                adj[above]!!.add(layerId)
+                inDegree[layerId] = inDegree[layerId]!! + 1
+            }
+            if (below != null && below in involvedLayerIds && layerId in involvedLayerIds) {
+                adj[layerId]!!.add(below)
+                inDegree[below] = inDegree[below]!! + 1
             }
         }
+
+        // Kahn's algorithm with declaration-order tiebreaker: when several layers
+        // have no remaining dependencies the one declared earliest goes first
+        // (= lower in the layer stack), preserving compose-tree order for
+        // independent layers.
+        val queue = java.util.PriorityQueue<String>(compareBy { declarationOrder[it] ?: Int.MAX_VALUE })
+        for ((id, deg) in inDegree) {
+            if (deg == 0) queue.add(id)
+        }
+
+        val sortedOrder = mutableListOf<String>()
+        while (queue.isNotEmpty()) {
+            val current = queue.poll()
+            sortedOrder.add(current)
+            for (neighbor in adj[current]!!) {
+                val newDeg = inDegree[neighbor]!! - 1
+                inDegree[neighbor] = newDeg
+                if (newDeg == 0) queue.add(neighbor)
+            }
+        }
+
+        // Walk the computed order and move each layer just above the previous
+        // one, producing the desired total ordering.
+        var previousInternalLayerId: String? = null
+        for (layerId in sortedOrder) {
+            val manager = namedLayerRegistry[layerId] ?: continue
+            val internalLayerId = manager.layerId
+
+            if (previousInternalLayerId != null) {
+                val layer = style.getLayer(internalLayerId) ?: continue
+                style.removeLayer(layer)
+                style.addLayerAbove(layer, previousInternalLayerId)
+            }
+
+            previousInternalLayerId = internalLayerId
+        }
+
         pendingOrders.clear()
-    }
-
-    private fun topologicalSort(orders: List<PendingLayerOrder>): List<PendingLayerOrder> {
-        val orderByLayerId = orders.associateBy { it.layerId }
-        val result = mutableListOf<PendingLayerOrder>()
-        val visited = mutableSetOf<String>()
-
-        fun visit(order: PendingLayerOrder) {
-            if (order.layerId in visited) return
-            visited.add(order.layerId)
-            val depLayerId = order.aboveLayerId ?: order.belowLayerId
-            if (depLayerId != null) {
-                orderByLayerId[depLayerId]?.let { visit(it) }
-            }
-            result.add(order)
-        }
-
-        for (order in orders.reversed()) visit(order)
-        return result
     }
 
     override fun insertBottomUp(index: Int, instance: MapNode) {

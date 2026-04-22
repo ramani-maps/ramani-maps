@@ -252,11 +252,10 @@ class MapApplierLayerOrderTest {
     }
 
     @Test
-    fun mixed_aboveAndBelow_differentAnchors_bothBetweenAnchors() = withApplier { applier, style ->
-        // symbol says aboveLayerId = "circle1", polyline says belowLayerId = "circle2".
-        // "above circle1" anchors symbol just above circle1 (bottom of gap).
-        // "below circle2" anchors polyline just below circle2 (top of gap).
-        // Result: circle1 -> symbol -> polyline -> circle2, regardless of declaration order.
+    fun mixed_aboveAndBelow_symbolDeclaredFirst_symbolBelowPolyline() = withApplier { applier, style ->
+        // symbol(above circle1) declared before polyline(below circle2).
+        // Both end up between circle1 and circle2.  Since symbol is declared
+        // first, it sits lower in the stack: circle1 -> symbol -> polyline -> circle2.
         val circle1 = applier.getOrCreateCircleManagerForLayerId("circle1", null, null)
         val symbolManager = applier.getOrCreateSymbolManagerForLayerId("symbol", aboveLayerId = "circle1", belowLayerId = null)
         val lineManager = applier.getOrCreateLineManagerForLayerId("polyline", aboveLayerId = null, belowLayerId = "circle2")
@@ -270,16 +269,15 @@ class MapApplierLayerOrderTest {
         val c2 = style.layerIndex(circle2.layerId)
 
         assertTrue("all layers should be valid", c1 >= 0 && sym >= 0 && line >= 0 && c2 >= 0)
-        assertTrue("symbol should be above circle1", sym > c1)
-        assertTrue("symbol should be below circle2", sym < c2)
-        assertTrue("polyline should be above circle1", line > c1)
-        assertTrue("polyline should be below circle2", line < c2)
+        assertTrue("circle1 < symbol < polyline < circle2: c1=$c1, sym=$sym, line=$line, c2=$c2",
+            c1 < sym && sym < line && line < c2)
     }
 
     @Test
-    fun mixed_aboveAndBelow_reversedDeclaration_bothBetweenAnchors() = withApplier { applier, style ->
-        // Same constraints as above but polyline declared before symbol.
-        // Result should still have both between circle1 and circle2.
+    fun mixed_aboveAndBelow_polylineDeclaredFirst_polylineBelowSymbol() = withApplier { applier, style ->
+        // polyline(below circle2) declared before symbol(above circle1).
+        // Both between circle1 and circle2, but now polyline is lower:
+        // circle1 -> polyline -> symbol -> circle2.
         val circle1 = applier.getOrCreateCircleManagerForLayerId("circle1", null, null)
         val lineManager = applier.getOrCreateLineManagerForLayerId("polyline", aboveLayerId = null, belowLayerId = "circle2")
         val symbolManager = applier.getOrCreateSymbolManagerForLayerId("symbol", aboveLayerId = "circle1", belowLayerId = null)
@@ -288,15 +286,88 @@ class MapApplierLayerOrderTest {
         applier.onEndChanges()
 
         val c1 = style.layerIndex(circle1.layerId)
+        val line = style.layerIndex(lineManager.layerId)
+        val sym = style.layerIndex(symbolManager.layerId)
+        val c2 = style.layerIndex(circle2.layerId)
+
+        assertTrue("all layers should be valid", c1 >= 0 && line >= 0 && sym >= 0 && c2 >= 0)
+        assertTrue("circle1 < polyline < symbol < circle2: c1=$c1, line=$line, sym=$sym, c2=$c2",
+            c1 < line && line < sym && sym < c2)
+    }
+
+    @Test
+    fun mixed_anchorsDeclaredFirst_constraintsAndDeclarationOrder() = withApplier { applier, style ->
+        // Anchors declared first, constrained layers after.
+        // circle1(0), circle2(1), polyline(2, below circle2), symbol(3, above circle1)
+        // circle1 and polyline both have in-degree 0; circle1(idx 0) goes first.
+        // Result: circle1 -> polyline -> circle2 -> symbol
+        val circle1 = applier.getOrCreateCircleManagerForLayerId("circle1", null, null)
+        val circle2 = applier.getOrCreateCircleManagerForLayerId("circle2", null, null)
+        val lineManager = applier.getOrCreateLineManagerForLayerId("polyline", aboveLayerId = null, belowLayerId = "circle2")
+        val symbolManager = applier.getOrCreateSymbolManagerForLayerId("symbol", aboveLayerId = "circle1", belowLayerId = null)
+
+        applier.onEndChanges()
+
+        val c1 = style.layerIndex(circle1.layerId)
+        val c2 = style.layerIndex(circle2.layerId)
+        val line = style.layerIndex(lineManager.layerId)
+        val sym = style.layerIndex(symbolManager.layerId)
+
+        assertTrue("all valid", c1 >= 0 && c2 >= 0 && line >= 0 && sym >= 0)
+        assertTrue("polyline below circle2", line < c2)
+        assertTrue("symbol above circle1", sym > c1)
+        assertTrue("circle1 < polyline < circle2 < symbol: c1=$c1, line=$line, c2=$c2, sym=$sym",
+            c1 < line && line < c2 && c2 < sym)
+    }
+
+    @Test
+    fun mixed_anchorsSwapped_constraintsStillHold() = withApplier { applier, style ->
+        // Same constraints but circle2 declared before circle1.
+        // circle2(0), circle1(1), polyline(2, below circle2), symbol(3, above circle1)
+        // circle2 has in-degree 1 (from polyline), so it waits.
+        // Result: circle1 -> polyline -> circle2 -> symbol
+        val circle2 = applier.getOrCreateCircleManagerForLayerId("circle2", null, null)
+        val circle1 = applier.getOrCreateCircleManagerForLayerId("circle1", null, null)
+        val lineManager = applier.getOrCreateLineManagerForLayerId("polyline", aboveLayerId = null, belowLayerId = "circle2")
+        val symbolManager = applier.getOrCreateSymbolManagerForLayerId("symbol", aboveLayerId = "circle1", belowLayerId = null)
+
+        applier.onEndChanges()
+
+        val c1 = style.layerIndex(circle1.layerId)
+        val c2 = style.layerIndex(circle2.layerId)
+        val line = style.layerIndex(lineManager.layerId)
+        val sym = style.layerIndex(symbolManager.layerId)
+
+        assertTrue("all valid", c1 >= 0 && c2 >= 0 && line >= 0 && sym >= 0)
+        assertTrue("polyline below circle2", line < c2)
+        assertTrue("symbol above circle1", sym > c1)
+        assertTrue("circle1 < polyline < circle2 < symbol: c1=$c1, line=$line, c2=$c2, sym=$sym",
+            c1 < line && line < c2 && c2 < sym)
+    }
+
+    @Test
+    fun mixed_allReversed_forwardRefsResolvedCorrectly() = withApplier { applier, style ->
+        // Everything declared in reverse dependency order.
+        // symbol(0, above circle1), polyline(1, below circle2), circle2(2), circle1(3)
+        // polyline(in-deg 0, idx 1) and circle1(in-deg 0, idx 3): polyline first.
+        // Result: polyline -> circle2 -> circle1 -> symbol
+        val symbolManager = applier.getOrCreateSymbolManagerForLayerId("symbol", aboveLayerId = "circle1", belowLayerId = null)
+        val lineManager = applier.getOrCreateLineManagerForLayerId("polyline", aboveLayerId = null, belowLayerId = "circle2")
+        val circle2 = applier.getOrCreateCircleManagerForLayerId("circle2", null, null)
+        val circle1 = applier.getOrCreateCircleManagerForLayerId("circle1", null, null)
+
+        applier.onEndChanges()
+
         val sym = style.layerIndex(symbolManager.layerId)
         val line = style.layerIndex(lineManager.layerId)
         val c2 = style.layerIndex(circle2.layerId)
+        val c1 = style.layerIndex(circle1.layerId)
 
-        assertTrue("all layers should be valid", c1 >= 0 && sym >= 0 && line >= 0 && c2 >= 0)
-        assertTrue("symbol should be above circle1", sym > c1)
-        assertTrue("symbol should be below circle2", sym < c2)
-        assertTrue("polyline should be above circle1", line > c1)
-        assertTrue("polyline should be below circle2", line < c2)
+        assertTrue("all valid", c1 >= 0 && c2 >= 0 && line >= 0 && sym >= 0)
+        assertTrue("polyline below circle2", line < c2)
+        assertTrue("symbol above circle1", sym > c1)
+        assertTrue("polyline < circle2 < circle1 < symbol: line=$line, c2=$c2, c1=$c1, sym=$sym",
+            line < c2 && c2 < c1 && c1 < sym)
     }
 
     @Test

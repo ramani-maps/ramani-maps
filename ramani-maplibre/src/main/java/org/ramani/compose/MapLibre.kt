@@ -398,63 +398,6 @@ internal fun MapUpdater(
     val context = LocalContext.current
     val currentCameraMode by rememberUpdatedState(cameraMode.value)
 
-    fun observeZoom(cameraPosition: CameraPosition) {
-        map.addOnScaleListener(object : OnScaleListener {
-            override fun onScaleBegin(detector: StandardScaleGestureDetector) {}
-
-            override fun onScale(detector: StandardScaleGestureDetector) {
-                cameraPosition.zoom = map.cameraPosition.zoom
-            }
-
-            override fun onScaleEnd(detector: StandardScaleGestureDetector) {}
-        })
-    }
-
-    fun observeCameraPosition(cameraPosition: CameraPosition) {
-        map.addOnMoveListener(object : OnMoveListener {
-            override fun onMoveBegin(detector: MoveGestureDetector) {}
-
-            override fun onMove(detector: MoveGestureDetector) {
-                cameraPosition.target = map.cameraPosition.target
-            }
-
-            override fun onMoveEnd(detector: MoveGestureDetector) {}
-        })
-    }
-
-    fun observeBearing(cameraPosition: CameraPosition) {
-        map.addOnRotateListener(object : OnRotateListener {
-            override fun onRotateBegin(detector: RotateGestureDetector) {}
-
-            override fun onRotate(detector: RotateGestureDetector) {
-                cameraPosition.bearing = map.cameraPosition.bearing
-            }
-
-            override fun onRotateEnd(detector: RotateGestureDetector) {}
-        })
-    }
-
-    fun observeTilt(cameraPosition: CameraPosition) {
-        map.addOnShoveListener(object : OnShoveListener {
-            override fun onShoveBegin(detector: ShoveGestureDetector) {}
-
-            override fun onShove(detector: ShoveGestureDetector) {
-                cameraPosition.tilt = map.cameraPosition.tilt
-            }
-
-            override fun onShoveEnd(detector: ShoveGestureDetector) {}
-        })
-    }
-
-    fun observeIdle(cameraPosition: CameraPosition) {
-        map.addOnCameraIdleListener {
-            cameraPosition.zoom = map.cameraPosition.zoom
-            cameraPosition.target = map.cameraPosition.target
-            cameraPosition.bearing = map.cameraPosition.bearing
-            cameraPosition.tilt = map.cameraPosition.tilt
-        }
-    }
-
     ComposeNode<MapPropertiesNode, MapApplier>(factory = {
         MapPropertiesNode(
             context = context,
@@ -471,12 +414,6 @@ internal fun MapUpdater(
             cameraMode = cameraMode,
         )
     }, update = {
-        observeZoom(cameraPosition)
-        observeCameraPosition(cameraPosition)
-        observeBearing(cameraPosition)
-        observeTilt(cameraPosition)
-        observeIdle(cameraPosition)
-
         update(uiSettings) {
             map.applyUiSettings(uiSettings)
         }
@@ -555,6 +492,57 @@ internal class MapPropertiesNode(
             renderMode = renderMode,
             cameraMode = cameraMode,
         )
+
+        registerCameraListeners()
+    }
+
+    private fun registerCameraListeners() {
+        map.addOnScaleListener(object : OnScaleListener {
+            override fun onScaleBegin(detector: StandardScaleGestureDetector) {}
+
+            override fun onScale(detector: StandardScaleGestureDetector) {
+                cameraPosition.zoom = map.cameraPosition.zoom
+            }
+
+            override fun onScaleEnd(detector: StandardScaleGestureDetector) {}
+        })
+
+        map.addOnMoveListener(object : OnMoveListener {
+            override fun onMoveBegin(detector: MoveGestureDetector) {}
+
+            override fun onMove(detector: MoveGestureDetector) {
+                cameraPosition.target = map.cameraPosition.target
+            }
+
+            override fun onMoveEnd(detector: MoveGestureDetector) {}
+        })
+
+        map.addOnRotateListener(object : OnRotateListener {
+            override fun onRotateBegin(detector: RotateGestureDetector) {}
+
+            override fun onRotate(detector: RotateGestureDetector) {
+                cameraPosition.bearing = map.cameraPosition.bearing
+            }
+
+            override fun onRotateEnd(detector: RotateGestureDetector) {}
+        })
+
+        map.addOnShoveListener(object : OnShoveListener {
+            override fun onShoveBegin(detector: ShoveGestureDetector) {}
+
+            override fun onShove(detector: ShoveGestureDetector) {
+                cameraPosition.tilt = map.cameraPosition.tilt
+            }
+
+            override fun onShoveEnd(detector: ShoveGestureDetector) {}
+        })
+
+        map.addOnCameraIdleListener {
+            cameraPosition.zoom = map.cameraPosition.zoom
+            cameraPosition.target = map.cameraPosition.target
+            cameraPosition.bearing = map.cameraPosition.bearing
+            cameraPosition.tilt = map.cameraPosition.tilt
+        }
     }
 }
 

@@ -68,7 +68,7 @@ import org.maplibre.android.utils.BitmapUtils
  * A composable representing a MapLibre map.
  *
  * @param modifier The modifier applied to the map.
- * @param styleBuilder The style builder to access the tile provider. Defaults to a demo tile provider.
+ * @param style The map style definition. Defaults to the MapLibre demo tiles.
  * @param cameraPosition The position of the map camera.
  * @param uiSettings Settings related to the map UI.
  * @param properties Properties being applied to the map.
@@ -92,8 +92,7 @@ import org.maplibre.android.utils.BitmapUtils
 @Composable
 fun MapLibre(
     modifier: Modifier,
-    styleBuilder: Style.Builder = Style.Builder()
-        .fromUri("https://demotiles.maplibre.org/style.json"),
+    style: MapStyle = MapStyle.Default,
     cameraPosition: CameraPosition = rememberSaveable { CameraPosition() },
     uiSettings: UiSettings = UiSettings(),
     properties: MapProperties = MapProperties(),
@@ -119,7 +118,7 @@ fun MapLibre(
     }
 
     val context = LocalContext.current
-    val currentStyleBuilder by rememberUpdatedState(styleBuilder)
+    val currentStyle by rememberUpdatedState(style)
     val currentCameraPosition by rememberUpdatedState(cameraPosition)
     val currentUiSettings by rememberUpdatedState(uiSettings)
     val currentMapProperties by rememberUpdatedState(properties)
@@ -134,7 +133,7 @@ fun MapLibre(
     val currentContent by rememberUpdatedState(content)
     val parentComposition = rememberCompositionContext()
 
-    val currentStyle = remember { mutableStateOf<Style?>(null) }
+    val loadedStyle = remember { mutableStateOf<Style?>(null) }
     val currentMap = remember { mutableStateOf<MapLibreMap?>(null) }
 
     LaunchedEffect(currentHttpClient) {
@@ -143,22 +142,22 @@ fun MapLibre(
         }
     }
 
-    LaunchedEffect(currentStyleBuilder) {
-        currentLayers?.forEach { currentStyle.value?.removeLayer(it) }
-        currentSources?.forEach { currentStyle.value?.removeSource(it) }
-        currentStyle.value = mapView.awaitMap().awaitStyle(currentStyleBuilder)
-        currentStyle.value?.let { onStyleLoaded(it) }
+    LaunchedEffect(currentStyle) {
+        currentLayers?.forEach { loadedStyle.value?.removeLayer(it) }
+        currentSources?.forEach { loadedStyle.value?.removeSource(it) }
+        loadedStyle.value = mapView.awaitMap().awaitStyle(currentStyle.toBuilder())
+        loadedStyle.value?.let { onStyleLoaded(it) }
     }
 
     AndroidView(modifier = modifier, factory = { mapView })
 
     LaunchedEffect(null) {
         val maplibreMap = mapView.awaitMap()
-        val style = maplibreMap.awaitStyle(currentStyleBuilder)
-        onStyleLoaded(style)
+        val maplibreStyle = maplibreMap.awaitStyle(currentStyle.toBuilder())
+        onStyleLoaded(maplibreStyle)
 
         currentMap.value = maplibreMap
-        currentStyle.value = style
+        loadedStyle.value = maplibreStyle
 
         maplibreMap.addImages(context, currentImages)
 
@@ -179,11 +178,11 @@ fun MapLibre(
             false
         }
 
-        mapView.newComposition(parentComposition, maplibreMap, currentStyle) {
+        mapView.newComposition(parentComposition, maplibreMap, loadedStyle) {
             CompositionLocalProvider {
                 MapUpdater(
                     map = checkNotNull(currentMap.value),
-                    style = currentStyle,
+                    style = loadedStyle,
                     cameraPosition = currentCameraPosition,
                     uiSettings = currentUiSettings,
                     properties = currentMapProperties,

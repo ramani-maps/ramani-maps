@@ -36,6 +36,10 @@ import org.maplibre.android.plugins.annotation.OnCircleDragListener
 import org.maplibre.android.plugins.annotation.OnSymbolDragListener
 import org.maplibre.android.plugins.annotation.Symbol
 import org.maplibre.android.plugins.annotation.SymbolManager
+import android.content.Context
+import org.maplibre.android.style.layers.Layer
+import org.maplibre.android.style.sources.Source
+import org.maplibre.android.utils.BitmapUtils
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -505,6 +509,39 @@ internal class MapObserverNode(
 ) : MapNode {
     override fun onRemoved() {
     }
+}
+
+internal class SourceNode(
+    val style: MutableState<Style?>,
+    val source: Source,
+) : MapNode {
+    override fun onAttached() { style.value?.addSource(source) }
+    override fun onRemoved() { style.value?.removeSource(source) }
+    override fun onCleared() { style.value?.removeSource(source) }
+}
+
+internal class LayerNode(
+    val style: MutableState<Style?>,
+    val layer: Layer,
+) : MapNode {
+    override fun onAttached() { style.value?.addLayer(layer) }
+    override fun onRemoved() { style.value?.removeLayer(layer) }
+    override fun onCleared() { style.value?.removeLayer(layer) }
+}
+
+internal class ImageNode(
+    val style: MutableState<Style?>,
+    val context: Context,
+    val id: String,
+    val drawableRes: Int,
+) : MapNode {
+    override fun onAttached() {
+        val drawable = context.getDrawable(drawableRes)
+        val bitmap = BitmapUtils.getBitmapFromDrawable(drawable)
+        bitmap?.let { style.value?.addImage(id, it) }
+    }
+    override fun onRemoved() { style.value?.removeImage(id) }
+    override fun onCleared() { style.value?.removeImage(id) }
 }
 
 private inline fun <reified NodeT : MapNode, I, O> Iterable<MapNode>.findInputCallback(

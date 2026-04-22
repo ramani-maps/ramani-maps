@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.maplibre.android.MapLibre
 import org.maplibre.android.geometry.LatLng
-import org.maplibre.android.maps.Style
 import org.maplibre.android.style.expressions.Expression
 import org.maplibre.android.style.layers.FillLayer
 import org.maplibre.android.style.layers.LineLayer
@@ -28,7 +27,10 @@ import org.maplibre.android.style.sources.RasterSource
 import org.maplibre.android.style.sources.VectorSource
 import org.ramani.compose.CameraPosition
 import org.ramani.compose.Circle
+import org.ramani.compose.MapLayer
 import org.ramani.compose.MapLibre
+import org.ramani.compose.MapSource
+import org.ramani.compose.MapStyle
 import org.ramani.compose.Symbol
 import org.ramani.compose.UiSettings
 import org.ramani.example.custom_layers.ui.theme.CustomLayersTheme
@@ -125,7 +127,6 @@ class MainActivity : ComponentActivity() {
             }
             val isDefaultStyle = rememberSaveable { mutableStateOf(true) }
             val styleUrl = rememberSaveable { mutableStateOf(DEFAULT_STYLE_URL) }
-            val styleBuilder = Style.Builder().fromUri(styleUrl.value)
             val uiSettings = rememberSaveable {
                 mutableStateOf(
                     UiSettings(rotateGesturesEnabled = false)
@@ -140,21 +141,17 @@ class MainActivity : ComponentActivity() {
                     ) {
                         MapLibre(
                             modifier = Modifier.fillMaxSize(),
-                            styleBuilder = styleBuilder,
+                            style = MapStyle.Uri(styleUrl.value),
                             uiSettings = uiSettings.value,
                             cameraPosition = cameraPosition.value,
-                            sources = listOf(
-                                nfzSource,
-                                contourSource,
-                                hillShadeSource,
-                            ),
-                            layers = listOf(
-                                nfzFill,
-                                nfzPoly,
-                                hillshadeLayer,
-                                contourLayer,
-                            ),
                         ) {
+                            MapSource(source = nfzSource)
+                            MapSource(source = contourSource)
+                            MapSource(source = hillShadeSource)
+                            MapLayer(layer = nfzFill)
+                            MapLayer(layer = nfzPoly)
+                            MapLayer(layer = hillshadeLayer)
+                            MapLayer(layer = contourLayer)
                             Symbol(center = LatLng(46.5, 6.4))
                             Circle(
                                 center = LatLng(46.5, 6.4),

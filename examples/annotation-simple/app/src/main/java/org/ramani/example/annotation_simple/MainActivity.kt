@@ -56,11 +56,6 @@ class MainActivity : ComponentActivity() {
                             style = mapStyle,
                             cameraPosition = cameraPosition.value,
                         ) {
-                            Symbol(
-                                center = symbolCenter.value,
-                                isDraggable = true,
-                                onSymbolDragged = { center -> symbolCenter.value = center }
-                            )
                             Circle(
                                 center = circleCenter.value,
                                 radius = 50F,
@@ -69,6 +64,11 @@ class MainActivity : ComponentActivity() {
                                 onCenterDragged = { center -> circleCenter.value = center }
                             )
                             Polyline(points = polylinePoints, color = "Red", lineWidth = 5.0F)
+                            Symbol(
+                                center = symbolCenter.value,
+                                isDraggable = true,
+                                onSymbolDragged = { center -> symbolCenter.value = center }
+                            )
                         }
                     }
                     Button(

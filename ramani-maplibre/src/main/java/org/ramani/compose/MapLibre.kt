@@ -61,10 +61,6 @@ import org.maplibre.android.maps.MapLibreMap.OnShoveListener
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.maplibre.android.module.http.HttpRequestUtil
-import org.maplibre.android.style.layers.Layer
-import org.maplibre.android.style.sources.Source
-import org.maplibre.android.utils.BitmapUtils
-
 
 /**
  * A composable representing a MapLibre map.
@@ -82,9 +78,6 @@ import org.maplibre.android.utils.BitmapUtils
  * @param locationStyling Styling related to the location marker (color, pulse, etc).
  * @param userLocation If set and if the location is enabled (by setting [locationRequestProperties],
  *        it will be updated to contain the latest user location as known by the map.
- * @param sources External (user-defined) sources for the map.
- * @param layers External (user-defined) layers for the map.
- * @param images Images to be added to the map and used by external layers (pairs of <id, drawable code>).
  * @param renderMode Ways the user location can be rendered on the map.
  * @param cameraMode Set specific camera tracking modes as the device location changes.
  * @param httpClient The HTTP client to use for all requests.
@@ -102,9 +95,6 @@ fun MapLibre(
     locationEngine: LocationEngine? = null,
     locationStyling: LocationStyling = LocationStyling(),
     userLocation: MutableState<Location>? = null,
-    sources: List<Source>? = null,
-    layers: List<Layer>? = null,
-    images: List<Pair<String, Int>>? = null,
     mapView: MapView = rememberMapViewWithLifecycle(),
     renderMode: Int = RenderMode.NORMAL,
     cameraMode: MutableIntState = mutableIntStateOf(CameraMode.NONE),
@@ -119,7 +109,6 @@ fun MapLibre(
         return
     }
 
-    val context = LocalContext.current
     val currentStyle by rememberUpdatedState(style)
     val currentCameraPosition by rememberUpdatedState(cameraPosition)
     val currentUiSettings by rememberUpdatedState(uiSettings)
@@ -127,9 +116,6 @@ fun MapLibre(
     val currentLocationRequestProperties by rememberUpdatedState(locationRequestProperties)
     val currentLocationEngine by rememberUpdatedState(locationEngine)
     val currentLocationStyling by rememberUpdatedState(locationStyling)
-    val currentSources by rememberUpdatedState(sources)
-    val currentLayers by rememberUpdatedState(layers)
-    val currentImages by rememberUpdatedState(images)
     val currentRenderMode by rememberUpdatedState(renderMode)
     val currentHttpClient by rememberUpdatedState(httpClient)
     val currentContent by rememberUpdatedState(content)
@@ -146,13 +132,8 @@ fun MapLibre(
 
     LaunchedEffect(currentStyle) {
         val maplibreMap = mapView.awaitMap()
-        currentLayers?.forEach { loadedStyle.value?.removeLayer(it) }
-        currentSources?.forEach { loadedStyle.value?.removeSource(it) }
         loadedStyle.value = maplibreMap.awaitStyle(currentStyle.toBuilder())
         loadedStyle.value?.let { onStyleLoaded(it) }
-        maplibreMap.addImages(context, currentImages)
-        maplibreMap.addSources(currentSources)
-        maplibreMap.addLayers(currentLayers)
     }
 
     AndroidView(modifier = modifier, factory = { mapView })
@@ -160,11 +141,6 @@ fun MapLibre(
     LaunchedEffect(Unit) {
         val maplibreMap = mapView.awaitMap()
         currentMap.value = maplibreMap
-
-        mapView.addOnDidFinishLoadingStyleListener {
-            maplibreMap.addSources(currentSources)
-            maplibreMap.addLayers(currentLayers)
-        }
 
         maplibreMap.addOnMapClickListener { latLng ->
             onMapClick(latLng)
@@ -361,26 +337,6 @@ private fun LocationRequestProperties.toMapLibre(): LocationEngineRequest {
         .setDisplacement(this.displacement)
         .setMaxWaitTime(this.maxWaitTime)
         .build()
-}
-
-private fun MapLibreMap.addImages(context: Context, images: List<Pair<String, Int>>?) {
-    images?.let {
-        images.mapNotNull { image ->
-            val drawable = context.getDrawable(image.second)
-            val bitmap = BitmapUtils.getBitmapFromDrawable(drawable)
-            bitmap?.let { Pair(image.first, bitmap) }
-        }.forEach {
-            style!!.addImage(it.first, it.second)
-        }
-    }
-}
-
-private fun MapLibreMap.addSources(sources: List<Source>?) {
-    sources?.let { sources.forEach { style!!.addSource(it) } }
-}
-
-private fun MapLibreMap.addLayers(layers: List<Layer>?) {
-    layers?.let { layers.forEach { style!!.addLayer(it) } }
 }
 
 @Composable

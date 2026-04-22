@@ -15,7 +15,9 @@ import org.maplibre.android.style.layers.PropertyFactory
 import org.maplibre.android.style.layers.SymbolLayer
 import org.maplibre.android.style.sources.GeoJsonOptions
 import org.maplibre.android.style.sources.GeoJsonSource
+import org.ramani.compose.MapLayer
 import org.ramani.compose.MapLibre
+import org.ramani.compose.MapSource
 import org.ramani.example.clusters.ui.theme.ClustersTheme
 import java.net.URI
 
@@ -88,9 +90,12 @@ class MainActivity : ComponentActivity() {
                 ) {
                     MapLibre(
                         modifier = Modifier.fillMaxSize(),
-                        sources = listOf(mySource),
-                        layers = listOf(unclustered, clusters, numbers),
-                    )
+                    ) {
+                        MapSource(source = mySource)
+                        MapLayer(layer = unclustered)
+                        MapLayer(layer = clusters)
+                        MapLayer(layer = numbers)
+                    }
                 }
             }
         }

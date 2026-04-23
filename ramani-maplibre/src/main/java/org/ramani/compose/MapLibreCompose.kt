@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Composition
 import androidx.compose.runtime.CompositionContext
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.staticCompositionLocalOf
 import kotlinx.coroutines.awaitCancellation
 import org.maplibre.android.gestures.MoveGestureDetector
 import org.maplibre.android.gestures.RotateGestureDetector
@@ -78,6 +79,72 @@ interface MapNode {
     fun onCleared() {}
 }
 
+internal data class PendingLayerOrder(
+    val layerId: String,
+    val aboveLayerId: String?,
+    val belowLayerId: String?
+)
+
+internal fun computeLayerOrder(
+    pendingOrders: List<PendingLayerOrder>,
+    registeredLayerIds: Set<String>,
+    declarationOrder: Map<String, Int>
+): List<String> {
+    // Collect every layer that participates in ordering (subjects + references).
+    val involvedLayerIds = mutableSetOf<String>()
+    for (order in pendingOrders) {
+        involvedLayerIds.add(order.layerId)
+        order.aboveLayerId?.let { involvedLayerIds.add(it) }
+        order.belowLayerId?.let { involvedLayerIds.add(it) }
+    }
+    involvedLayerIds.retainAll(registeredLayerIds)
+
+    // Build a DAG: edge A -> B means "A must be below B in the final stack".
+    val adj = involvedLayerIds.associateWith { mutableListOf<String>() }
+    val inDegree = involvedLayerIds.associateWithTo(mutableMapOf()) { 0 }
+
+    for (order in pendingOrders) {
+        val layerId = order.layerId
+        val above = order.aboveLayerId
+        val below = order.belowLayerId
+
+        if (above != null && above in involvedLayerIds && layerId in involvedLayerIds) {
+            adj[above]!!.add(layerId)
+            inDegree[layerId] = inDegree[layerId]!! + 1
+        }
+        if (below != null && below in involvedLayerIds && layerId in involvedLayerIds) {
+            adj[layerId]!!.add(below)
+            inDegree[below] = inDegree[below]!! + 1
+        }
+    }
+
+    // Kahn's algorithm with declaration-order tiebreaker: when several layers
+    // have no remaining dependencies the one declared earliest goes first
+    // (= lower in the layer stack), preserving compose-tree order for
+    // independent layers.
+    val queue = java.util.PriorityQueue<String>(compareBy { declarationOrder[it] ?: Int.MAX_VALUE })
+    for ((id, deg) in inDegree) {
+        if (deg == 0) queue.add(id)
+    }
+
+    val sortedOrder = mutableListOf<String>()
+    while (queue.isNotEmpty()) {
+        val current = queue.poll()
+        sortedOrder.add(current)
+        for (neighbor in adj[current]!!) {
+            val newDeg = inDegree[neighbor]!! - 1
+            inDegree[neighbor] = newDeg
+            if (newDeg == 0) queue.add(neighbor)
+        }
+    }
+
+    return sortedOrder
+}
+
+internal val LocalMapApplier = staticCompositionLocalOf<MapApplier> {
+    error("MapApplier not provided. Map composables must be used inside a MapLibre { } block.")
+}
+
 private object MapNodeRoot : MapNode
 
 class MapApplier(
@@ -93,12 +160,6 @@ class MapApplier(
     private val lineManagerByLayerId = mutableMapOf<String, LineManager>()
 
     private val namedLayerRegistry = mutableMapOf<String, AnnotationManager<*, *, *, *, *, *>>()
-
-    private data class PendingLayerOrder(
-        val layerId: String,
-        val aboveLayerId: String?,
-        val belowLayerId: String?
-    )
 
     private val pendingOrders = mutableListOf<PendingLayerOrder>()
 
@@ -192,27 +253,41 @@ class MapApplier(
         })
     }
 
-    fun getOrCreateCircleManagerForLayerId(
+    private fun <M : AnnotationManager<*, *, *, *, *, *>> getOrCreateManager(
         layerId: String,
         aboveLayerId: String?,
-        belowLayerId: String?
-    ): CircleManager {
-        circleManagerByLayerId[layerId]?.let { return it }
+        belowLayerId: String?,
+        cache: MutableMap<String, M>,
+        factory: (MapView, MapLibreMap, Style) -> M,
+        attachListeners: ((M) -> Unit)? = null
+    ): M {
+        cache[layerId]?.let { return it }
 
         val style = checkNotNull(style.value)
 
         if (aboveLayerId != null || belowLayerId != null) {
             pendingOrders.add(PendingLayerOrder(layerId, aboveLayerId, belowLayerId))
         }
-        val circleManager = CircleManager(mapView, map, style)
+        val manager = factory(mapView, map, style)
 
-        circleManagerByLayerId[layerId] = circleManager
-        namedLayerRegistry[layerId] = circleManager
+        cache[layerId] = manager
+        namedLayerRegistry[layerId] = manager
 
-        attachCircleManagerListeners(circleManager)
+        attachListeners?.invoke(manager)
 
-        return circleManager
+        return manager
     }
+
+    fun getOrCreateCircleManagerForLayerId(
+        layerId: String,
+        aboveLayerId: String?,
+        belowLayerId: String?
+    ): CircleManager = getOrCreateManager(
+        layerId, aboveLayerId, belowLayerId,
+        circleManagerByLayerId,
+        ::CircleManager,
+        ::attachCircleManagerListeners
+    )
 
     private fun attachCircleManagerListeners(circleManager: CircleManager) {
         circleManager.addDragListener(object : OnCircleDragListener {
@@ -259,25 +334,14 @@ class MapApplier(
         layerId: String,
         aboveLayerId: String?,
         belowLayerId: String?
-    ): SymbolManager {
-        symbolManagerByLayerId[layerId]?.let { return it }
-
-        val style = checkNotNull(style.value)
-
-        if (aboveLayerId != null || belowLayerId != null) {
-            pendingOrders.add(PendingLayerOrder(layerId, aboveLayerId, belowLayerId))
-        }
-        val symbolManager = SymbolManager(mapView, map, style)
-
-        symbolManager.iconAllowOverlap = true
-
-        symbolManagerByLayerId[layerId] = symbolManager
-        namedLayerRegistry[layerId] = symbolManager
-
-        attachSymbolManagerListeners(symbolManager)
-
-        return symbolManager
-    }
+    ): SymbolManager = getOrCreateManager(
+        layerId, aboveLayerId, belowLayerId,
+        symbolManagerByLayerId,
+        { mapView, map, style ->
+            SymbolManager(mapView, map, style).apply { iconAllowOverlap = true }
+        },
+        ::attachSymbolManagerListeners
+    )
 
     private fun attachSymbolManagerListeners(symbolManager: SymbolManager) {
         symbolManager.addDragListener(object : OnSymbolDragListener {
@@ -324,41 +388,21 @@ class MapApplier(
         layerId: String,
         aboveLayerId: String?,
         belowLayerId: String?
-    ): FillManager {
-        fillManagerByLayerId[layerId]?.let { return it }
-
-        val style = checkNotNull(style.value)
-
-        if (aboveLayerId != null || belowLayerId != null) {
-            pendingOrders.add(PendingLayerOrder(layerId, aboveLayerId, belowLayerId))
-        }
-        val fillManager = FillManager(mapView, map, style)
-
-        fillManagerByLayerId[layerId] = fillManager
-        namedLayerRegistry[layerId] = fillManager
-
-        return fillManager
-    }
+    ): FillManager = getOrCreateManager(
+        layerId, aboveLayerId, belowLayerId,
+        fillManagerByLayerId,
+        ::FillManager
+    )
 
     fun getOrCreateLineManagerForLayerId(
         layerId: String,
         aboveLayerId: String?,
         belowLayerId: String?
-    ): LineManager {
-        lineManagerByLayerId[layerId]?.let { return it }
-
-        val style = checkNotNull(style.value)
-
-        if (aboveLayerId != null || belowLayerId != null) {
-            pendingOrders.add(PendingLayerOrder(layerId, aboveLayerId, belowLayerId))
-        }
-        val lineManager = LineManager(mapView, map, style)
-
-        lineManagerByLayerId[layerId] = lineManager
-        namedLayerRegistry[layerId] = lineManager
-
-        return lineManager
-    }
+    ): LineManager = getOrCreateManager(
+        layerId, aboveLayerId, belowLayerId,
+        lineManagerByLayerId,
+        ::LineManager
+    )
 
     override fun onEndChanges() {
         super.onEndChanges()
@@ -366,58 +410,14 @@ class MapApplier(
 
         val style = style.value ?: return
 
-        // Collect every layer that participates in ordering (subjects + references).
-        val involvedLayerIds = mutableSetOf<String>()
-        for (order in pendingOrders) {
-            involvedLayerIds.add(order.layerId)
-            order.aboveLayerId?.let { involvedLayerIds.add(it) }
-            order.belowLayerId?.let { involvedLayerIds.add(it) }
-        }
-        involvedLayerIds.retainAll(namedLayerRegistry.keys)
-
-        // Declaration index derived from namedLayerRegistry insertion order
-        // (LinkedHashMap preserves insertion order, matching the compose tree).
         val declarationOrder = namedLayerRegistry.keys.withIndex()
             .associate { (index, key) -> key to index }
 
-        // Build a DAG: edge A → B means "A must be below B in the final stack".
-        val adj = involvedLayerIds.associateWith { mutableListOf<String>() }
-        val inDegree = involvedLayerIds.associateWithTo(mutableMapOf()) { 0 }
-
-        for (order in pendingOrders) {
-            val layerId = order.layerId
-            val above = order.aboveLayerId
-            val below = order.belowLayerId
-
-            if (above != null && above in involvedLayerIds && layerId in involvedLayerIds) {
-                adj[above]!!.add(layerId)
-                inDegree[layerId] = inDegree[layerId]!! + 1
-            }
-            if (below != null && below in involvedLayerIds && layerId in involvedLayerIds) {
-                adj[layerId]!!.add(below)
-                inDegree[below] = inDegree[below]!! + 1
-            }
-        }
-
-        // Kahn's algorithm with declaration-order tiebreaker: when several layers
-        // have no remaining dependencies the one declared earliest goes first
-        // (= lower in the layer stack), preserving compose-tree order for
-        // independent layers.
-        val queue = java.util.PriorityQueue<String>(compareBy { declarationOrder[it] ?: Int.MAX_VALUE })
-        for ((id, deg) in inDegree) {
-            if (deg == 0) queue.add(id)
-        }
-
-        val sortedOrder = mutableListOf<String>()
-        while (queue.isNotEmpty()) {
-            val current = queue.poll()
-            sortedOrder.add(current)
-            for (neighbor in adj[current]!!) {
-                val newDeg = inDegree[neighbor]!! - 1
-                inDegree[neighbor] = newDeg
-                if (newDeg == 0) queue.add(neighbor)
-            }
-        }
+        val sortedOrder = computeLayerOrder(
+            pendingOrders = pendingOrders,
+            registeredLayerIds = namedLayerRegistry.keys,
+            declarationOrder = declarationOrder
+        )
 
         // Walk the computed order and move each layer just above the previous
         // one, producing the desired total ordering.
@@ -611,20 +611,14 @@ internal class ImageNode(
     val id: String,
     val drawableRes: Int,
 ) : MapNode {
-    override fun onAttached() {
-        try {
-            val drawable = context.getDrawable(drawableRes)
-            val bitmap = BitmapUtils.getBitmapFromDrawable(drawable)
-            bitmap?.let { style.value?.addImage(id, it) }
-        } catch (_: IllegalStateException) {
-            // Style is being replaced and will be re-added after the new style loads
-        }
-    }
+    override fun onAttached() { loadImage() }
 
     override fun onRemoved() { style.value?.removeImage(id) }
     override fun onCleared() { style.value?.removeImage(id) }
 
-    fun reattach() {
+    fun reattach() { loadImage() }
+
+    private fun loadImage() {
         try {
             val drawable = context.getDrawable(drawableRes)
             val bitmap = BitmapUtils.getBitmapFromDrawable(drawable)

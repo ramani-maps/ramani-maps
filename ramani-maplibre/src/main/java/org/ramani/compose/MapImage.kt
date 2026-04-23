@@ -12,13 +12,12 @@ package org.ramani.compose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
-import androidx.compose.runtime.currentComposer
 import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun MapImage(id: String, drawableRes: Int) {
     val context = LocalContext.current
-    val mapApplier = currentComposer.applier as MapApplier
+    val mapApplier = LocalMapApplier.current
     ComposeNode<ImageNode, MapApplier>(
         factory = { ImageNode(mapApplier.style, context, id, drawableRes) },
         update = {}

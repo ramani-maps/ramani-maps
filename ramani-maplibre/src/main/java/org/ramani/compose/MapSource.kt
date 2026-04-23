@@ -12,12 +12,11 @@ package org.ramani.compose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
-import androidx.compose.runtime.currentComposer
 import org.maplibre.android.style.sources.Source
 
 @Composable
 fun MapSource(factory: () -> Source) {
-    val mapApplier = currentComposer.applier as MapApplier
+    val mapApplier = LocalMapApplier.current
     ComposeNode<SourceNode, MapApplier>(
         factory = { SourceNode(mapApplier.style, factory).apply { attach() } },
         update = {}

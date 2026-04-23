@@ -12,7 +12,6 @@ package org.ramani.compose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
-import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -51,7 +50,7 @@ fun Symbol(
     onClick: (JsonElement?) -> Unit = {},
     onLongClick: (JsonElement?) -> Unit = {}
 ) {
-    val mapApplier = currentComposer.applier as MapApplier
+    val mapApplier = LocalMapApplier.current
     val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
 
     imageId?.let {
@@ -118,10 +117,12 @@ fun Symbol(
 
         set(color) {
             symbol.iconColor = color
+            symbolManager.update(symbol)
         }
 
         set(imageRotation) {
             symbol.iconRotate = imageRotation
+            symbolManager.update(symbol)
         }
     })
 }

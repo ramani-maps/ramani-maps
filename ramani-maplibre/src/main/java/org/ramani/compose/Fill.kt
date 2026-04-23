@@ -12,7 +12,6 @@ package org.ramani.compose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
-import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.remember
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.plugins.annotation.FillOptions
@@ -27,7 +26,7 @@ fun Fill(
     belowLayerId: String? = null,
     isDraggable: Boolean = false,
 ) {
-    val mapApplier = currentComposer.applier as MapApplier
+    val mapApplier = LocalMapApplier.current
     val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
 
     ComposeNode<FillNode, MapApplier>(factory = {

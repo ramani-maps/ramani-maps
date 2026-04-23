@@ -12,7 +12,6 @@ package org.ramani.compose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
-import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.remember
 import com.google.gson.JsonElement
 import com.google.gson.JsonNull
@@ -37,7 +36,7 @@ fun Circle(
     onClick: (JsonElement?) -> Unit = {},
     onLongClick: (JsonElement?) -> Unit = {}
 ) {
-    val mapApplier = currentComposer.applier as MapApplier
+    val mapApplier = LocalMapApplier.current
     val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
 
     ComposeNode<CircleNode, MapApplier>(factory = {

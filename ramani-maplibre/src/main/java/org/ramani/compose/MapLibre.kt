@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
@@ -118,6 +119,8 @@ fun MapLibre(
     val currentLocationStyling by rememberUpdatedState(locationStyling)
     val currentRenderMode by rememberUpdatedState(renderMode)
     val currentHttpClient by rememberUpdatedState(httpClient)
+    val currentOnMapClick by rememberUpdatedState(onMapClick)
+    val currentOnMapLongClick by rememberUpdatedState(onMapLongClick)
     val currentContent by rememberUpdatedState(content)
     val parentComposition = rememberCompositionContext()
 
@@ -143,12 +146,12 @@ fun MapLibre(
         currentMap.value = maplibreMap
 
         maplibreMap.addOnMapClickListener { latLng ->
-            onMapClick(latLng)
+            currentOnMapClick(latLng)
             false
         }
 
         maplibreMap.addOnMapLongClickListener { latLng ->
-            onMapLongClick(latLng)
+            currentOnMapLongClick(latLng)
             false
         }
 
@@ -157,7 +160,9 @@ fun MapLibre(
             .first { it != null }
 
         mapView.newComposition(parentComposition, maplibreMap, loadedStyle) {
-            CompositionLocalProvider {
+            @Suppress("UNCHECKED_CAST")
+            val mapApplier = currentComposer.applier as MapApplier
+            CompositionLocalProvider(LocalMapApplier provides mapApplier) {
                 MapUpdater(
                     map = checkNotNull(currentMap.value),
                     style = loadedStyle,
@@ -435,6 +440,45 @@ internal class MapPropertiesNode(
     val renderMode: Int,
     val cameraMode: MutableIntState,
 ) : MapNode {
+    private val scaleListener = object : OnScaleListener {
+        override fun onScaleBegin(detector: StandardScaleGestureDetector) {}
+        override fun onScale(detector: StandardScaleGestureDetector) {
+            cameraPosition.zoom = map.cameraPosition.zoom
+        }
+        override fun onScaleEnd(detector: StandardScaleGestureDetector) {}
+    }
+
+    private val moveListener = object : OnMoveListener {
+        override fun onMoveBegin(detector: MoveGestureDetector) {}
+        override fun onMove(detector: MoveGestureDetector) {
+            cameraPosition.target = map.cameraPosition.target
+        }
+        override fun onMoveEnd(detector: MoveGestureDetector) {}
+    }
+
+    private val rotateListener = object : OnRotateListener {
+        override fun onRotateBegin(detector: RotateGestureDetector) {}
+        override fun onRotate(detector: RotateGestureDetector) {
+            cameraPosition.bearing = map.cameraPosition.bearing
+        }
+        override fun onRotateEnd(detector: RotateGestureDetector) {}
+    }
+
+    private val shoveListener = object : OnShoveListener {
+        override fun onShoveBegin(detector: ShoveGestureDetector) {}
+        override fun onShove(detector: ShoveGestureDetector) {
+            cameraPosition.tilt = map.cameraPosition.tilt
+        }
+        override fun onShoveEnd(detector: ShoveGestureDetector) {}
+    }
+
+    private val cameraIdleListener = MapLibreMap.OnCameraIdleListener {
+        cameraPosition.zoom = map.cameraPosition.zoom
+        cameraPosition.target = map.cameraPosition.target
+        cameraPosition.bearing = map.cameraPosition.bearing
+        cameraPosition.tilt = map.cameraPosition.tilt
+    }
+
     override fun onAttached() {
         map.setupLocation(
             context = context,
@@ -447,56 +491,27 @@ internal class MapPropertiesNode(
             cameraMode = cameraMode,
         )
 
-        registerCameraListeners()
+        map.addOnScaleListener(scaleListener)
+        map.addOnMoveListener(moveListener)
+        map.addOnRotateListener(rotateListener)
+        map.addOnShoveListener(shoveListener)
+        map.addOnCameraIdleListener(cameraIdleListener)
     }
 
-    private fun registerCameraListeners() {
-        map.addOnScaleListener(object : OnScaleListener {
-            override fun onScaleBegin(detector: StandardScaleGestureDetector) {}
+    override fun onRemoved() {
+        removeCameraListeners()
+    }
 
-            override fun onScale(detector: StandardScaleGestureDetector) {
-                cameraPosition.zoom = map.cameraPosition.zoom
-            }
+    override fun onCleared() {
+        removeCameraListeners()
+    }
 
-            override fun onScaleEnd(detector: StandardScaleGestureDetector) {}
-        })
-
-        map.addOnMoveListener(object : OnMoveListener {
-            override fun onMoveBegin(detector: MoveGestureDetector) {}
-
-            override fun onMove(detector: MoveGestureDetector) {
-                cameraPosition.target = map.cameraPosition.target
-            }
-
-            override fun onMoveEnd(detector: MoveGestureDetector) {}
-        })
-
-        map.addOnRotateListener(object : OnRotateListener {
-            override fun onRotateBegin(detector: RotateGestureDetector) {}
-
-            override fun onRotate(detector: RotateGestureDetector) {
-                cameraPosition.bearing = map.cameraPosition.bearing
-            }
-
-            override fun onRotateEnd(detector: RotateGestureDetector) {}
-        })
-
-        map.addOnShoveListener(object : OnShoveListener {
-            override fun onShoveBegin(detector: ShoveGestureDetector) {}
-
-            override fun onShove(detector: ShoveGestureDetector) {
-                cameraPosition.tilt = map.cameraPosition.tilt
-            }
-
-            override fun onShoveEnd(detector: ShoveGestureDetector) {}
-        })
-
-        map.addOnCameraIdleListener {
-            cameraPosition.zoom = map.cameraPosition.zoom
-            cameraPosition.target = map.cameraPosition.target
-            cameraPosition.bearing = map.cameraPosition.bearing
-            cameraPosition.tilt = map.cameraPosition.tilt
-        }
+    private fun removeCameraListeners() {
+        map.removeOnScaleListener(scaleListener)
+        map.removeOnMoveListener(moveListener)
+        map.removeOnRotateListener(rotateListener)
+        map.removeOnShoveListener(shoveListener)
+        map.removeOnCameraIdleListener(cameraIdleListener)
     }
 }
 

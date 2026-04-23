@@ -12,7 +12,6 @@ package org.ramani.compose
 
 import android.graphics.PointF
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.currentComposer
 import androidx.core.graphics.minus
 import androidx.core.graphics.plus
 import org.maplibre.android.geometry.LatLng
@@ -22,7 +21,7 @@ fun VertexInsertCalculator(
     vertices: List<LatLng>,
     onPointsChanged: (List<LatLng>) -> Unit
 ) {
-    val mapApplier = currentComposer.applier as MapApplier
+    val mapApplier = LocalMapApplier.current
     val projection = mapApplier.map.projection
 
     val vertexPixel = vertices.map { vertex ->

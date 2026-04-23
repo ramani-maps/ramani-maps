@@ -12,7 +12,6 @@ package org.ramani.compose
 
 import android.graphics.PointF
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.core.graphics.minus
@@ -27,7 +26,7 @@ private fun AzimuthCalculator(
     refPos: LatLng,
     onAzimuthChanged: (Float) -> Unit
 ) {
-    val mapApplier = currentComposer.applier as MapApplier
+    val mapApplier = LocalMapApplier.current
     val projection = mapApplier.map.projection
 
     val localA = projection.toScreenLocation(posA)
@@ -52,7 +51,7 @@ private fun VertexDragger(
         return
     }
 
-    val mapApplier = currentComposer.applier as MapApplier
+    val mapApplier = LocalMapApplier.current
     val projection = mapApplier.map.projection
 
     var currentCenter = PointF()

@@ -537,6 +537,7 @@ internal class SourceNode(
 ) : MapNode {
     var source: Source? = null
         private set
+    var onUpdate: ((Source) -> Unit)? = null
 
     fun attach() {
         source = factory()
@@ -574,6 +575,7 @@ internal class LayerNode(
 ) : MapNode {
     var layer: Layer? = null
         private set
+    var onUpdate: ((Layer) -> Unit)? = null
 
     fun attach() {
         layer = factory()
@@ -609,7 +611,7 @@ internal class ImageNode(
     val style: MutableState<Style?>,
     val context: Context,
     val id: String,
-    val drawableRes: Int,
+    var drawableRes: Int,
 ) : MapNode {
     override fun onAttached() { loadImage() }
 
@@ -618,7 +620,7 @@ internal class ImageNode(
 
     fun reattach() { loadImage() }
 
-    private fun loadImage() {
+    fun loadImage() {
         try {
             val drawable = context.getDrawable(drawableRes)
             val bitmap = BitmapUtils.getBitmapFromDrawable(drawable)

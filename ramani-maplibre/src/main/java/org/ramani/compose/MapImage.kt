@@ -20,6 +20,12 @@ fun MapImage(id: String, drawableRes: Int) {
     val mapApplier = LocalMapApplier.current
     ComposeNode<ImageNode, MapApplier>(
         factory = { ImageNode(mapApplier.style, context, id, drawableRes) },
-        update = {}
+        update = {
+            set(drawableRes) {
+                this.drawableRes = it
+                style.value?.removeImage(id)
+                loadImage()
+            }
+        }
     )
 }

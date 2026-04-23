@@ -14,11 +14,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import org.maplibre.android.style.sources.Source
 
+/**
+ * Adds a [Source] to the map style.
+ *
+ * @param update Optional lambda called when recomposition occurs, receiving the current [Source].
+ *        Use this to update the source in-place — for example, calling `setGeoJson()` on a
+ *        [org.maplibre.android.style.sources.GeoJsonSource].
+ * @param factory Creates the source. Called during initial composition and on style reload.
+ */
 @Composable
-fun MapSource(factory: () -> Source) {
+fun MapSource(
+    update: ((Source) -> Unit)? = null,
+    factory: () -> Source,
+) {
     val mapApplier = LocalMapApplier.current
     ComposeNode<SourceNode, MapApplier>(
         factory = { SourceNode(mapApplier.style, factory).apply { attach() } },
-        update = {}
+        update = {
+            update(update) {
+                this.onUpdate = it
+                it?.let { updater -> source?.let(updater) }
+            }
+        }
     )
 }

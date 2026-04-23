@@ -13,6 +13,7 @@ package org.ramani.compose
 import androidx.compose.runtime.mutableStateOf
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -249,5 +250,59 @@ class SourceLayerImageNodeTest {
         node.onAttached()
         node.onRemoved()
         node.onCleared()
+    }
+
+    // --- SourceNode onUpdate ---
+
+    @Test
+    fun sourceNode_onUpdate_calledWithSource() = withStyle { style ->
+        val node = SourceNode(mutableStateOf(style)) { GeoJsonSource("update-source") }
+        node.attach()
+
+        var receivedSource: org.maplibre.android.style.sources.Source? = null
+        node.onUpdate = { receivedSource = it }
+        node.source?.let { node.onUpdate?.invoke(it) }
+
+        assertNotNull("onUpdate should receive the source", receivedSource)
+        assertEquals("update-source", receivedSource?.id)
+    }
+
+    @Test
+    fun sourceNode_onUpdate_notCalledWhenNull() = withStyle { style ->
+        val node = SourceNode(mutableStateOf(style)) { GeoJsonSource("no-update-source") }
+        node.attach()
+
+        var called = false
+        node.onUpdate = null
+        node.onUpdate?.let { called = true }
+
+        assertTrue("onUpdate should not be called when null", !called)
+    }
+
+    // --- LayerNode onUpdate ---
+
+    @Test
+    fun layerNode_onUpdate_calledWithLayer() = withStyle { style ->
+        val node = LayerNode(mutableStateOf(style)) { BackgroundLayer("update-layer") }
+        node.attach()
+
+        var receivedLayer: org.maplibre.android.style.layers.Layer? = null
+        node.onUpdate = { receivedLayer = it }
+        node.layer?.let { node.onUpdate?.invoke(it) }
+
+        assertNotNull("onUpdate should receive the layer", receivedLayer)
+        assertEquals("update-layer", receivedLayer?.id)
+    }
+
+    @Test
+    fun layerNode_onUpdate_notCalledWhenNull() = withStyle { style ->
+        val node = LayerNode(mutableStateOf(style)) { BackgroundLayer("no-update-layer") }
+        node.attach()
+
+        var called = false
+        node.onUpdate = null
+        node.onUpdate?.let { called = true }
+
+        assertTrue("onUpdate should not be called when null", !called)
     }
 }

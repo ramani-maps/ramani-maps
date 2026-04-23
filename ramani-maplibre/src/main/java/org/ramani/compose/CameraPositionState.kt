@@ -11,8 +11,15 @@
 package org.ramani.compose
 
 import android.os.Parcelable
-import org.maplibre.android.geometry.LatLng
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import kotlinx.parcelize.Parcelize
+import org.maplibre.android.geometry.LatLng
 import org.ramani.compose.CameraMotionType.EASE
 import org.ramani.compose.CameraMotionType.FLY
 import org.ramani.compose.CameraMotionType.INSTANT
@@ -27,44 +34,74 @@ import org.ramani.compose.CameraMotionType.INSTANT
 enum class CameraMotionType : Parcelable { INSTANT, EASE, FLY }
 
 @Parcelize
-class CameraPosition(
-    var target: LatLng? = null,
-    var zoom: Double? = null,
-    var tilt: Double? = null,
-    var bearing: Double? = null,
-    var motionType: CameraMotionType = FLY,
-    var animationDurationMs: Int = 1000,
-) : Parcelable {
-    constructor(cameraPosition: CameraPosition) : this(
-        cameraPosition.target,
-        cameraPosition.zoom,
-        cameraPosition.tilt,
-        cameraPosition.bearing,
-        cameraPosition.motionType,
-        cameraPosition.animationDurationMs,
-    )
+data class CameraPosition(
+    val target: LatLng? = null,
+    val zoom: Double? = null,
+    val tilt: Double? = null,
+    val bearing: Double? = null,
+    val motionType: CameraMotionType = FLY,
+    val animationDurationMs: Int = 1000,
+) : Parcelable
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+/**
+ * A state holder for the camera position, providing bidirectional synchronisation
+ * between user code and the map:
+ *
+ * - **User → map:** Setting [position] triggers a camera animation on the map.
+ * - **Map → user:** Gesture-driven camera changes (pan, zoom, rotate, tilt) are
+ *   reflected in [position] so that composables reading it recompose automatically.
+ *
+ * Use [rememberCameraPositionState] to create an instance that survives recomposition
+ * and configuration changes.
+ */
+class CameraPositionState(initialPosition: CameraPosition = CameraPosition()) {
+    private var _position by mutableStateOf(initialPosition)
 
-        other as CameraPosition
+    /**
+     * The current camera position. Setting this triggers a camera animation on the map.
+     * Reading this always returns the latest position, including gesture-driven updates.
+     */
+    var position: CameraPosition
+        get() = _position
+        set(value) {
+            _position = value
+            _moveGeneration++
+        }
 
-        if (target != other.target) return false
-        if (zoom != other.zoom) return false
-        if (tilt != other.tilt) return false
-        if (bearing != other.bearing) return false
-        if (motionType != other.motionType) return false
-        return animationDurationMs == other.animationDurationMs
+    // Incremented only on programmatic changes (public setter). MapUpdater watches this
+    // to distinguish user-initiated moves (which need animation) from gesture-driven
+    // updates (which don't, since the map is already at the right position).
+    private var _moveGeneration by mutableIntStateOf(0)
+    internal val moveGeneration: Int get() = _moveGeneration
+
+    // Called by gesture and camera-idle listeners to update the position without
+    // triggering a redundant camera animation.
+    internal fun updatePositionFromMap(
+        target: LatLng? = _position.target,
+        zoom: Double? = _position.zoom,
+        tilt: Double? = _position.tilt,
+        bearing: Double? = _position.bearing,
+    ) {
+        _position = _position.copy(target = target, zoom = zoom, tilt = tilt, bearing = bearing)
     }
 
-    override fun hashCode(): Int {
-        var result = target?.hashCode() ?: 0
-        result = 31 * result + (zoom?.hashCode() ?: 0)
-        result = 31 * result + (tilt?.hashCode() ?: 0)
-        result = 31 * result + (bearing?.hashCode() ?: 0)
-        result = 31 * result + motionType.hashCode()
-        result = 31 * result + animationDurationMs
-        return result
+    companion object {
+        val Saver: Saver<CameraPositionState, CameraPosition> = Saver(
+            save = { it.position },
+            restore = { CameraPositionState(it) }
+        )
     }
+}
+
+/**
+ * Creates and remembers a [CameraPositionState] that survives recomposition and
+ * configuration changes.
+ *
+ * @param init The initial camera position.
+ */
+@Composable
+fun rememberCameraPositionState(
+    init: CameraPosition = CameraPosition()
+): CameraPositionState = rememberSaveable(saver = CameraPositionState.Saver) {
+    CameraPositionState(init)
 }

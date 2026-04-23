@@ -27,6 +27,7 @@ import org.maplibre.android.location.modes.CameraMode
 import org.maplibre.android.location.modes.RenderMode
 import org.maplibre.android.maps.Style
 import org.ramani.compose.CameraPosition
+import org.ramani.compose.rememberCameraPositionState
 import org.ramani.compose.LocationRequestProperties
 import org.ramani.compose.LocationStyling
 import org.ramani.compose.MapLibre
@@ -43,8 +44,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             LocationTheme {
                 val locationProperties = rememberSaveable { locationPropertiesState }
-                val cameraPosition =
-                    rememberSaveable { mutableStateOf(CameraPosition(zoom = 14.0)) }
+                val cameraPositionState =
+                    rememberCameraPositionState(CameraPosition(zoom = 14.0))
                 val userLocation = rememberSaveable { mutableStateOf(Location(null)) }
                 val cameraMode = rememberSaveable { mutableIntStateOf(CameraMode.TRACKING) }
                 val renderMode = rememberSaveable { mutableIntStateOf(RenderMode.COMPASS) }
@@ -60,7 +61,7 @@ class MainActivity : ComponentActivity() {
                         MapLibre(
                             modifier = Modifier.fillMaxSize(),
                             styleBuilder = styleBuilder,
-                            cameraPosition = cameraPosition.value,
+                            cameraPositionState = cameraPositionState,
                             locationRequestProperties = locationProperties.value,
                             locationStyling = LocationStyling(
                                 enablePulse = true,
@@ -106,12 +107,12 @@ class MainActivity : ComponentActivity() {
                         Button(
                             modifier = Modifier.align(Alignment.CenterHorizontally),
                             onClick = {
-                                cameraPosition.value = CameraPosition(cameraPosition.value).apply {
-                                    this.target = LatLng(
+                                cameraPositionState.position = cameraPositionState.position.copy(
+                                    target = LatLng(
                                         userLocation.value.latitude,
                                         userLocation.value.longitude
                                     )
-                                }
+                                )
                             },
                         ) {
                             Text(text = "Center on device location")

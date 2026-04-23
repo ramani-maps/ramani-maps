@@ -29,7 +29,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCompositionContext
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.first
 import androidx.compose.ui.Modifier
@@ -68,7 +67,9 @@ import org.maplibre.android.module.http.HttpRequestUtil
  *
  * @param modifier The modifier applied to the map.
  * @param style The map style definition. Defaults to the MapLibre demo tiles.
- * @param cameraPosition The position of the map camera.
+ * @param cameraPositionState The state holder for the camera position. Provides bidirectional
+ *        synchronisation: set [CameraPositionState.position] to move the camera programmatically,
+ *        read it to observe gesture-driven changes.
  * @param uiSettings Settings related to the map UI.
  * @param properties Properties being applied to the map.
  * @param locationRequestProperties Properties related to the location marker. If null (which is
@@ -89,7 +90,7 @@ import org.maplibre.android.module.http.HttpRequestUtil
 fun MapLibre(
     modifier: Modifier,
     style: MapStyle = MapStyle.Default,
-    cameraPosition: CameraPosition = rememberSaveable { CameraPosition() },
+    cameraPositionState: CameraPositionState = rememberCameraPositionState(),
     uiSettings: UiSettings = UiSettings(),
     properties: MapProperties = MapProperties(),
     locationRequestProperties: LocationRequestProperties = LocationRequestProperties(),
@@ -111,7 +112,6 @@ fun MapLibre(
     }
 
     val currentStyle by rememberUpdatedState(style)
-    val currentCameraPosition by rememberUpdatedState(cameraPosition)
     val currentUiSettings by rememberUpdatedState(uiSettings)
     val currentMapProperties by rememberUpdatedState(properties)
     val currentLocationRequestProperties by rememberUpdatedState(locationRequestProperties)
@@ -166,7 +166,7 @@ fun MapLibre(
                 MapUpdater(
                     map = checkNotNull(currentMap.value),
                     style = loadedStyle,
-                    cameraPosition = currentCameraPosition,
+                    cameraPositionState = cameraPositionState,
                     uiSettings = currentUiSettings,
                     properties = currentMapProperties,
                     locationRequestProperties = currentLocationRequestProperties,
@@ -348,7 +348,7 @@ private fun LocationRequestProperties.toMapLibre(): LocationEngineRequest {
 internal fun MapUpdater(
     map: MapLibreMap,
     style: MutableState<Style?>,
-    cameraPosition: CameraPosition,
+    cameraPositionState: CameraPositionState,
     uiSettings: UiSettings,
     properties: MapProperties,
     locationRequestProperties: LocationRequestProperties,
@@ -368,7 +368,7 @@ internal fun MapUpdater(
             style = style,
             uiSettings = uiSettings,
             properties = properties,
-            cameraPosition = cameraPosition,
+            cameraPositionState = cameraPositionState,
             locationRequestProperties = locationRequestProperties,
             locationEngine = locationEngine,
             locationStyling = locationStyling,
@@ -405,8 +405,8 @@ internal fun MapUpdater(
             map.locationComponent.renderMode = renderMode
         }
 
-        update(cameraPosition) {
-            this.cameraPosition = it
+        update(cameraPositionState.moveGeneration) {
+            val cameraPosition = cameraPositionState.position
             val cameraUpdate = CameraUpdateFactory.newCameraPosition(cameraPosition.toMapLibre())
 
             when (cameraPosition.motionType) {
@@ -432,7 +432,7 @@ internal class MapPropertiesNode(
     val style: MutableState<Style?>,
     val uiSettings: UiSettings,
     val properties: MapProperties,
-    var cameraPosition: CameraPosition,
+    val cameraPositionState: CameraPositionState,
     val locationRequestProperties: LocationRequestProperties,
     val locationEngine: LocationEngine?,
     val locationStyling: LocationStyling,
@@ -443,7 +443,7 @@ internal class MapPropertiesNode(
     private val scaleListener = object : OnScaleListener {
         override fun onScaleBegin(detector: StandardScaleGestureDetector) {}
         override fun onScale(detector: StandardScaleGestureDetector) {
-            cameraPosition.zoom = map.cameraPosition.zoom
+            cameraPositionState.updatePositionFromMap(zoom = map.cameraPosition.zoom)
         }
         override fun onScaleEnd(detector: StandardScaleGestureDetector) {}
     }
@@ -451,7 +451,7 @@ internal class MapPropertiesNode(
     private val moveListener = object : OnMoveListener {
         override fun onMoveBegin(detector: MoveGestureDetector) {}
         override fun onMove(detector: MoveGestureDetector) {
-            cameraPosition.target = map.cameraPosition.target
+            cameraPositionState.updatePositionFromMap(target = map.cameraPosition.target)
         }
         override fun onMoveEnd(detector: MoveGestureDetector) {}
     }
@@ -459,7 +459,7 @@ internal class MapPropertiesNode(
     private val rotateListener = object : OnRotateListener {
         override fun onRotateBegin(detector: RotateGestureDetector) {}
         override fun onRotate(detector: RotateGestureDetector) {
-            cameraPosition.bearing = map.cameraPosition.bearing
+            cameraPositionState.updatePositionFromMap(bearing = map.cameraPosition.bearing)
         }
         override fun onRotateEnd(detector: RotateGestureDetector) {}
     }
@@ -467,16 +467,18 @@ internal class MapPropertiesNode(
     private val shoveListener = object : OnShoveListener {
         override fun onShoveBegin(detector: ShoveGestureDetector) {}
         override fun onShove(detector: ShoveGestureDetector) {
-            cameraPosition.tilt = map.cameraPosition.tilt
+            cameraPositionState.updatePositionFromMap(tilt = map.cameraPosition.tilt)
         }
         override fun onShoveEnd(detector: ShoveGestureDetector) {}
     }
 
     private val cameraIdleListener = MapLibreMap.OnCameraIdleListener {
-        cameraPosition.zoom = map.cameraPosition.zoom
-        cameraPosition.target = map.cameraPosition.target
-        cameraPosition.bearing = map.cameraPosition.bearing
-        cameraPosition.tilt = map.cameraPosition.tilt
+        cameraPositionState.updatePositionFromMap(
+            target = map.cameraPosition.target,
+            zoom = map.cameraPosition.zoom,
+            bearing = map.cameraPosition.bearing,
+            tilt = map.cameraPosition.tilt,
+        )
     }
 
     override fun onAttached() {

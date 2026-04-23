@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.maplibre.android.geometry.LatLng
 import org.ramani.compose.CameraPosition
+import org.ramani.compose.rememberCameraPositionState
 import org.ramani.compose.MapStyle
 import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
@@ -32,14 +33,12 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             AnnotationSimpleTheme {
-                val cameraPosition = rememberSaveable {
-                    mutableStateOf(
-                        CameraPosition(
-                            target = LatLng(46.0, 4.8),
-                            zoom = 2.0,
-                        )
+                val cameraPositionState = rememberCameraPositionState(
+                    CameraPosition(
+                        target = LatLng(46.0, 4.8),
+                        zoom = 2.0,
                     )
-                }
+                )
                 val symbolCenter = rememberSaveable { mutableStateOf(LatLng(4.9, 46.1)) }
                 val circleCenter = rememberSaveable { mutableStateOf(LatLng(4.8, 46.0)) }
                 val isDefaultStyle = rememberSaveable { mutableStateOf(true) }
@@ -54,7 +53,7 @@ class MainActivity : ComponentActivity() {
                         MapLibre(
                             modifier = Modifier.fillMaxSize(),
                             style = mapStyle,
-                            cameraPosition = cameraPosition.value,
+                            cameraPositionState = cameraPositionState,
                         ) {
                             Circle(
                                 center = circleCenter.value,

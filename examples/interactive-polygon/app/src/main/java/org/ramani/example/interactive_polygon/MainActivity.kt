@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.Style
 import org.ramani.compose.CameraPosition
+import org.ramani.compose.rememberCameraPositionState
 import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
 import org.ramani.compose.Polygon
@@ -35,9 +36,9 @@ class MainActivity : ComponentActivity() {
             InteractivePolygonTheme {
                 var polygonCenter = LatLng(44.989, 10.809)
                 var polygonState by rememberSaveable { mutableStateOf(polygonPoints) }
-                val cameraPosition = rememberSaveable {
-                    mutableStateOf(CameraPosition(target = polygonCenter, zoom = 15.0))
-                }
+                val cameraPositionState = rememberCameraPositionState(
+                    CameraPosition(target = polygonCenter, zoom = 15.0)
+                )
 
                 val isDefaultStyle = rememberSaveable { mutableStateOf(true) }
                 val styleUrl = rememberSaveable { mutableStateOf(DEFAULT_STYLE_URL) }
@@ -51,7 +52,7 @@ class MainActivity : ComponentActivity() {
                         MapLibre(
                             modifier = Modifier.fillMaxSize(),
                             styleBuilder = styleBuilder,
-                            cameraPosition = cameraPosition.value,
+                            cameraPositionState = cameraPositionState,
                         ) {
                             polygonState.forEachIndexed { index, vertex ->
                                 Circle(
@@ -97,10 +98,10 @@ class MainActivity : ComponentActivity() {
                         Button(
                             modifier = Modifier.align(Alignment.CenterHorizontally),
                             onClick = {
-                                cameraPosition.value = CameraPosition(cameraPosition.value).apply {
-                                    this.target = polygonCenter
-                                    this.animationDurationMs = 3000
-                                }
+                                cameraPositionState.position = cameraPositionState.position.copy(
+                                    target = polygonCenter,
+                                    animationDurationMs = 3000,
+                                )
                             },
                         ) {
                             Text(text = "Center on polygon")

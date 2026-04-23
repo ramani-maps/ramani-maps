@@ -26,6 +26,7 @@ import org.maplibre.android.style.sources.GeoJsonSource
 import org.maplibre.android.style.sources.RasterSource
 import org.maplibre.android.style.sources.VectorSource
 import org.ramani.compose.CameraPosition
+import org.ramani.compose.rememberCameraPositionState
 import org.ramani.compose.Circle
 import org.ramani.compose.MapLayer
 import org.ramani.compose.MapLibre
@@ -50,11 +51,9 @@ class MainActivity : ComponentActivity() {
         val maptilerKey = resources.getString(R.string.maptiler_api_key)
 
         setContent {
-            val cameraPosition = rememberSaveable {
-                mutableStateOf(
-                    CameraPosition(target = LatLng(46.6, 7.1), zoom = 8.0)
-                )
-            }
+            val cameraPositionState = rememberCameraPositionState(
+                CameraPosition(target = LatLng(46.6, 7.1), zoom = 8.0)
+            )
             val isDefaultStyle = rememberSaveable { mutableStateOf(true) }
             val styleUrl = rememberSaveable { mutableStateOf(DEFAULT_STYLE_URL) }
             val uiSettings = rememberSaveable {
@@ -73,7 +72,7 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxSize(),
                             style = MapStyle.Uri(styleUrl.value),
                             uiSettings = uiSettings.value,
-                            cameraPosition = cameraPosition.value,
+                            cameraPositionState = cameraPositionState,
                         ) {
                             MapSource {
                                 GeoJsonSource(

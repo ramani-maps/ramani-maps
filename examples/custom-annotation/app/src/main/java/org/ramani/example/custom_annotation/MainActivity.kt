@@ -13,6 +13,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import org.maplibre.android.geometry.LatLng
 import org.ramani.compose.CameraPosition
+import org.ramani.compose.rememberCameraPositionState
 import org.ramani.compose.MapLibre
 import org.ramani.compose.MapObserver
 import org.ramani.example.custom_annotation.ui.theme.CustomAnnotationTheme
@@ -23,14 +24,12 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             CustomAnnotationTheme {
-                val cameraPosition = rememberSaveable {
-                    mutableStateOf(
-                        CameraPosition(
-                            target = LatLng(44.989, 10.809),
-                            zoom = 6.0
-                        )
+                val cameraPositionState = rememberCameraPositionState(
+                    CameraPosition(
+                        target = LatLng(44.989, 10.809),
+                        zoom = 6.0
                     )
-                }
+                )
                 val progress = remember { mutableFloatStateOf(0.0f) }
 
                 Surface(
@@ -39,7 +38,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     MapLibre(
                         modifier = Modifier.fillMaxSize(),
-                        cameraPosition = cameraPosition.value
+                        cameraPositionState = cameraPositionState
                     ) {
                         MapObserver(onMapRotated = {
                             progress.floatValue = (it / 360).toFloat()

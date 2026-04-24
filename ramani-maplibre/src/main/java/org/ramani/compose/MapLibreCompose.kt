@@ -541,7 +541,10 @@ internal class SourceNode(
 
     fun attach() {
         source = factory()
-        style.value?.addSource(source!!)
+        style.value?.let { s ->
+            s.getSource(source!!.id)?.let { existing -> s.removeSource(existing) }
+            s.addSource(source!!)
+        }
     }
 
     override fun onAttached() {
@@ -579,7 +582,10 @@ internal class LayerNode(
 
     fun attach() {
         layer = factory()
-        style.value?.addLayer(layer!!)
+        style.value?.let { s ->
+            s.getLayer(layer!!.id)?.let { existing -> s.removeLayer(existing) }
+            s.addLayer(layer!!)
+        }
     }
 
     override fun onAttached() {

@@ -4,20 +4,33 @@ import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.maplibre.android.MapLibre
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.style.expressions.Expression
+import org.maplibre.android.style.layers.CircleLayer
 import org.maplibre.android.style.layers.FillLayer
 import org.maplibre.android.style.layers.LineLayer
 import org.maplibre.android.style.layers.PropertyFactory
@@ -26,14 +39,12 @@ import org.maplibre.android.style.sources.GeoJsonSource
 import org.maplibre.android.style.sources.RasterSource
 import org.maplibre.android.style.sources.VectorSource
 import org.ramani.compose.CameraPosition
-import org.ramani.compose.rememberCameraPositionState
-import org.ramani.compose.Circle
 import org.ramani.compose.MapLayer
 import org.ramani.compose.MapLibre
 import org.ramani.compose.MapSource
 import org.ramani.compose.MapStyle
-import org.ramani.compose.Symbol
 import org.ramani.compose.UiSettings
+import org.ramani.compose.rememberCameraPositionState
 import org.ramani.example.custom_layers.ui.theme.CustomLayersTheme
 import java.net.URI
 
@@ -62,6 +73,14 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
+            // Toggle states for each custom layer group
+            var showNoFlyZones by rememberSaveable { mutableStateOf(true) }
+            var showHillshades by rememberSaveable { mutableStateOf(true) }
+            var showContours by rememberSaveable { mutableStateOf(false) }
+
+            // Reactive update demo: slider-controlled circle radius
+            var circleRadius by rememberSaveable { mutableFloatStateOf(8f) }
+
             CustomLayersTheme {
                 Box {
                     Surface(
@@ -74,90 +93,157 @@ class MainActivity : ComponentActivity() {
                             uiSettings = uiSettings.value,
                             cameraPositionState = cameraPositionState,
                         ) {
-                            MapSource {
-                                GeoJsonSource(
-                                    "no-fly-zones",
-                                    URI("https://data.geo.admin.ch/ch.bazl.einschraenkungen-drohnen/einschraenkungen-drohnen/einschraenkungen-drohnen_4326.geojson"),
-                                )
+                            // --- Toggleable layers ---
+
+                            if (showNoFlyZones) {
+                                MapSource {
+                                    GeoJsonSource(
+                                        "no-fly-zones",
+                                        URI("https://data.geo.admin.ch/ch.bazl.einschraenkungen-drohnen/einschraenkungen-drohnen/einschraenkungen-drohnen_4326.geojson"),
+                                    )
+                                }
+                                MapLayer {
+                                    FillLayer("nfz-fill", "no-fly-zones").apply {
+                                        setProperties(
+                                            PropertyFactory.fillColor(
+                                                Expression.switchCase(
+                                                    Expression.has("fill"),
+                                                    Expression.get("fill"),
+                                                    Expression.color(Color.BLUE),
+                                                )
+                                            ),
+                                            PropertyFactory.fillOpacity(
+                                                Expression.switchCase(
+                                                    Expression.has("fill-opacity"),
+                                                    Expression.get("fill-opacity"),
+                                                    Expression.literal(0.4F),
+                                                )
+                                            ),
+                                        )
+                                    }
+                                }
+                                MapLayer {
+                                    LineLayer("nfz-poly", "no-fly-zones").apply {
+                                        setProperties(
+                                            PropertyFactory.lineColor(
+                                                Expression.switchCase(
+                                                    Expression.has("stroke"),
+                                                    Expression.get("stroke"),
+                                                    Expression.color(Color.BLUE),
+                                                )
+                                            ),
+                                            PropertyFactory.lineWidth(
+                                                Expression.switchCase(
+                                                    Expression.has("stroke-width"),
+                                                    Expression.get("stroke-width"),
+                                                    Expression.literal(2),
+                                                )
+                                            ),
+                                            PropertyFactory.lineOpacity(
+                                                Expression.switchCase(
+                                                    Expression.has("stroke-opacity"),
+                                                    Expression.get("stroke-opacity"),
+                                                    Expression.literal(0.4F),
+                                                )
+                                            ),
+                                        )
+                                    }
+                                }
                             }
-                            MapSource {
-                                VectorSource(
-                                    "contours",
-                                    "https://tile.thunderforest.com/thunderforest.outdoors-v2.json?apikey=$thunderKey",
-                                )
+
+                            if (showHillshades) {
+                                MapSource {
+                                    RasterSource(
+                                        "hillshades",
+                                        "https://api.maptiler.com/tiles/hillshade/tiles.json?key=$maptilerKey",
+                                    )
+                                }
+                                MapLayer {
+                                    RasterLayer("hillshades-layer", "hillshades")
+                                }
                             }
-                            MapSource {
-                                RasterSource(
-                                    "hillshades",
-                                    "https://api.maptiler.com/tiles/hillshade/tiles.json?key=$maptilerKey",
-                                )
+
+                            if (showContours) {
+                                MapSource {
+                                    VectorSource(
+                                        "contours",
+                                        "https://tile.thunderforest.com/thunderforest.outdoors-v2.json?apikey=$thunderKey",
+                                    )
+                                }
+                                MapLayer {
+                                    LineLayer("contour", "contours").apply {
+                                        sourceLayer = "elevation"
+                                    }
+                                }
                             }
-                            MapLayer {
-                                FillLayer("nfz-fill", "no-fly-zones").apply {
+
+                            // --- Reactive update demo: slider-controlled circles ---
+
+                            MapSource {
+                                GeoJsonSource("circle-points").apply {
+                                    setGeoJson(circlePointsGeoJson())
+                                }
+                            }
+                            MapLayer(
+                                update = { layer ->
+                                    layer.setProperties(
+                                        PropertyFactory.circleRadius(circleRadius),
+                                        PropertyFactory.circleColor(
+                                            radiusToColor(circleRadius)
+                                        ),
+                                        PropertyFactory.circleOpacity(0.7f),
+                                    )
+                                },
+                                keys = listOf(circleRadius),
+                            ) {
+                                CircleLayer("circle-points-layer", "circle-points").apply {
                                     setProperties(
-                                        PropertyFactory.fillColor(
-                                            Expression.switchCase(
-                                                Expression.has("fill"),
-                                                Expression.get("fill"),
-                                                Expression.color(Color.BLUE),
-                                            )
+                                        PropertyFactory.circleRadius(circleRadius),
+                                        PropertyFactory.circleColor(
+                                            radiusToColor(circleRadius)
                                         ),
-                                        PropertyFactory.fillOpacity(
-                                            Expression.switchCase(
-                                                Expression.has("fill-opacity"),
-                                                Expression.get("fill-opacity"),
-                                                Expression.literal(0.4F),
-                                            )
-                                        ),
+                                        PropertyFactory.circleOpacity(0.7f),
                                     )
                                 }
                             }
-                            MapLayer {
-                                LineLayer("nfz-poly", "no-fly-zones").apply {
-                                    setProperties(
-                                        PropertyFactory.lineColor(
-                                            Expression.switchCase(
-                                                Expression.has("stroke"),
-                                                Expression.get("stroke"),
-                                                Expression.color(Color.BLUE),
-                                            )
-                                        ),
-                                        PropertyFactory.lineWidth(
-                                            Expression.switchCase(
-                                                Expression.has("stroke-width"),
-                                                Expression.get("stroke-width"),
-                                                Expression.literal(2),
-                                            )
-                                        ),
-                                        PropertyFactory.lineOpacity(
-                                            Expression.switchCase(
-                                                Expression.has("stroke-opacity"),
-                                                Expression.get("stroke-opacity"),
-                                                Expression.literal(0.4F),
-                                            )
-                                        ),
-                                    )
-                                }
-                            }
-                            MapLayer {
-                                RasterLayer("hillshades-layer", "hillshades")
-                            }
-                            MapLayer {
-                                LineLayer("contour", "contours").apply {
-                                    sourceLayer = "elevation"
-                                }
-                            }
-                            Circle(
-                                center = LatLng(46.5, 6.4),
-                                radius = 40F,
-                                isDraggable = true,
-                            )
-                            Symbol(center = LatLng(46.5, 6.4))
                         }
                     }
+
                     Column(
                         modifier = Modifier.align(Alignment.BottomCenter),
                     ) {
+                        // Circle radius slider
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                "Radius: ${circleRadius.toInt()}",
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(end = 8.dp),
+                            )
+                            Slider(
+                                value = circleRadius,
+                                onValueChange = { circleRadius = it },
+                                valueRange = 2f..40f,
+                            )
+                        }
+
+                        // Layer toggle buttons
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                        ) {
+                            ToggleButton("NFZ", showNoFlyZones) { showNoFlyZones = it }
+                            ToggleButton("Hills", showHillshades) { showHillshades = it }
+                            ToggleButton("Contours", showContours) { showContours = it }
+                        }
+
+                        // Existing buttons
                         Button(
                             modifier = Modifier.align(Alignment.CenterHorizontally),
                             onClick = {
@@ -186,4 +272,37 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
+
+@Composable
+private fun ToggleButton(label: String, enabled: Boolean, onToggle: (Boolean) -> Unit) {
+    Button(
+        onClick = { onToggle(!enabled) },
+        colors = if (enabled) ButtonDefaults.buttonColors()
+        else ButtonDefaults.outlinedButtonColors(),
+    ) {
+        Text(if (enabled) "$label ON" else "$label OFF", fontSize = 11.sp)
+    }
+}
+
+/** GeoJSON FeatureCollection with a few points around Bern/Lausanne. */
+private fun circlePointsGeoJson(): String = """
+{
+  "type": "FeatureCollection",
+  "features": [
+    {"type":"Feature","geometry":{"type":"Point","coordinates":[7.45,46.95]},"properties":{}},
+    {"type":"Feature","geometry":{"type":"Point","coordinates":[6.63,46.52]},"properties":{}},
+    {"type":"Feature","geometry":{"type":"Point","coordinates":[7.59,47.56]},"properties":{}},
+    {"type":"Feature","geometry":{"type":"Point","coordinates":[8.54,47.37]},"properties":{}},
+    {"type":"Feature","geometry":{"type":"Point","coordinates":[6.14,46.20]},"properties":{}}
+  ]
+}
+""".trimIndent()
+
+/** Maps the radius slider value to a colour: blue (small) -> red (large). */
+private fun radiusToColor(radius: Float): Int {
+    val t = ((radius - 2f) / 38f).coerceIn(0f, 1f)
+    val r = (255 * t).toInt()
+    val b = (255 * (1 - t)).toInt()
+    return Color.rgb(r, 0, b)
 }

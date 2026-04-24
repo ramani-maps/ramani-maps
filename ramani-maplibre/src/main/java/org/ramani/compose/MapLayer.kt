@@ -17,23 +17,29 @@ import org.maplibre.android.style.layers.Layer
 /**
  * Adds a [Layer] to the map style.
  *
- * @param factory Creates the layer. Called during initial composition and on style reload.
  * @param update Optional lambda called when recomposition occurs, receiving the current [Layer].
  *        Use this to update layer properties in-place — for example, calling `setProperties()`
  *        to change paint or layout values, or toggling visibility.
+ * @param keys Values that should trigger the [update] callback when they change. Pass any state
+ *        values read inside the [update] lambda so that changes are detected and applied.
+ * @param factory Creates the layer. Called during initial composition and on style reload.
  */
 @Composable
 fun MapLayer(
     update: ((Layer) -> Unit)? = null,
+    keys: List<Any?> = emptyList(),
     factory: () -> Layer,
 ) {
     val mapApplier = LocalMapApplier.current
     ComposeNode<LayerNode, MapApplier>(
         factory = { LayerNode(mapApplier.style, factory).apply { attach() } },
         update = {
-            update(update) {
+            set(update) {
                 this.onUpdate = it
                 it?.let { updater -> layer?.let(updater) }
+            }
+            set(keys) {
+                this.onUpdate?.let { updater -> layer?.let(updater) }
             }
         }
     )

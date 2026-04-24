@@ -377,11 +377,11 @@ internal fun MapUpdater(
             cameraMode = cameraMode,
         )
     }, update = {
-        update(uiSettings) {
+        set(uiSettings) {
             map.applyUiSettings(uiSettings)
         }
 
-        update(properties) {
+        set(properties) {
             map.applyProperties(properties)
         }
 
@@ -492,6 +492,12 @@ internal class MapPropertiesNode(
             renderMode = renderMode,
             cameraMode = cameraMode,
         )
+
+        // Apply the initial camera position. The ComposeNode update block only
+        // fires on moveGeneration changes, which doesn't cover the initial value.
+        val initialPosition = cameraPositionState.position
+        val cameraUpdate = CameraUpdateFactory.newCameraPosition(initialPosition.toMapLibre())
+        map.moveCamera(cameraUpdate)
 
         map.addOnScaleListener(scaleListener)
         map.addOnMoveListener(moveListener)

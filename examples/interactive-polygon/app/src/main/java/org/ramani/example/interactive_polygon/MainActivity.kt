@@ -74,7 +74,7 @@ class MainActivity : ComponentActivity() {
                                 draggerImageId = R.drawable.ic_drag,
                                 borderWidth = 4.0F,
                                 fillColor = "Yellow",
-                                opacity = 1.0F,
+                                opacity = 0.5F,
                                 onCenterChanged = { newCenter ->
                                     polygonCenter = newCenter
                                 },

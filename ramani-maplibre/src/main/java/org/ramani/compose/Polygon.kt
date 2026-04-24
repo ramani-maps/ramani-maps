@@ -143,20 +143,20 @@ private fun PolygonDragHandle(
             }
         })
 
-    Circle(
-        center = polygonDragHandleCoord.value,
-        radius = 20.0f,
-        isDraggable = true,
-        color = "Transparent",
-        layerId = "${layerId}_drag_handle",
-        aboveLayerId = "${layerId}_rotation_handle",
-        onCenterDragged = {
-            isDragActive.value = true
-            inputDragCoord.value = it
-        },
-        onDragFinished = {
-            isDragActive.value = false
-        })
+    imageId?.let {
+        CircleWithItem(
+            center = polygonDragHandleCoord.value,
+            radius = 20.0f,
+            isDraggable = false,
+            color = "Transparent",
+            borderColor = "Black",
+            borderWidth = 1.0f,
+            imageId = imageId,
+            itemSize = 1.0f,
+            layerId = "${layerId}_drag_icon",
+            aboveLayerId = aboveLayerId,
+        )
+    }
 
     Circle(
         center = azimuthHandleCoord.value,
@@ -181,19 +181,20 @@ private fun PolygonDragHandle(
         }
     )
 
-    imageId?.let {
-        CircleWithItem(
-            center = polygonDragHandleCoord.value,
-            radius = 20.0f,
-            isDraggable = false,
-            color = "Transparent",
-            borderColor = "Black",
-            borderWidth = 1.0f,
-            imageId = imageId,
-            itemSize = 1.0f,
-            layerId = "${layerId}_drag_icon",
-        )
-    }
+    Circle(
+        center = polygonDragHandleCoord.value,
+        radius = 20.0f,
+        isDraggable = true,
+        color = "Transparent",
+        layerId = "${layerId}_drag_handle",
+        aboveLayerId = "${layerId}_rotation_handle",
+        onCenterDragged = {
+            isDragActive.value = true
+            inputDragCoord.value = it
+        },
+        onDragFinished = {
+            isDragActive.value = false
+        })
 }
 
 @Composable

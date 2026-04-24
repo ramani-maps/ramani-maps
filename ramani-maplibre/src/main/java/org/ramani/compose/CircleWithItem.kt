@@ -31,6 +31,7 @@ fun CircleWithItem(
     borderWidth: Float = 0.0f,
     opacity: Float = 1.0f,
     layerId: String? = null,
+    aboveLayerId: String? = null,
     imageId: Int? = null,
     itemSize: Float = 0.0f,
     text: String? = null,
@@ -69,6 +70,7 @@ fun CircleWithItem(
         color = color,
         opacity = opacity,
         layerId = resolvedLayerId,
+        aboveLayerId = aboveLayerId,
         borderColor = borderColor,
         borderWidth = borderWidth,
         onCenterDragged = {}

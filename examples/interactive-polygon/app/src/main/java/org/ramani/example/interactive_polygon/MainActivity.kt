@@ -22,7 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.maplibre.android.geometry.LatLng
 import org.ramani.compose.CameraPosition
-import org.ramani.compose.CircleCenterState
+import org.ramani.compose.CenterState
 import org.ramani.compose.rememberCameraPositionState
 import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
             InteractivePolygonTheme {
                 var polygonCenter = LatLng(44.989, 10.809)
                 val vertexStates = remember {
-                    polygonPoints.map { CircleCenterState(it) }
+                    polygonPoints.map { CenterState(it) }
                 }
                 val cameraPositionState = rememberCameraPositionState(
                     CameraPosition(target = polygonCenter, zoom = 15.0)

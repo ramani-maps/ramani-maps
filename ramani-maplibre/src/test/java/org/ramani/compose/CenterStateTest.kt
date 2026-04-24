@@ -15,18 +15,18 @@ import org.junit.Assert.assertNotSame
 import org.junit.Test
 import org.maplibre.android.geometry.LatLng
 
-class CircleCenterStateTest {
+class CenterStateTest {
 
     @Test
     fun initialCenter_isReturned() {
         val initial = LatLng(48.5, 7.7)
-        val state = CircleCenterState(initial)
+        val state = CenterState(initial)
         assertEquals(initial, state.center)
     }
 
     @Test
     fun setCenter_updatesValue() {
-        val state = CircleCenterState(LatLng(0.0, 0.0))
+        val state = CenterState(LatLng(0.0, 0.0))
         val newCenter = LatLng(51.5, -0.12)
         state.center = newCenter
         assertEquals(newCenter, state.center)
@@ -34,7 +34,7 @@ class CircleCenterStateTest {
 
     @Test
     fun updateCenterFromDrag_updatesCenter() {
-        val state = CircleCenterState(LatLng(0.0, 0.0))
+        val state = CenterState(LatLng(0.0, 0.0))
         val dragged = LatLng(44.0, 10.0)
         state.updateCenterFromDrag(dragged)
         assertEquals(dragged, state.center)
@@ -42,20 +42,20 @@ class CircleCenterStateTest {
 
     @Test
     fun saver_roundTrips() {
-        val original = CircleCenterState(LatLng(48.5, 7.7))
-        val saved = CircleCenterState.Saver.save(original)
-        val restored = CircleCenterState.Saver.restore(saved!!)!!
+        val original = CenterState(LatLng(48.5, 7.7))
+        val saved = CenterState.Saver.save(original)
+        val restored = CenterState.Saver.restore(saved!!)!!
         assertEquals(original.center, restored.center)
         assertNotSame(original, restored)
     }
 
     @Test
     fun saver_roundTrips_afterCenterChanged() {
-        val state = CircleCenterState(LatLng(0.0, 0.0))
+        val state = CenterState(LatLng(0.0, 0.0))
         state.center = LatLng(51.5, -0.12)
 
-        val saved = CircleCenterState.Saver.save(state)
-        val restored = CircleCenterState.Saver.restore(saved!!)!!
+        val saved = CenterState.Saver.save(state)
+        val restored = CenterState.Saver.restore(saved!!)!!
         assertEquals(LatLng(51.5, -0.12), restored.center)
     }
 }

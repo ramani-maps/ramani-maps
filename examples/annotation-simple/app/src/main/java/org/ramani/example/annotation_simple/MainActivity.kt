@@ -24,7 +24,7 @@ import org.ramani.compose.CameraPosition
 import org.ramani.compose.rememberCameraPositionState
 import org.ramani.compose.MapStyle
 import org.ramani.compose.Circle
-import org.ramani.compose.CircleCenterState
+import org.ramani.compose.CenterState
 import org.ramani.compose.MapLibre
 import org.ramani.compose.Polyline
 import org.ramani.compose.Symbol
@@ -34,6 +34,7 @@ class MainActivity : ComponentActivity() {
     companion object {
         const val DEFAULT_STYLE_URL = "https://demotiles.maplibre.org/style.json"
         val INITIAL_CIRCLE_CENTER = LatLng(4.8, 46.0)
+        val INITIAL_SYMBOL_CENTER = LatLng(4.9, 46.1)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,9 +48,11 @@ class MainActivity : ComponentActivity() {
                         zoom = 2.0,
                     )
                 )
-                val symbolCenter = rememberSaveable { mutableStateOf(LatLng(4.9, 46.1)) }
-                val circleCenterState = rememberSaveable(saver = CircleCenterState.Saver) {
-                    CircleCenterState(INITIAL_CIRCLE_CENTER)
+                val symbolCenterState = rememberSaveable(saver = CenterState.Saver) {
+                    CenterState(INITIAL_SYMBOL_CENTER)
+                }
+                val circleCenterState = rememberSaveable(saver = CenterState.Saver) {
+                    CenterState(INITIAL_CIRCLE_CENTER)
                 }
                 val isDefaultStyle = rememberSaveable { mutableStateOf(true) }
                 val styleUrl = rememberSaveable { mutableStateOf(DEFAULT_STYLE_URL) }
@@ -73,23 +76,31 @@ class MainActivity : ComponentActivity() {
                             )
                             Polyline(points = polylinePoints, color = "Red", lineWidth = 5.0F)
                             Symbol(
-                                center = symbolCenter.value,
+                                centerState = symbolCenterState,
                                 isDraggable = true,
-                                onSymbolDragged = { center -> symbolCenter.value = center }
                             )
                         }
                     }
-                    Text(
-                        text = "Circle: lat: %.4f  lng: %.4f".format(
-                            circleCenterState.center.latitude,
-                            circleCenterState.center.longitude,
-                        ),
+                    Column(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
                             .padding(top = 48.dp)
                             .background(Color.White.copy(alpha = 0.8f), RoundedCornerShape(8.dp))
                             .padding(horizontal = 12.dp, vertical = 6.dp),
-                    )
+                    ) {
+                        Text(
+                            text = "Circle: lat: %.4f  lng: %.4f".format(
+                                circleCenterState.center.latitude,
+                                circleCenterState.center.longitude,
+                            ),
+                        )
+                        Text(
+                            text = "Symbol: lat: %.4f  lng: %.4f".format(
+                                symbolCenterState.center.latitude,
+                                symbolCenterState.center.longitude,
+                            ),
+                        )
+                    }
                     Column(
                         modifier = Modifier.align(Alignment.BottomCenter),
                     ) {
@@ -108,9 +119,10 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.align(Alignment.CenterHorizontally),
                             onClick = {
                                 circleCenterState.center = INITIAL_CIRCLE_CENTER
+                                symbolCenterState.center = INITIAL_SYMBOL_CENTER
                             },
                         ) {
-                            Text("Reset circle")
+                            Text("Reset annotations")
                         }
                     }
                 }

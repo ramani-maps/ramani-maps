@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.plus
 import org.maplibre.android.geometry.LatLng
 import org.ramani.compose.Circle
-import org.ramani.compose.CircleCenterState
+import org.ramani.compose.CenterState
 import org.ramani.compose.Fill
 import org.ramani.compose.MapApplier
 import org.ramani.compose.MapObserver
@@ -40,20 +40,24 @@ fun ProgressCircle(
     val recomposeState = remember { mutableStateOf(true) }
     MapObserver(onMapScaled = { recomposeState.value = !recomposeState.value })
 
+    val symbolCenter = proj.fromScreenLocation(
+        centerLocal + PointF(
+            0.0f,
+            -(radius + indicatorTextSize) * dpToPixel
+        )
+    )
+    val symbolCenterState = remember { CenterState(symbolCenter) }
+    symbolCenterState.center = symbolCenter
+
     Symbol(
-        center = proj.fromScreenLocation(
-            centerLocal + PointF(
-                0.0f,
-                -(radius + indicatorTextSize) * dpToPixel
-            )
-        ),
+        centerState = symbolCenterState,
         color = indicatorTextColor,
         isDraggable = false,
         text = progress.value.toString(),
         size = indicatorTextSize,
     )
 
-    val borderCenterState = remember { CircleCenterState(center) }
+    val borderCenterState = remember { CenterState(center) }
     borderCenterState.center = center
 
     Circle(
@@ -66,7 +70,7 @@ fun ProgressCircle(
 
     key(recomposeState.value) {
         if (progress.value == 100) {
-            val fillCenterState = remember { CircleCenterState(center) }
+            val fillCenterState = remember { CenterState(center) }
             fillCenterState.center = center
 
             Circle(

@@ -83,11 +83,11 @@ private fun PolygonDragHandle(
     onAzimuthChanged: (Float) -> Unit = {},
 ) {
     val polygonDragHandleCoord = remember {
-        CircleCenterState(LatLng())
+        CenterState(LatLng())
     }
 
     val azimuthHandleCoord = remember {
-        CircleCenterState(LatLng())
+        CenterState(LatLng())
     }
 
     val inputDragCoord = remember {
@@ -145,7 +145,7 @@ private fun PolygonDragHandle(
 
     imageId?.let {
         CircleWithItem(
-            center = polygonDragHandleCoord.center,
+            centerState = polygonDragHandleCoord,
             radius = 20.0f,
             isDraggable = false,
             color = "Transparent",

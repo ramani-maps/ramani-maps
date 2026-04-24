@@ -16,7 +16,7 @@ import org.maplibre.android.geometry.LatLng
 
 @Composable
 fun CircleWithItem(
-    center: LatLng,
+    centerState: CenterState,
     radius: Float,
     dragRadius: Float = radius,
     isDraggable: Boolean,
@@ -33,11 +33,11 @@ fun CircleWithItem(
     onDragStopped: () -> Unit = {},
 ) {
     val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
-    val dragCenterState = remember { CircleCenterState(center) }
-    val displayCenterState = remember { CircleCenterState(center) }
+    val dragCenterState = remember { CenterState(centerState.center) }
+    val displayCenterState = remember { CenterState(centerState.center) }
 
-    dragCenterState.center = center
-    displayCenterState.center = center
+    dragCenterState.center = centerState.center
+    displayCenterState.center = centerState.center
 
     // Invisible circle, this is the draggable
     Circle(
@@ -50,10 +50,11 @@ fun CircleWithItem(
         layerId = "${resolvedLayerId}_drag",
         aboveLayerId = resolvedLayerId,
         onCenterDragged = {
+            centerState.updateCenterFromDrag(it)
             onCenterChanged(it)
         },
         onDragFinished = {
-            dragCenterState.center = center
+            dragCenterState.center = centerState.center
             onDragStopped()
         },
     )
@@ -72,8 +73,11 @@ fun CircleWithItem(
     )
 
     imageId?.let {
+        val imageCenterState = remember { CenterState(centerState.center) }
+        imageCenterState.center = centerState.center
+
         Symbol(
-            center = center,
+            centerState = imageCenterState,
             color = "Black",
             isDraggable = false,
             imageId = imageId,
@@ -84,8 +88,11 @@ fun CircleWithItem(
     }
 
     text?.let {
+        val textCenterState = remember { CenterState(centerState.center) }
+        textCenterState.center = centerState.center
+
         Symbol(
-            center = center,
+            centerState = textCenterState,
             color = "Black",
             isDraggable = false,
             text = text,

@@ -20,7 +20,7 @@ import org.maplibre.android.plugins.annotation.CircleOptions
 
 @Composable
 fun Circle(
-    centerState: CircleCenterState,
+    centerState: CenterState,
     radius: Float,
     isDraggable: Boolean = false,
     color: String = "Yellow",

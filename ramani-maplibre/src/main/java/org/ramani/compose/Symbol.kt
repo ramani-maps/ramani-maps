@@ -26,7 +26,7 @@ import org.maplibre.android.style.layers.Property.TEXT_JUSTIFY_CENTER
 
 @Composable
 fun Symbol(
-    center: LatLng,
+    centerState: CenterState,
     size: Float = 1F,
     color: String = "",
     isDraggable: Boolean = false,
@@ -69,7 +69,7 @@ fun Symbol(
         val symbolManager = mapApplier.getOrCreateSymbolManagerForLayerId(resolvedLayerId, aboveLayerId, belowLayerId)
         var symbolOptions = SymbolOptions()
             .withDraggable(isDraggable)
-            .withLatLng(center)
+            .withLatLng(centerState.center)
             .withData(data)
 
         imageId?.let {
@@ -99,14 +99,28 @@ fun Symbol(
         SymbolNode(
             symbolManager,
             symbol,
-            onSymbolDragged = { onSymbolDragged(it.latLng) },
+            onSymbolDragged = {
+                centerState.updateCenterFromDrag(it.latLng)
+                onSymbolDragged(it.latLng)
+            },
             onSymbolDragStopped = { onDragFinished(it.latLng) },
             onSymbolClicked = { onClick(it.data) },
             onSymbolLongClicked = { onLongClick(it.data) }
         )
     }, update = {
-        set(center) {
-            symbol.latLng = center
+        update(onSymbolDragged) {
+            this.onSymbolDragged = {
+                centerState.updateCenterFromDrag(it.latLng)
+                onSymbolDragged(it.latLng)
+            }
+        }
+
+        update(onDragFinished) {
+            this.onSymbolDragStopped = { onDragFinished(it.latLng) }
+        }
+
+        set(centerState.center) {
+            symbol.latLng = centerState.center
             symbolManager.update(symbol)
         }
 

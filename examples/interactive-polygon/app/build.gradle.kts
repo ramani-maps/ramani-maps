@@ -14,16 +14,17 @@ val keystoreProperties = Properties()
 
 try {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-} catch (ignored: IOException) {
+} catch (_: IOException) {
 }
 
 android {
     namespace = "org.ramani.example.interactive_polygon"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "org.ramani.example.interactive_polygon"
         minSdk = 25
+        targetSdk = 36
 
         if (keystoreProperties.containsKey("MAPLIBRE_STYLE_URL")) {
             resValue(
@@ -52,11 +53,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = "17"
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     packaging {
         resources {
@@ -66,19 +64,19 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.15.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
-    implementation("androidx.activity:activity-compose:1.9.3")
-    implementation(platform("androidx.compose:compose-bom:2024.11.00"))
+    implementation("androidx.core:core-ktx:1.18.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
+    implementation("androidx.activity:activity-compose:1.13.0")
+    implementation(platform("androidx.compose:compose-bom:2026.04.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3:1.3.1")
-    implementation("org.ramani-maps:ramani-maplibre:0.8.1")
+    implementation("androidx.compose.material3:material3:1.4.0")
+    implementation("org.ramani-maps:ramani-maplibre:0.10.0")
     testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.2.1")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2024.11.00"))
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
+    androidTestImplementation(platform("androidx.compose:compose-bom:2026.04.01"))
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

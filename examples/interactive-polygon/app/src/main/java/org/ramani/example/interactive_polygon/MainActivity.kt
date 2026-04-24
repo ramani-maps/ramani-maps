@@ -3,9 +3,12 @@ package org.ramani.example.interactive_polygon
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -16,6 +19,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import org.maplibre.android.geometry.LatLng
 import org.ramani.compose.CameraPosition
 import org.ramani.compose.rememberCameraPositionState
@@ -82,6 +87,19 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
+                    val camPos = cameraPositionState.position
+                    Text(
+                        text = "lat: %.4f  lng: %.4f  zoom: %.1f".format(
+                            camPos.target?.latitude,
+                            camPos.target?.longitude,
+                            camPos.zoom
+                        ),
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 48.dp)
+                            .background(Color.White.copy(alpha = 0.8f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    )
                     Column(
                         modifier = Modifier.align(Alignment.BottomCenter),
                     ) {

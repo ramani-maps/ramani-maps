@@ -3,8 +3,12 @@ package org.ramani.example.annotation_simple
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -13,6 +17,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import org.maplibre.android.geometry.LatLng
 import org.ramani.compose.CameraPosition
 import org.ramani.compose.rememberCameraPositionState
@@ -27,6 +33,7 @@ import org.ramani.example.annotation_simple.ui.theme.AnnotationSimpleTheme
 class MainActivity : ComponentActivity() {
     companion object {
         const val DEFAULT_STYLE_URL = "https://demotiles.maplibre.org/style.json"
+        val INITIAL_CIRCLE_CENTER = LatLng(4.8, 46.0)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,7 +49,7 @@ class MainActivity : ComponentActivity() {
                 )
                 val symbolCenter = rememberSaveable { mutableStateOf(LatLng(4.9, 46.1)) }
                 val circleCenterState = rememberSaveable(saver = CircleCenterState.Saver) {
-                    CircleCenterState(LatLng(4.8, 46.0))
+                    CircleCenterState(INITIAL_CIRCLE_CENTER)
                 }
                 val isDefaultStyle = rememberSaveable { mutableStateOf(true) }
                 val styleUrl = rememberSaveable { mutableStateOf(DEFAULT_STYLE_URL) }
@@ -72,16 +79,39 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
-                    Button(
+                    Text(
+                        text = "Circle: lat: %.4f  lng: %.4f".format(
+                            circleCenterState.center.latitude,
+                            circleCenterState.center.longitude,
+                        ),
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 48.dp)
+                            .background(Color.White.copy(alpha = 0.8f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    )
+                    Column(
                         modifier = Modifier.align(Alignment.BottomCenter),
-                        onClick = {
-                            styleUrl.value =
-                                if (!isDefaultStyle.value) DEFAULT_STYLE_URL
-                                else resources.getString(R.string.maplibre_style_url)
+                    ) {
+                        Button(
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            onClick = {
+                                styleUrl.value =
+                                    if (!isDefaultStyle.value) DEFAULT_STYLE_URL
+                                    else resources.getString(R.string.maplibre_style_url)
 
-                            isDefaultStyle.value = !isDefaultStyle.value
-                        }) {
-                        Text("Swap style")
+                                isDefaultStyle.value = !isDefaultStyle.value
+                            }) {
+                            Text("Swap style")
+                        }
+                        Button(
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            onClick = {
+                                circleCenterState.center = INITIAL_CIRCLE_CENTER
+                            },
+                        ) {
+                            Text("Reset circle")
+                        }
                     }
                 }
             }

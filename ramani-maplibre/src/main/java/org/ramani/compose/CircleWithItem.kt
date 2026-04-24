@@ -11,14 +11,8 @@
 package org.ramani.compose
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import org.maplibre.android.geometry.LatLng
-
-@Composable
-fun UpdateCenter(coord: LatLng, centerUpdated: (LatLng) -> Unit) {
-    centerUpdated(coord)
-}
 
 @Composable
 fun CircleWithItem(
@@ -39,13 +33,15 @@ fun CircleWithItem(
     onDragStopped: () -> Unit = {},
 ) {
     val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
-    val draggableCenterState = remember { mutableStateOf(center) }
+    val dragCenterState = remember { CircleCenterState(center) }
+    val displayCenterState = remember { CircleCenterState(center) }
 
-    UpdateCenter(coord = center, centerUpdated = { draggableCenterState.value = it })
+    dragCenterState.center = center
+    displayCenterState.center = center
 
     // Invisible circle, this is the draggable
     Circle(
-        center = draggableCenterState.value,
+        centerState = dragCenterState,
         radius = dragRadius,
         isDraggable = isDraggable,
         color = "Transparent",
@@ -57,14 +53,14 @@ fun CircleWithItem(
             onCenterChanged(it)
         },
         onDragFinished = {
-            draggableCenterState.value = center
+            dragCenterState.center = center
             onDragStopped()
         },
     )
 
     // Display circle
     Circle(
-        center = center,
+        centerState = displayCenterState,
         radius = radius,
         isDraggable = false,
         color = color,
@@ -73,7 +69,6 @@ fun CircleWithItem(
         aboveLayerId = aboveLayerId,
         borderColor = borderColor,
         borderWidth = borderWidth,
-        onCenterDragged = {}
     )
 
     imageId?.let {

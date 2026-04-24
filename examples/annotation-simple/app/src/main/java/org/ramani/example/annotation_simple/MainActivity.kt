@@ -18,6 +18,7 @@ import org.ramani.compose.CameraPosition
 import org.ramani.compose.rememberCameraPositionState
 import org.ramani.compose.MapStyle
 import org.ramani.compose.Circle
+import org.ramani.compose.CircleCenterState
 import org.ramani.compose.MapLibre
 import org.ramani.compose.Polyline
 import org.ramani.compose.Symbol
@@ -40,7 +41,9 @@ class MainActivity : ComponentActivity() {
                     )
                 )
                 val symbolCenter = rememberSaveable { mutableStateOf(LatLng(4.9, 46.1)) }
-                val circleCenter = rememberSaveable { mutableStateOf(LatLng(4.8, 46.0)) }
+                val circleCenterState = rememberSaveable(saver = CircleCenterState.Saver) {
+                    CircleCenterState(LatLng(4.8, 46.0))
+                }
                 val isDefaultStyle = rememberSaveable { mutableStateOf(true) }
                 val styleUrl = rememberSaveable { mutableStateOf(DEFAULT_STYLE_URL) }
                 val mapStyle = MapStyle.Uri(styleUrl.value)
@@ -56,11 +59,10 @@ class MainActivity : ComponentActivity() {
                             cameraPositionState = cameraPositionState,
                         ) {
                             Circle(
-                                center = circleCenter.value,
+                                centerState = circleCenterState,
                                 radius = 50F,
                                 isDraggable = true,
                                 borderWidth = 2F,
-                                onCenterDragged = { center -> circleCenter.value = center }
                             )
                             Polyline(points = polylinePoints, color = "Red", lineWidth = 5.0F)
                             Symbol(

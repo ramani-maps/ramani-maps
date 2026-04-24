@@ -13,16 +13,16 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.maplibre.android.geometry.LatLng
 import org.ramani.compose.CameraPosition
+import org.ramani.compose.CircleCenterState
 import org.ramani.compose.rememberCameraPositionState
 import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
@@ -40,7 +40,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             InteractivePolygonTheme {
                 var polygonCenter = LatLng(44.989, 10.809)
-                var polygonState by rememberSaveable { mutableStateOf(polygonPoints) }
+                val vertexStates = remember {
+                    polygonPoints.map { CircleCenterState(it) }
+                }
                 val cameraPositionState = rememberCameraPositionState(
                     CameraPosition(target = polygonCenter, zoom = 15.0)
                 )
@@ -59,22 +61,18 @@ class MainActivity : ComponentActivity() {
                             style = style,
                             cameraPositionState = cameraPositionState,
                         ) {
-                            polygonState.forEachIndexed { index, vertex ->
+                            vertexStates.forEach { state ->
                                 Circle(
+                                    centerState = state,
                                     aboveLayerId = "editable_polygon",
-                                    center = vertex,
                                     radius = 10.0F,
                                     color = "Blue",
                                     isDraggable = true,
-                                    onCenterDragged = { newCenter ->
-                                        polygonState = polygonState.toMutableList()
-                                            .apply { this[index] = newCenter }
-                                    }
                                 )
                             }
                             Polygon(
                                 layerId = "editable_polygon",
-                                vertices = polygonState,
+                                vertices = vertexStates.map { it.center },
                                 isDraggable = true,
                                 draggerImageId = R.drawable.ic_drag,
                                 borderWidth = 4.0F,
@@ -83,7 +81,11 @@ class MainActivity : ComponentActivity() {
                                 onCenterChanged = { newCenter ->
                                     polygonCenter = newCenter
                                 },
-                                onVerticesChanged = { newVertices -> polygonState = newVertices },
+                                onVerticesChanged = { newVertices ->
+                                    newVertices.forEachIndexed { index, vertex ->
+                                        vertexStates[index].center = vertex
+                                    }
+                                },
                             )
                         }
                     }

@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.plus
 import org.maplibre.android.geometry.LatLng
 import org.ramani.compose.Circle
+import org.ramani.compose.CircleCenterState
 import org.ramani.compose.Fill
 import org.ramani.compose.MapApplier
 import org.ramani.compose.MapObserver
@@ -52,8 +53,11 @@ fun ProgressCircle(
         size = indicatorTextSize,
     )
 
+    val borderCenterState = remember { CircleCenterState(center) }
+    borderCenterState.center = center
+
     Circle(
-        center = center,
+        centerState = borderCenterState,
         radius = radius,
         color = "Transparent",
         borderColor = borderColor,
@@ -62,8 +66,11 @@ fun ProgressCircle(
 
     key(recomposeState.value) {
         if (progress.value == 100) {
+            val fillCenterState = remember { CircleCenterState(center) }
+            fillCenterState.center = center
+
             Circle(
-                center = center,
+                centerState = fillCenterState,
                 radius = radius,
                 color = fillColor,
                 borderColor = borderColor,

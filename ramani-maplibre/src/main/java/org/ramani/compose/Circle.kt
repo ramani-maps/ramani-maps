@@ -20,7 +20,7 @@ import org.maplibre.android.plugins.annotation.CircleOptions
 
 @Composable
 fun Circle(
-    center: LatLng,
+    centerState: CircleCenterState,
     radius: Float,
     isDraggable: Boolean = false,
     color: String = "Yellow",
@@ -44,7 +44,7 @@ fun Circle(
 
         val circleOptions = CircleOptions()
             .withCircleRadius(radius)
-            .withLatLng(center)
+            .withLatLng(centerState.center)
             .withDraggable(isDraggable)
             .withCircleStrokeColor(borderColor)
             .withCircleStrokeWidth(borderWidth)
@@ -56,22 +56,28 @@ fun Circle(
         CircleNode(
             circleManager,
             circle,
-            onCircleDragged = { onCenterDragged(it.latLng) },
+            onCircleDragged = {
+                centerState.updateCenterFromDrag(it.latLng)
+                onCenterDragged(it.latLng)
+            },
             onCircleDragStopped = { onDragFinished(it.latLng) },
             onCircleClicked = { onClick(it.data) },
             onCircleLongClicked = { onLongClick(it.data) }
         )
     }, update = {
         update(onCenterDragged) {
-            this.onCircleDragged = { onCenterDragged(it.latLng) }
+            this.onCircleDragged = {
+                centerState.updateCenterFromDrag(it.latLng)
+                onCenterDragged(it.latLng)
+            }
         }
 
         update(onDragFinished) {
             this.onCircleDragStopped = { onDragFinished(it.latLng) }
         }
 
-        set(center) {
-            circle.latLng = center
+        set(centerState.center) {
+            circle.latLng = centerState.center
             circleManager.update(circle)
         }
 

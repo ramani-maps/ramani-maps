@@ -83,11 +83,11 @@ private fun PolygonDragHandle(
     onAzimuthChanged: (Float) -> Unit = {},
 ) {
     val polygonDragHandleCoord = remember {
-        mutableStateOf(LatLng())
+        CircleCenterState(LatLng())
     }
 
     val azimuthHandleCoord = remember {
-        mutableStateOf(LatLng())
+        CircleCenterState(LatLng())
     }
 
     val inputDragCoord = remember {
@@ -115,7 +115,7 @@ private fun PolygonDragHandle(
     }
 
     if (!isAzimuthDragActive.value) {
-        azimuthHandleCoord.value = polygonDragHandleCoord.value
+        azimuthHandleCoord.center = polygonDragHandleCoord.center
     }
 
     val counter = remember {
@@ -126,7 +126,7 @@ private fun PolygonDragHandle(
         draggedCenter = inputDragCoord.value,
         vertices = vertices,
         onCenterAndVerticesChanged = { center, vertices ->
-            polygonDragHandleCoord.value = center
+            polygonDragHandleCoord.center = center
             if (isDragActive.value) {
                 onVerticesChanged(vertices)
             }
@@ -135,7 +135,7 @@ private fun PolygonDragHandle(
 
     AzimuthCalculator(
         posA = inputAzimuthCoord.value,
-        posB = polygonDragHandleCoord.value,
+        posB = polygonDragHandleCoord.center,
         startAzimuthRefPos.value,
         onAzimuthChanged = {
             if (isAzimuthDragActive.value) {
@@ -145,7 +145,7 @@ private fun PolygonDragHandle(
 
     imageId?.let {
         CircleWithItem(
-            center = polygonDragHandleCoord.value,
+            center = polygonDragHandleCoord.center,
             radius = 20.0f,
             isDraggable = false,
             color = "Transparent",
@@ -159,7 +159,7 @@ private fun PolygonDragHandle(
     }
 
     Circle(
-        center = azimuthHandleCoord.value,
+        centerState = azimuthHandleCoord,
         radius = 50.0f,
         isDraggable = true,
         color = "Transparent",
@@ -173,7 +173,6 @@ private fun PolygonDragHandle(
             }
             counter.value = counter.value + 1
             inputAzimuthCoord.value = it
-            azimuthHandleCoord.value = it
         },
         onDragFinished = {
             isAzimuthDragActive.value = false
@@ -182,7 +181,7 @@ private fun PolygonDragHandle(
     )
 
     Circle(
-        center = polygonDragHandleCoord.value,
+        centerState = polygonDragHandleCoord,
         radius = 20.0f,
         isDraggable = true,
         color = "Transparent",

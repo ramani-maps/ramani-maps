@@ -79,7 +79,7 @@ class MapLayerOrderingTest {
                 ) {
                     MapLayer { BackgroundLayer("custom-bg") }
                     Circle(
-                        center = LatLng(0.0, 0.0),
+                        centerState = CircleCenterState(LatLng(0.0, 0.0)),
                         radius = 10F,
                         isDraggable = false,
                     )
@@ -124,7 +124,7 @@ class MapLayerOrderingTest {
                 ) {
                     MapLayer { BackgroundLayer("custom-bg") }
                     Circle(
-                        center = LatLng(0.0, 0.0),
+                        centerState = CircleCenterState(LatLng(0.0, 0.0)),
                         radius = 10F,
                         isDraggable = false,
                     )

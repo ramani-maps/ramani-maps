@@ -161,7 +161,9 @@ class MapApplier(
 
     private val namedLayerRegistry = mutableMapOf<String, AnnotationManager<*, *, *, *, *, *>>()
 
+    private val layerAliases = mutableMapOf<String, String>()
     private val pendingOrders = mutableListOf<PendingLayerOrder>()
+    private val committedOrders = mutableListOf<PendingLayerOrder>()
 
     init {
         attachMapListeners()
@@ -173,6 +175,11 @@ class MapApplier(
             map.getStyle { newStyle ->
                 style.value = newStyle
                 reattachStyleNodes()
+                // Annotation managers recreate their layers in their own
+                // OnDidFinishLoadingStyleListener callbacks, which fire after
+                // ours (registered later). Post to the next frame so all
+                // managers have rebuilt before we reapply layer ordering.
+                mapView.post { applyLayerOrdering(newStyle) }
             }
         }
     }
@@ -276,6 +283,10 @@ class MapApplier(
         attachListeners?.invoke(manager)
 
         return manager
+    }
+
+    fun registerLayerAlias(alias: String, targetLayerId: String) {
+        layerAliases[alias] = targetLayerId
     }
 
     fun getOrCreateCircleManagerForLayerId(
@@ -408,13 +419,29 @@ class MapApplier(
         super.onEndChanges()
         if (pendingOrders.isEmpty()) return
 
+        committedOrders.addAll(pendingOrders)
+        pendingOrders.clear()
+
         val style = style.value ?: return
+        applyLayerOrdering(style)
+    }
+
+    private fun applyLayerOrdering(style: Style) {
+        if (committedOrders.isEmpty()) return
+
+        val resolvedOrders = committedOrders.map { order ->
+            PendingLayerOrder(
+                layerId = order.layerId,
+                aboveLayerId = order.aboveLayerId?.let { layerAliases[it] ?: it },
+                belowLayerId = order.belowLayerId?.let { layerAliases[it] ?: it }
+            )
+        }
 
         val declarationOrder = namedLayerRegistry.keys.withIndex()
             .associate { (index, key) -> key to index }
 
         val sortedOrder = computeLayerOrder(
-            pendingOrders = pendingOrders,
+            pendingOrders = resolvedOrders,
             registeredLayerIds = namedLayerRegistry.keys,
             declarationOrder = declarationOrder
         )
@@ -434,8 +461,6 @@ class MapApplier(
 
             previousInternalLayerId = internalLayerId
         }
-
-        pendingOrders.clear()
     }
 
     override fun insertBottomUp(index: Int, instance: MapNode) {
@@ -453,6 +478,8 @@ class MapApplier(
     override fun onClear() {
         decorations.forEach { it.onCleared() }
         decorations.clear()
+        layerAliases.clear()
+        committedOrders.clear()
     }
 
     override fun remove(index: Int, count: Int) {

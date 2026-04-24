@@ -17,11 +17,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.maplibre.android.geometry.LatLng
-import org.maplibre.android.maps.Style
 import org.ramani.compose.CameraPosition
 import org.ramani.compose.rememberCameraPositionState
 import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
+import org.ramani.compose.MapStyle
 import org.ramani.compose.Polygon
 import org.ramani.example.interactive_polygon.ui.theme.InteractivePolygonTheme
 
@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
 
                 val isDefaultStyle = rememberSaveable { mutableStateOf(true) }
                 val styleUrl = rememberSaveable { mutableStateOf(DEFAULT_STYLE_URL) }
-                val styleBuilder = Style.Builder().fromUri(styleUrl.value)
+                val style = MapStyle.Uri(styleUrl.value)
 
                 Box {
                     Surface(
@@ -51,15 +51,15 @@ class MainActivity : ComponentActivity() {
                     ) {
                         MapLibre(
                             modifier = Modifier.fillMaxSize(),
-                            styleBuilder = styleBuilder,
+                            style = style,
                             cameraPositionState = cameraPositionState,
                         ) {
                             polygonState.forEachIndexed { index, vertex ->
                                 Circle(
+                                    aboveLayerId = "editable_polygon",
                                     center = vertex,
                                     radius = 10.0F,
                                     color = "Blue",
-                                    zIndex = 1,
                                     isDraggable = true,
                                     onCenterDragged = { newCenter ->
                                         polygonState = polygonState.toMutableList()
@@ -68,12 +68,13 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             Polygon(
+                                layerId = "editable_polygon",
                                 vertices = polygonState,
                                 isDraggable = true,
                                 draggerImageId = R.drawable.ic_drag,
                                 borderWidth = 4.0F,
                                 fillColor = "Yellow",
-                                opacity = 0.5F,
+                                opacity = 1.0F,
                                 onCenterChanged = { newCenter ->
                                     polygonCenter = newCenter
                                 },

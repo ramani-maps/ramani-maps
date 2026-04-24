@@ -75,6 +75,7 @@ private fun VertexDragger(
 private fun PolygonDragHandle(
     vertices: List<LatLng>,
     layerId: String,
+    aboveLayerId: String,
     imageId: Int? = null,
     azimuth: Float,
     onCenterChanged: (LatLng) -> Unit = {},
@@ -163,7 +164,7 @@ private fun PolygonDragHandle(
         isDraggable = true,
         color = "Transparent",
         layerId = "${layerId}_rotation_handle",
-        aboveLayerId = layerId,
+        aboveLayerId = aboveLayerId,
         onCenterDragged = {
             if (!isAzimuthDragActive.value && counter.value > 0) {
                 startAzimuth.value = azimuth
@@ -210,7 +211,13 @@ fun Polygon(
     onVerticesChanged: (List<LatLng>) -> Unit = {},
     onAzimuthChanged: (Float) -> Unit = {},
 ) {
+    val mapApplier = LocalMapApplier.current
     val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
+
+    val visualTopLayerId = if (borderWidth > 0) "${resolvedLayerId}_border" else "${resolvedLayerId}_fill"
+    val topLayerId = if (isDraggable) "${resolvedLayerId}_drag_handle" else visualTopLayerId
+    mapApplier.registerLayerAlias(resolvedLayerId, topLayerId)
+
     val borderPath = vertices.toMutableList().apply { this.add(this[0]) }
 
     Fill(
@@ -235,6 +242,7 @@ fun Polygon(
         PolygonDragHandle(
             vertices = vertices,
             layerId = resolvedLayerId,
+            aboveLayerId = visualTopLayerId,
             imageId = draggerImageId,
             azimuth = azimuth,
             onCenterChanged = { onCenterChanged(it) },

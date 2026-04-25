@@ -37,6 +37,24 @@ android {
             resValue("string", "maplibre_style_url", "https://demotiles.maplibre.org/style.json")
         }
 
+        if (keystoreProperties.containsKey("MAPTILER_API_KEY")) {
+            resValue("string", "maptiler_api_key", keystoreProperties["MAPTILER_API_KEY"] as String)
+        } else {
+            println("NOTE: MAPTILER_API_KEY is not present, custom layers hillshades will not work")
+            resValue("string", "maptiler_api_key", "")
+        }
+
+        if (keystoreProperties.containsKey("THUNDERFOREST_API_KEY")) {
+            resValue(
+                "string",
+                "thunderforest_api_key",
+                keystoreProperties["THUNDERFOREST_API_KEY"] as String
+            )
+        } else {
+            println("NOTE: THUNDERFOREST_API_KEY is not present, custom layers contours will not work")
+            resValue("string", "thunderforest_api_key", "")
+        }
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -72,6 +90,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3:1.4.0")
+    implementation("androidx.navigation:navigation-compose:2.8.9")
     implementation("org.ramani-maps:ramani-maplibre:0.10.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")

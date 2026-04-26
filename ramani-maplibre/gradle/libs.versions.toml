@@ -1,18 +1,18 @@
 [versions]
 android-gradle-plugin = "8.13.2"
-androidx-core-ktx = "1.15.0"
-compose-ui = "1.7.5"
-jreleaser-plugin = "1.19.0"
-kotlin = "2.0.20"
-kotlin-parcelize = "2.0.20-RC"
-kotlin-gradle-plugin = "2.0.0"
-kotlinx-coroutines-android = "1.8.0"
+androidx-core-ktx = "1.18.0"
+compose-ui = "1.11.0"
+jreleaser-plugin = "1.23.0"
+kotlin = "2.3.21"
+kotlin-parcelize = "2.3.21"
+kotlin-gradle-plugin = "2.3.20"
+kotlinx-coroutines-android = "1.10.2"
 maplibre-android-sdk = "11.11.0"
 maplibre-android-plugin-annotation = "3.0.2"
 junit = "4.13.2"
-okhttp = "4.12.0"
-androidx-test = "1.6.1"
-androidx-test-ext-junit = "1.2.1"
+okhttp = "5.3.2"
+androidx-test = "1.7.0"
+androidx-test-ext-junit = "1.3.0"
 
 [libraries]
 android-gradle-plugin = { group = "com.android.tools.build", name = "gradle", version.ref = "android-gradle-plugin" }

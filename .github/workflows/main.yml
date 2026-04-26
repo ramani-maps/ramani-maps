@@ -13,15 +13,15 @@ on:
 jobs:
   ramani-maplibre:
     name: Build and test ramani-maplibre
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
       - name: Build
         working-directory: ./ramani-maplibre
@@ -38,134 +38,23 @@ jobs:
             ./gradlew -PcentralUsername=${{ secrets.CENTRAL_USERNAME }} -PcentralPassword=${{ secrets.CENTRAL_PASSWORD }} publish
             ./gradlew -PcentralUsername=${{ secrets.CENTRAL_USERNAME }} -PcentralPassword=${{ secrets.CENTRAL_PASSWORD }} jreleaserDeploy
 
-  annotation-simple:
-    name: "Build and test example: AnnotationSimple"
-    runs-on: ubuntu-22.04
+  example:
+    name: "Build and test example"
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
       - name: Use ramani as composite build
-        working-directory: ./examples/annotation-simple
-        run: echo "includeBuild(\"../../ramani-maplibre\")" >> settings.gradle.kts
+        working-directory: ./example
+        run: echo "includeBuild(\"../ramani-maplibre\")" >> settings.gradle.kts
       - name: Build
-        working-directory: ./examples/annotation-simple
+        working-directory: ./example
         run: |
             ./gradlew build
-            ./gradlew test
-
-  interactive-polygon:
-    name: "Build and test example: InteractivePolygon"
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-      - name: Use ramani as composite build
-        working-directory: ./examples/interactive-polygon
-        run: echo "includeBuild(\"../../ramani-maplibre\")" >> settings.gradle.kts
-      - name: Build
-        working-directory: ./examples/interactive-polygon
-        run: |
-            ./gradlew build
-            ./gradlew test
-
-  location:
-    name: "Build and test example: Location"
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-      - name: Use ramani as composite build
-        working-directory: ./examples/location
-        run: echo "includeBuild(\"../../ramani-maplibre\")" >> settings.gradle.kts
-      - name: Build
-        working-directory: ./examples/location
-        run: |
-            ./gradlew build
-            ./gradlew test
-
-  clusters:
-    name: "Build and test example: Clusters"
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-      - name: Use ramani as composite build
-        working-directory: ./examples/clusters
-        run: echo "includeBuild(\"../../ramani-maplibre\")" >> settings.gradle.kts
-      - name: Build
-        working-directory: ./examples/clusters
-        run: |
-            ./gradlew build
-            ./gradlew test
-
-  custom-layers:
-    name: "Build and test example: CustomLayers"
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-      - name: Set tokens
-        working-directory: ./examples/custom-layers
-        run: |
-            echo "MAPTILER_API_KEY=placeholder" >> keystore.properties
-            echo "THUNDERFOREST_API_KEY=placeholder" >> keystore.properties
-      - name: Use ramani as composite build
-        working-directory: ./examples/custom-layers
-        run: echo "includeBuild(\"../../ramani-maplibre\")" >> settings.gradle.kts
-      - name: Build
-        working-directory: ./examples/custom-layers
-        run: |
-            ./gradlew build
-            ./gradlew test
-
-  custom-annotation:
-    name: "Build and test example: CustomAnnotation"
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-      - name: Use ramani as composite build
-        working-directory: ./examples/custom-annotation
-        run: echo "includeBuild(\"../../ramani-maplibre\")" >> settings.gradle.kts
-      - name: Build
-        working-directory: ./examples/custom-annotation
-        run: |
-            ./gradlew build
-            ./gradlew test
 

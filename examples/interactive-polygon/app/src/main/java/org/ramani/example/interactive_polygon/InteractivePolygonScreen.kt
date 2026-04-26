@@ -62,12 +62,20 @@ fun InteractivePolygonScreen() {
                 style = style,
                 cameraPositionState = cameraPositionState,
             ) {
-                vertexStates.forEach { state ->
+                vertexStates.forEachIndexed { index, state ->
                     Circle(
                         centerState = state,
+                        layerId = "vertex_$index",
                         aboveLayerId = "editable_polygon",
                         radius = 10.0F,
                         color = "Blue",
+                    )
+                    Circle(
+                        centerState = state,
+                        aboveLayerId = "vertex_$index",
+                        radius = 30.0F,
+                        color = "Blue",
+                        opacity = 0.0F,
                         isDraggable = true,
                     )
                 }

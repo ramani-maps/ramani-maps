@@ -16,7 +16,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.maplibre.android.geometry.LatLng
 import org.ramani.compose.CameraPosition
@@ -38,7 +38,7 @@ private val polygonPoints = listOf(
 
 @Composable
 fun InteractivePolygonScreen() {
-    val context = LocalContext.current
+    val maplibreStyleUrl = stringResource(R.string.maplibre_style_url)
     val polygonState = rememberPolygonState(polygonPoints)
     val cameraPositionState = rememberCameraPositionState(
         CameraPosition(target = polygonState.center, zoom = 15.0)
@@ -107,7 +107,7 @@ fun InteractivePolygonScreen() {
                 onClick = {
                     styleUrl.value =
                         if (!isDefaultStyle.value) DEFAULT_STYLE_URL
-                        else context.getString(R.string.maplibre_style_url)
+                        else maplibreStyleUrl
                     isDefaultStyle.value = !isDefaultStyle.value
                 }) {
                 Text("Swap style")

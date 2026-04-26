@@ -12,7 +12,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,12 +20,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import org.maplibre.android.geometry.LatLng
 import org.ramani.compose.CameraPosition
-import org.ramani.compose.CenterState
 import org.ramani.compose.Circle
 import org.ramani.compose.MapLibre
 import org.ramani.compose.MapStyle
 import org.ramani.compose.Polygon
 import org.ramani.compose.rememberCameraPositionState
+import org.ramani.compose.rememberPolygonState
 
 private const val DEFAULT_STYLE_URL = "https://demotiles.maplibre.org/style.json"
 
@@ -40,12 +39,9 @@ private val polygonPoints = listOf(
 @Composable
 fun InteractivePolygonScreen() {
     val context = LocalContext.current
-    var polygonCenter = LatLng(44.989, 10.809)
-    val vertexStates = remember {
-        polygonPoints.map { CenterState(it) }
-    }
+    val polygonState = rememberPolygonState(polygonPoints)
     val cameraPositionState = rememberCameraPositionState(
-        CameraPosition(target = polygonCenter, zoom = 15.0)
+        CameraPosition(target = polygonState.center, zoom = 15.0)
     )
 
     val isDefaultStyle = rememberSaveable { mutableStateOf(true) }
@@ -62,7 +58,7 @@ fun InteractivePolygonScreen() {
                 style = style,
                 cameraPositionState = cameraPositionState,
             ) {
-                vertexStates.forEachIndexed { index, state ->
+                polygonState.vertexStates.forEachIndexed { index, state ->
                     Circle(
                         centerState = state,
                         layerId = "vertex_$index",
@@ -80,21 +76,13 @@ fun InteractivePolygonScreen() {
                     )
                 }
                 Polygon(
+                    state = polygonState,
                     layerId = "editable_polygon",
-                    vertices = vertexStates.map { it.center },
                     isDraggable = true,
                     draggerImageId = R.drawable.ic_drag,
                     borderWidth = 4.0F,
                     fillColor = "Yellow",
                     opacity = 0.5F,
-                    onCenterChanged = { newCenter ->
-                        polygonCenter = newCenter
-                    },
-                    onVerticesChanged = { newVertices ->
-                        newVertices.forEachIndexed { index, vertex ->
-                            vertexStates[index].center = vertex
-                        }
-                    },
                 )
             }
         }
@@ -128,7 +116,7 @@ fun InteractivePolygonScreen() {
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 onClick = {
                     cameraPositionState.position = cameraPositionState.position.copy(
-                        target = polygonCenter,
+                        target = polygonState.center,
                         animationDurationMs = 3000,
                     )
                 },

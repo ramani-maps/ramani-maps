@@ -75,14 +75,10 @@ private fun VertexDragger(
 
 @Composable
 private fun PolygonDragHandle(
-    vertices: List<LatLng>,
+    state: PolygonState,
     layerId: String,
     aboveLayerId: String,
     imageId: Int? = null,
-    azimuth: Float,
-    onCenterChanged: (LatLng) -> Unit = {},
-    onVerticesChanged: (List<LatLng>) -> Unit = {},
-    onAzimuthChanged: (Float) -> Unit = {},
 ) {
     val polygonDragHandleCoord = remember {
         CenterState(LatLng())
@@ -126,13 +122,12 @@ private fun PolygonDragHandle(
 
     VertexDragger(
         draggedCenter = inputDragCoord.value,
-        vertices = vertices,
-        onCenterAndVerticesChanged = { center, vertices ->
+        vertices = state.vertices,
+        onCenterAndVerticesChanged = { center, newVertices ->
             polygonDragHandleCoord.center = center
             if (isDragActive.value) {
-                onVerticesChanged(vertices)
+                state.updateVerticesFromDrag(newVertices)
             }
-            onCenterChanged(center)
         })
 
     AzimuthCalculator(
@@ -141,7 +136,7 @@ private fun PolygonDragHandle(
         startAzimuthRefPos.value,
         onAzimuthChanged = {
             if (isAzimuthDragActive.value) {
-                onAzimuthChanged(it + startAzimuth.floatValue)
+                state.updateAzimuthFromDrag(it + startAzimuth.floatValue)
             }
         })
 
@@ -169,7 +164,7 @@ private fun PolygonDragHandle(
         aboveLayerId = aboveLayerId,
         onCenterDragged = {
             if (!isAzimuthDragActive.value && counter.intValue > 0) {
-                startAzimuth.floatValue = azimuth
+                startAzimuth.floatValue = state.azimuth
                 startAzimuthRefPos.value = it
                 isAzimuthDragActive.value = true
             }
@@ -200,8 +195,7 @@ private fun PolygonDragHandle(
 
 @Composable
 fun Polygon(
-    vertices: List<LatLng>,
-    azimuth: Float = 0F,
+    state: PolygonState,
     draggerImageId: Int? = null,
     fillColor: String = "Transparent",
     borderWidth: Float = 1.0F,
@@ -209,9 +203,6 @@ fun Polygon(
     opacity: Float = 1.0F,
     layerId: String? = null,
     isDraggable: Boolean = false,
-    onCenterChanged: (LatLng) -> Unit = {},
-    onVerticesChanged: (List<LatLng>) -> Unit = {},
-    onAzimuthChanged: (Float) -> Unit = {},
 ) {
     val mapApplier = LocalMapApplier.current
     val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
@@ -220,7 +211,7 @@ fun Polygon(
     val topLayerId = if (isDraggable) "${resolvedLayerId}_drag_handle" else visualTopLayerId
     mapApplier.registerLayerAlias(resolvedLayerId, topLayerId)
 
-    val borderPath = vertices.toMutableList().apply { this.add(this[0]) }
+    val borderPath = state.vertices.toMutableList().apply { this.add(this[0]) }
 
     Fill(
         points = borderPath,
@@ -242,14 +233,10 @@ fun Polygon(
 
     if (isDraggable) {
         PolygonDragHandle(
-            vertices = vertices,
+            state = state,
             layerId = resolvedLayerId,
             aboveLayerId = visualTopLayerId,
             imageId = draggerImageId,
-            azimuth = azimuth,
-            onCenterChanged = { onCenterChanged(it) },
-            onVerticesChanged = { onVerticesChanged(it) },
-            onAzimuthChanged = onAzimuthChanged,
         )
     }
 }

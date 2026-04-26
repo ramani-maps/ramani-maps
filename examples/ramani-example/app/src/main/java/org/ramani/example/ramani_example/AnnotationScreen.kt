@@ -16,7 +16,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.maplibre.android.geometry.LatLng
 import org.ramani.compose.CameraPosition
@@ -45,7 +45,8 @@ private val polylinePoints = listOf(
 
 @Composable
 fun AnnotationScreen() {
-    val context = LocalContext.current
+    val maplibreStyleUrl = stringResource(R.string.maplibre_style_url)
+
     val cameraPositionState = rememberCameraPositionState(
         CameraPosition(target = LatLng(46.0, 4.8), zoom = 2.0)
     )
@@ -110,7 +111,7 @@ fun AnnotationScreen() {
                 onClick = {
                     styleUrl.value =
                         if (!isDefaultStyle.value) DEFAULT_STYLE_URL
-                        else context.getString(R.string.maplibre_style_url)
+                        else maplibreStyleUrl
                     isDefaultStyle.value = !isDefaultStyle.value
                 }) {
                 Text("Swap style")

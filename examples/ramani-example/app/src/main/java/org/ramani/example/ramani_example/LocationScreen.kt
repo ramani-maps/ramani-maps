@@ -19,7 +19,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.location.modes.CameraMode
 import org.maplibre.android.location.modes.RenderMode
@@ -29,10 +28,10 @@ import org.ramani.compose.LocationRequestProperties
 import org.ramani.compose.LocationStyling
 import org.ramani.compose.MapLibre
 import org.ramani.compose.rememberCameraPositionState
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun LocationScreen() {
-    val context = LocalContext.current
     val locationProperties = rememberSaveable { mutableStateOf(LocationRequestProperties()) }
     val cameraPositionState = rememberCameraPositionState(CameraPosition(zoom = 14.0))
     val userLocation = rememberSaveable { mutableStateOf(Location(null)) }
@@ -67,7 +66,7 @@ fun LocationScreen() {
         }
     }
 
-    val style = MapStyle.Uri(context.getString(R.string.maplibre_style_url))
+    val style = MapStyle.Uri(stringResource(R.string.maplibre_style_url))
 
     Box {
         Surface(
@@ -94,11 +93,11 @@ fun LocationScreen() {
             Button(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 onClick = {
-                    renderMode.value =
-                        if (renderMode.value == RenderMode.COMPASS) RenderMode.NORMAL else RenderMode.COMPASS
+                    renderMode.intValue =
+                        if (renderMode.intValue == RenderMode.COMPASS) RenderMode.NORMAL else RenderMode.COMPASS
                 }
             ) {
-                if (renderMode.value == RenderMode.COMPASS) {
+                if (renderMode.intValue == RenderMode.COMPASS) {
                     Text("RenderMode.NORMAL")
                 } else {
                     Text("RenderMode.COMPASS")

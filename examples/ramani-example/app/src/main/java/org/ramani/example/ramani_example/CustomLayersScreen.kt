@@ -22,7 +22,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.maplibre.android.geometry.LatLng
@@ -43,15 +42,15 @@ import org.ramani.compose.MapStyle
 import org.ramani.compose.UiSettings
 import org.ramani.compose.rememberCameraPositionState
 import java.net.URI
+import androidx.compose.ui.res.stringResource
 
 private const val DEFAULT_STYLE_URL = "https://demotiles.maplibre.org/style.json"
 
 @Composable
 fun CustomLayersScreen() {
-    val context = LocalContext.current
-
-    val thunderKey = context.getString(R.string.thunderforest_api_key)
-    val maptilerKey = context.getString(R.string.maptiler_api_key)
+    val maplibreStyleUrl = stringResource(R.string.maplibre_style_url)
+    val thunderKey = stringResource(R.string.thunderforest_api_key)
+    val maptilerKey = stringResource(R.string.maptiler_api_key)
 
     val cameraPositionState = rememberCameraPositionState(
         CameraPosition(target = LatLng(46.6, 7.1), zoom = 8.0)
@@ -235,7 +234,7 @@ fun CustomLayersScreen() {
                 onClick = {
                     styleUrl.value =
                         if (!isDefaultStyle.value) DEFAULT_STYLE_URL
-                        else context.getString(R.string.maplibre_style_url)
+                        else maplibreStyleUrl
                     isDefaultStyle.value = !isDefaultStyle.value
                 }) {
                 Text("Swap style")

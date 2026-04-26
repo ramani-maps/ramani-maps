@@ -32,11 +32,11 @@ enum class LocationPriority(val value: Int) : Parcelable {
 
 @Parcelize
 class LocationRequestProperties(
-    var priority: LocationPriority = PRIORITY_HIGH_ACCURACY,
-    var interval: Long = 1000L,
-    var fastestInterval: Long = 0L,
-    var displacement: Float = 0F,
-    var maxWaitTime: Long = 0L
+    val priority: LocationPriority = PRIORITY_HIGH_ACCURACY,
+    val interval: Long = 1000L,
+    val fastestInterval: Long = 0L,
+    val displacement: Float = 0F,
+    val maxWaitTime: Long = 0L
 ) : Parcelable {
     constructor(locationRequestProperties: LocationRequestProperties) : this(
         locationRequestProperties.priority,

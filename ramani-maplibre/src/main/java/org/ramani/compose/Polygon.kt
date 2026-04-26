@@ -12,6 +12,8 @@ package org.ramani.compose
 
 import android.graphics.PointF
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.core.graphics.minus
@@ -58,8 +60,8 @@ private fun VertexDragger(
 
     vertices.forEach { currentCenter += projection.toScreenLocation(it) }
 
-    currentCenter.x = currentCenter.x / vertices.size
-    currentCenter.y = currentCenter.y / vertices.size
+    currentCenter.x /= vertices.size
+    currentCenter.y /= vertices.size
 
     val newCenter = projection.toScreenLocation(draggedCenter)
     val draggedPixels: PointF = newCenter - currentCenter
@@ -107,7 +109,7 @@ private fun PolygonDragHandle(
     }
 
     val startAzimuth = remember {
-        mutableStateOf(0.0f)
+        mutableFloatStateOf(0.0f)
     }
 
     val startAzimuthRefPos = remember {
@@ -119,7 +121,7 @@ private fun PolygonDragHandle(
     }
 
     val counter = remember {
-        mutableStateOf(0)
+        mutableIntStateOf(0)
     }
 
     VertexDragger(
@@ -139,7 +141,7 @@ private fun PolygonDragHandle(
         startAzimuthRefPos.value,
         onAzimuthChanged = {
             if (isAzimuthDragActive.value) {
-                onAzimuthChanged(it + startAzimuth.value)
+                onAzimuthChanged(it + startAzimuth.floatValue)
             }
         })
 
@@ -166,17 +168,17 @@ private fun PolygonDragHandle(
         layerId = "${layerId}_rotation_handle",
         aboveLayerId = aboveLayerId,
         onCenterDragged = {
-            if (!isAzimuthDragActive.value && counter.value > 0) {
-                startAzimuth.value = azimuth
+            if (!isAzimuthDragActive.value && counter.intValue > 0) {
+                startAzimuth.floatValue = azimuth
                 startAzimuthRefPos.value = it
                 isAzimuthDragActive.value = true
             }
-            counter.value = counter.value + 1
+            counter.intValue += 1
             inputAzimuthCoord.value = it
         },
         onDragFinished = {
             isAzimuthDragActive.value = false
-            counter.value = 0
+            counter.intValue = 0
         }
     )
 

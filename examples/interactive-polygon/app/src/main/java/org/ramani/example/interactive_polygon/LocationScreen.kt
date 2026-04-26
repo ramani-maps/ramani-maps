@@ -58,6 +58,15 @@ fun LocationScreen() {
         )
     }
 
+    LaunchedEffect(userLocation.value) {
+        val loc = userLocation.value
+        if (loc.latitude != 0.0 || loc.longitude != 0.0) {
+            cameraPositionState.position = cameraPositionState.position.copy(
+                target = LatLng(loc.latitude, loc.longitude)
+            )
+        }
+    }
+
     val style = MapStyle.Uri(context.getString(R.string.maplibre_style_url))
 
     Box {

@@ -27,16 +27,16 @@ import kotlinx.parcelize.Parcelize
  */
 @Parcelize
 class LocationStyling(
-    var accuracyAlpha: Float? = null,
-    @ColorInt var accuracyColor: Int? = null,
-    var enablePulse: Boolean? = null,
-    var enablePulseFade: Boolean? = null,
-    @ColorInt var pulseColor: Int? = null,
-    @ColorInt var bearingTintColor: Int? = null,
-    @ColorInt var foregroundTintColor: Int? = null,
-    @ColorInt var backgroundTintColor: Int? = null,
-    @ColorInt var foregroundStaleTintColor: Int? = null,
-    @ColorInt var backgroundStaleTintColor: Int? = null,
+    val accuracyAlpha: Float? = null,
+    @ColorInt val accuracyColor: Int? = null,
+    val enablePulse: Boolean? = null,
+    val enablePulseFade: Boolean? = null,
+    @ColorInt val pulseColor: Int? = null,
+    @ColorInt val bearingTintColor: Int? = null,
+    @ColorInt val foregroundTintColor: Int? = null,
+    @ColorInt val backgroundTintColor: Int? = null,
+    @ColorInt val foregroundStaleTintColor: Int? = null,
+    @ColorInt val backgroundStaleTintColor: Int? = null,
 ) : Parcelable {
     constructor(locationStyling: LocationStyling) : this(
         locationStyling.accuracyAlpha,

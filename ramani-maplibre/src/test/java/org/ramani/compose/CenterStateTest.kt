@@ -10,12 +10,15 @@
 
 package org.ramani.compose
 
+import androidx.compose.runtime.saveable.SaverScope
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Test
 import org.maplibre.android.geometry.LatLng
 
 class CenterStateTest {
+
+    private val saverScope = SaverScope { _: Any -> true }
 
     @Test
     fun initialCenter_isReturned() {
@@ -43,7 +46,7 @@ class CenterStateTest {
     @Test
     fun saver_roundTrips() {
         val original = CenterState(LatLng(48.5, 7.7))
-        val saved = CenterState.Saver.save(original)
+        val saved = with(CenterState.Saver) { saverScope.save(original) }
         val restored = CenterState.Saver.restore(saved!!)!!
         assertEquals(original.center, restored.center)
         assertNotSame(original, restored)
@@ -54,7 +57,7 @@ class CenterStateTest {
         val state = CenterState(LatLng(0.0, 0.0))
         state.center = LatLng(51.5, -0.12)
 
-        val saved = CenterState.Saver.save(state)
+        val saved = with(CenterState.Saver) { saverScope.save(state) }
         val restored = CenterState.Saver.restore(saved!!)!!
         assertEquals(LatLng(51.5, -0.12), restored.center)
     }

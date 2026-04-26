@@ -261,15 +261,21 @@ private fun MapLibreMap.setupLocation(
     val locationActivationOptions = activationBuilder.build()
     this.locationComponent.activateLocationComponent(locationActivationOptions)
 
+    @SuppressLint("MissingPermission")
     if (isFineLocationGranted(context) || isCoarseLocationGranted(context)) {
-        @SuppressLint("MissingPermission")
         this.locationComponent.isLocationComponentEnabled = true
+        val engine = locationEngine ?: LocationEngineDefault.getDefaultLocationEngine(context)
         userLocation?.let {
-            trackLocation(
-                locationEngine ?: LocationEngineDefault.getDefaultLocationEngine(context),
-                locationEngineRequest,
-                userLocation,
-            )
+            engine.getLastLocation(object : LocationEngineCallback<LocationEngineResult> {
+                override fun onSuccess(result: LocationEngineResult?) {
+                    result?.lastLocation?.let { location -> userLocation.value = location }
+                }
+
+                override fun onFailure(exception: Exception) {
+                    // Ignore: last location may not be available, we'll get a fresh fix soon
+                }
+            })
+            trackLocation(engine, locationEngineRequest, userLocation)
         }
     }
 

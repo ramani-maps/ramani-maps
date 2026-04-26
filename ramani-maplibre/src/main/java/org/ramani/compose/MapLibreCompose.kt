@@ -16,7 +16,6 @@ import androidx.compose.runtime.Composition
 import androidx.compose.runtime.CompositionContext
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.staticCompositionLocalOf
-import kotlinx.coroutines.awaitCancellation
 import org.maplibre.android.gestures.MoveGestureDetector
 import org.maplibre.android.gestures.RotateGestureDetector
 import org.maplibre.android.gestures.StandardScaleGestureDetector
@@ -38,20 +37,12 @@ import org.maplibre.android.plugins.annotation.OnSymbolDragListener
 import org.maplibre.android.plugins.annotation.Symbol
 import org.maplibre.android.plugins.annotation.SymbolManager
 import android.content.Context
+import kotlinx.coroutines.suspendCancellableCoroutine
 import org.maplibre.android.style.layers.Layer
 import org.maplibre.android.style.sources.Source
 import org.maplibre.android.utils.BitmapUtils
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-
-internal suspend inline fun disposingComposition(factory: () -> Composition) {
-    val composition = factory()
-    try {
-        awaitCancellation()
-    } finally {
-        composition.dispose()
-    }
-}
 
 internal fun MapView.newComposition(
     parent: CompositionContext,
@@ -67,7 +58,7 @@ internal fun MapView.newComposition(
 }
 
 internal suspend fun MapLibreMap.awaitStyle(styleBuilder: Style.Builder) =
-    suspendCoroutine { continuation ->
+    suspendCancellableCoroutine { continuation ->
         setStyle(styleBuilder) { style ->
             continuation.resume(style)
         }
@@ -130,11 +121,13 @@ internal fun computeLayerOrder(
     val sortedOrder = mutableListOf<String>()
     while (queue.isNotEmpty()) {
         val current = queue.poll()
-        sortedOrder.add(current)
-        for (neighbor in adj[current]!!) {
-            val newDeg = inDegree[neighbor]!! - 1
-            inDegree[neighbor] = newDeg
-            if (newDeg == 0) queue.add(neighbor)
+        current?.let {
+            sortedOrder.add(current)
+            for (neighbor in adj[current]!!) {
+                val newDeg = inDegree[neighbor]!! - 1
+                inDegree[neighbor] = newDeg
+                if (newDeg == 0) queue.add(neighbor)
+            }
         }
     }
 

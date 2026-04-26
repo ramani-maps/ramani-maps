@@ -2,9 +2,15 @@ import java.util.Properties
 import java.io.FileInputStream
 import java.io.IOException
 
+buildscript {
+    dependencies {
+        // Needed for jreleaser for some reason
+        classpath("com.sun.activation:jakarta.activation:1.2.2")
+    }
+}
+
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.jreleaser)
@@ -123,10 +129,12 @@ if (keystoreProperties.containsKey("centralUsername") && keystoreProperties.cont
     jreleaser {
         signing {
             setActive("ALWAYS")
-            armored.set(true)
-            setMode("COMMAND")
-            keystoreProperties["gpgPass"]?.let {
-                passphrase.set(it as String)
+            pgp {
+                armored.set(true)
+                setMode("COMMAND")
+                keystoreProperties["gpgPass"]?.let {
+                    passphrase.set(it as String)
+                }
             }
         }
         deploy {

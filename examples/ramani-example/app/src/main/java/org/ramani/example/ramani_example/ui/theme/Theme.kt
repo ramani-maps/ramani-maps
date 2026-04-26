@@ -1,4 +1,4 @@
-package org.ramani.example.interactive_polygon.ui.theme
+package org.ramani.example.ramani_example.ui.theme
 
 import android.app.Activity
 import android.os.Build

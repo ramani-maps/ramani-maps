@@ -1,4 +1,4 @@
-package org.ramani.example.interactive_polygon
+package org.ramani.example.ramani_example
 
 import android.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
@@ -49,6 +49,7 @@ private const val DEFAULT_STYLE_URL = "https://demotiles.maplibre.org/style.json
 @Composable
 fun CustomLayersScreen() {
     val context = LocalContext.current
+
     val thunderKey = context.getString(R.string.thunderforest_api_key)
     val maptilerKey = context.getString(R.string.maptiler_api_key)
 

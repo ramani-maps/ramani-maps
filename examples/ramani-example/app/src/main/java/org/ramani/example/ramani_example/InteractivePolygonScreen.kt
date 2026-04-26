@@ -1,4 +1,4 @@
-package org.ramani.example.interactive_polygon
+package org.ramani.example.ramani_example
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

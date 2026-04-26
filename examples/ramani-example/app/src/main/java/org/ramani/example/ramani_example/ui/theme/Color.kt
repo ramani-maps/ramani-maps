@@ -1,4 +1,4 @@
-package org.ramani.example.interactive_polygon.ui.theme
+package org.ramani.example.ramani_example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

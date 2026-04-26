@@ -18,7 +18,7 @@ try {
 }
 
 android {
-    namespace = "org.ramani.example.interactive_polygon"
+    namespace = "org.ramani.example.ramani_example"
     compileSdk = 36
 
     defaultConfig {

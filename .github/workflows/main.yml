@@ -14,6 +14,8 @@ jobs:
   ramani-maplibre:
     name: Build and test ramani-maplibre
     runs-on: ubuntu-24.04
+    env:
+      ANDROID_AVD_HOME: ${{ github.workspace }}/.android/avd
     steps:
       - uses: actions/checkout@v6
         with:
@@ -28,8 +30,47 @@ jobs:
         run: |
             ./gradlew build
             ./gradlew test
+      - name: Enable KVM access
+        run: |
+          echo 'KERNEL=="kvm",GROUP="kvm",MODE="0666",OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Create emulator AVD (latest available x86_64 API)
+        run: |
+          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          AVDMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager"
+          mkdir -p "$ANDROID_AVD_HOME"
+          LATEST_API=$("$SDKMANAGER" --list \
+            | grep -Eo 'system-images;android-[0-9]+;google_apis;x86_64' \
+            | sed 's/^system-images;android-//;s/;google_apis;x86_64$//' \
+            | sort -n \
+            | tail -1)
+          if [ -z "$LATEST_API" ]; then
+            echo "No Android x86_64 system image package is available on this runner."
+            exit 1
+          fi
+          SYSTEM_IMAGE="system-images;android-${LATEST_API};google_apis;x86_64"
+          echo "Using Android API ${LATEST_API} (${SYSTEM_IMAGE})"
+          yes 2>/dev/null | "$SDKMANAGER" --licenses > /dev/null
+          "$SDKMANAGER" "emulator" "platforms;android-${LATEST_API}" "$SYSTEM_IMAGE"
+          echo "no" | "$AVDMANAGER" create avd -n test_avd_latest -k "$SYSTEM_IMAGE" --device "pixel_5" -p "$ANDROID_AVD_HOME/test_avd_latest" --force
+          "$ANDROID_SDK_ROOT/emulator/emulator" -list-avds | grep -Fx "test_avd_latest"
       - name: Print github values
         run: echo "github.event_name=${{ github.event_name }}, github.event.action=${{ github.event.action }}, github.ref_name=${{ github.ref_name }}"
+      - name: Start emulator
+        id: start_emulator
+        run: |
+          "$ANDROID_SDK_ROOT/emulator/emulator" -avd test_avd_latest -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect &
+          "$ANDROID_SDK_ROOT/platform-tools/adb" wait-for-device
+          "$ANDROID_SDK_ROOT/platform-tools/adb" shell 'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 1; done'
+          echo "Emulator ready"
+      - name: Run connected debug tests
+        working-directory: ./ramani-maplibre
+        run: ./gradlew connectedDebugAndroidTest
+      - name: Stop emulator
+        if: ${{ always() && steps.start_emulator.outcome != 'skipped' }}
+        run: |
+          "$ANDROID_SDK_ROOT/platform-tools/adb" emu kill
       - name: Publish (Maven)
         if: ${{ github.event_name == 'release' && github.event.action == 'created' && startsWith(github.ref_name, 'maplibre') }}
         working-directory: ./ramani-maplibre
@@ -57,4 +98,3 @@ jobs:
         working-directory: ./example
         run: |
             ./gradlew build
-

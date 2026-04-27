@@ -55,6 +55,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
 }
 
 dependencies {
@@ -78,50 +85,50 @@ dependencies {
 }
 
 if (keystoreProperties.containsKey("centralUsername") && keystoreProperties.containsKey("centralPassword")) {
-    afterEvaluate {
-        publishing {
-            publications {
-                create<MavenPublication>("release") {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                afterEvaluate {
                     from(components["release"])
+                }
 
-                    pom {
-                        name = "Ramani-Maplibre"
-                        packaging = "aar"
-                        description = "An Android Compose library to manipulate MapLibre maps."
-                        url = "https://github.com/ramani-maps/ramani-maps"
+                pom {
+                    name = "Ramani-Maplibre"
+                    packaging = "aar"
+                    description = "An Android Compose library to manipulate MapLibre maps."
+                    url = "https://github.com/ramani-maps/ramani-maps"
 
-                        scm {
-                        connection = "scm:git:https://github.com/ramani-maps/ramani-maps"
-                        developerConnection = "scm:git:https://github.com/ramani-maps/ramani-maps"
-                        url = "https://github.com/ramani-maps/ramani-maps"
+                    scm {
+                    connection = "scm:git:https://github.com/ramani-maps/ramani-maps"
+                    developerConnection = "scm:git:https://github.com/ramani-maps/ramani-maps"
+                    url = "https://github.com/ramani-maps/ramani-maps"
+                    }
+
+                    licenses {
+                        license {
+                            name = "Mozilla Public License 2.0"
+                            url = "https://spdx.org/licenses/MPL-2.0.html"
                         }
+                    }
 
-                        licenses {
-                            license {
-                                name = "Mozilla Public License 2.0"
-                                url = "https://spdx.org/licenses/MPL-2.0.html"
-                            }
+                    developers {
+                        developer {
+                            id = "romanbapst"
+                            name = "Roman Bapst"
+                            email = "bapstroman@gmail.com"
                         }
-
-                        developers {
-                            developer {
-                                id = "romanbapst"
-                                name = "Roman Bapst"
-                                email = "bapstroman@gmail.com"
-                            }
-                            developer {
-                                id = "jonasvautherin"
-                                name = "Jonas Vautherin"
-                                email = "dev@jonas.vautherin.ch"
-                            }
+                        developer {
+                            id = "jonasvautherin"
+                            name = "Jonas Vautherin"
+                            email = "dev@jonas.vautherin.ch"
                         }
                     }
                 }
             }
-            repositories {
-                maven {
-                   url = uri(layout.buildDirectory.dir("target/staging-deploy"))
-                }
+        }
+        repositories {
+            maven {
+               url = uri(layout.buildDirectory.dir("target/staging-deploy"))
             }
         }
     }

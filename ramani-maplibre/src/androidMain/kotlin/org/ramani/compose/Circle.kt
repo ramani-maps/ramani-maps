@@ -1,7 +1,7 @@
 /*
  * This file is part of ramani-maps.
  *
- * Copyright (c) 2023 Roman Bapst & Jonas Vautherin.
+ * Copyright (c) 2026 Roman Bapst & Jonas Vautherin.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,25 +18,26 @@ import com.google.gson.JsonNull
 import org.maplibre.android.plugins.annotation.CircleOptions
 
 @Composable
-fun Circle(
+actual fun Circle(
     centerState: CenterState,
     radius: Float,
-    isDraggable: Boolean = false,
-    color: String = "Yellow",
-    opacity: Float = 1.0f,
-    borderColor: String = "Black",
-    borderWidth: Float = 0.0F,
-    layerId: String? = null,
-    aboveLayerId: String? = null,
-    belowLayerId: String? = null,
-    data: JsonElement = JsonNull.INSTANCE,
-    onCenterDragged: (LatLng) -> Unit = {},
-    onDragFinished: (LatLng) -> Unit = {},
-    onClick: (JsonElement?) -> Unit = {},
-    onLongClick: (JsonElement?) -> Unit = {}
+    isDraggable: Boolean,
+    color: String,
+    opacity: Float,
+    borderColor: String,
+    borderWidth: Float,
+    layerId: String?,
+    aboveLayerId: String?,
+    belowLayerId: String?,
+    data: Any?,
+    onCenterDragged: (LatLng) -> Unit,
+    onDragFinished: (LatLng) -> Unit,
+    onClick: (Any?) -> Unit,
+    onLongClick: (Any?) -> Unit,
 ) {
     val mapApplier = LocalMapApplier.current
     val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
+    val jsonData = data as? JsonElement ?: JsonNull.INSTANCE
 
     ComposeNode<CircleNode, MapApplier>(factory = {
         val circleManager = mapApplier.getOrCreateCircleManagerForLayerId(resolvedLayerId, aboveLayerId, belowLayerId)
@@ -48,7 +49,7 @@ fun Circle(
             .withCircleStrokeColor(borderColor)
             .withCircleStrokeWidth(borderWidth)
             .withCircleOpacity(opacity)
-            .withData(data)
+            .withData(jsonData)
 
         val circle = circleManager.create(circleOptions)
 

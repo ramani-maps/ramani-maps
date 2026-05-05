@@ -1,7 +1,7 @@
 /*
  * This file is part of ramani-maps.
  *
- * Copyright (c) 2023 Roman Bapst & Jonas Vautherin.
+ * Copyright (c) 2026 Roman Bapst & Jonas Vautherin.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,6 +12,10 @@ package org.ramani.compose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+
+@OptIn(ExperimentalUuidApi::class)
 @Composable
 fun CircleWithItem(
     centerState: CenterState,
@@ -24,13 +28,13 @@ fun CircleWithItem(
     opacity: Float = 1.0f,
     layerId: String? = null,
     aboveLayerId: String? = null,
-    imageId: Int? = null,
+    imageId: Any? = null,
     itemSize: Float = 0.0f,
     text: String? = null,
     onCenterChanged: (LatLng) -> Unit = {},
     onDragStopped: () -> Unit = {},
 ) {
-    val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
+    val resolvedLayerId = layerId ?: remember { Uuid.random().toString() }
     val dragCenterState = remember { CenterState(centerState.center) }
     val displayCenterState = remember { CenterState(centerState.center) }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of ramani-maps.
  *
- * Copyright (c) 2023 Roman Bapst & Jonas Vautherin.
+ * Copyright (c) 2026 Roman Bapst & Jonas Vautherin.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,45 +19,46 @@ import androidx.compose.ui.res.imageResource
 import com.google.gson.JsonElement
 import com.google.gson.JsonNull
 import org.maplibre.android.plugins.annotation.SymbolOptions
-import org.maplibre.android.style.layers.Property.ICON_ANCHOR_CENTER
-import org.maplibre.android.style.layers.Property.TEXT_ANCHOR_CENTER
-import org.maplibre.android.style.layers.Property.TEXT_JUSTIFY_CENTER
+
+actual val DefaultMarkerImage: Any = org.maplibre.android.R.drawable.maplibre_marker_icon_default
 
 @Composable
-fun Symbol(
+actual fun Symbol(
     centerState: CenterState,
-    size: Float = 1F,
-    color: String = "",
-    isDraggable: Boolean = false,
-    layerId: String? = null,
-    aboveLayerId: String? = null,
-    belowLayerId: String? = null,
-    imageId: Int? = org.maplibre.android.R.drawable.maplibre_marker_icon_default,
-    imageAnchor: String = ICON_ANCHOR_CENTER,
-    imageOffset: Array<Float> = arrayOf(0f, 0f),
-    imageRotation: Float? = null,
-    text: String? = null,
-    textAnchor: String = TEXT_ANCHOR_CENTER,
-    textJustify: String = TEXT_JUSTIFY_CENTER,
-    textOffset: Array<Float> = arrayOf(0f, 3f),
-    textColor: String = "#000000",
-    textHaloColor: String = "#000000",
-    textHaloWidth: Float = 0f,
-    data: JsonElement = JsonNull.INSTANCE,
-    onSymbolDragged: (LatLng) -> Unit = {},
-    onDragFinished: (LatLng) -> Unit = {},
-    onClick: (JsonElement?) -> Unit = {},
-    onLongClick: (JsonElement?) -> Unit = {}
+    size: Float,
+    color: String,
+    isDraggable: Boolean,
+    layerId: String?,
+    aboveLayerId: String?,
+    belowLayerId: String?,
+    imageId: Any?,
+    imageAnchor: String,
+    imageOffset: Array<Float>,
+    imageRotation: Float?,
+    text: String?,
+    textAnchor: String,
+    textJustify: String,
+    textOffset: Array<Float>,
+    textColor: String,
+    textHaloColor: String,
+    textHaloWidth: Float,
+    data: Any?,
+    onSymbolDragged: (LatLng) -> Unit,
+    onDragFinished: (LatLng) -> Unit,
+    onClick: (Any?) -> Unit,
+    onLongClick: (Any?) -> Unit,
 ) {
     val mapApplier = LocalMapApplier.current
     val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
+    val jsonData = data as? JsonElement ?: JsonNull.INSTANCE
+    val androidImageId = imageId as? Int
 
-    imageId?.let {
+    androidImageId?.let {
         val bitmap = ImageBitmap.imageResource(it).asAndroidBitmap()
         try {
             val style = mapApplier.style.value
-            if (style != null && style.getImage("$imageId") == null) {
-                style.addImage("$imageId", bitmap)
+            if (style != null && style.getImage("$it") == null) {
+                style.addImage("$it", bitmap)
             }
         } catch (_: IllegalStateException) {
             // Style is being replaced — image will be re-added after the new style loads
@@ -69,11 +70,11 @@ fun Symbol(
         var symbolOptions = SymbolOptions()
             .withDraggable(isDraggable)
             .withLatLng(centerState.center.toMapLibre())
-            .withData(data)
+            .withData(jsonData)
 
-        imageId?.let {
+        androidImageId?.let {
             symbolOptions = symbolOptions
-                .withIconImage(imageId.toString())
+                .withIconImage(it.toString())
                 .withIconColor(color)
                 .withIconSize(size)
                 .withIconAnchor(imageAnchor)

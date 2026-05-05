@@ -1,7 +1,7 @@
 /*
  * This file is part of ramani-maps.
  *
- * Copyright (c) 2023 Roman Bapst & Jonas Vautherin.
+ * Copyright (c) 2026 Roman Bapst & Jonas Vautherin.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,15 +16,15 @@ import androidx.compose.runtime.remember
 import org.maplibre.android.plugins.annotation.LineOptions
 
 @Composable
-fun Polyline(
+actual fun Polyline(
     points: List<LatLng>,
     color: String,
     lineWidth: Float,
-    layerId: String? = null,
-    aboveLayerId: String? = null,
-    belowLayerId: String? = null,
-    isDraggable: Boolean = false,
-    dashType: Array<Float>? = null,
+    layerId: String?,
+    aboveLayerId: String?,
+    belowLayerId: String?,
+    isDraggable: Boolean,
+    dashType: Array<Float>?,
 ) {
     val mapApplier = LocalMapApplier.current
     val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }

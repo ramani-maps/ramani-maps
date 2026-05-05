@@ -1,7 +1,7 @@
 /*
  * This file is part of ramani-maps.
  *
- * Copyright (c) 2023 Roman Bapst & Jonas Vautherin.
+ * Copyright (c) 2026 Roman Bapst & Jonas Vautherin.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,14 +16,14 @@ import androidx.compose.runtime.remember
 import org.maplibre.android.plugins.annotation.FillOptions
 
 @Composable
-fun Fill(
+actual fun Fill(
     points: List<LatLng>,
-    fillColor: String = "Transparent",
-    opacity: Float = 1.0f,
-    layerId: String? = null,
-    aboveLayerId: String? = null,
-    belowLayerId: String? = null,
-    isDraggable: Boolean = false,
+    fillColor: String,
+    opacity: Float,
+    layerId: String?,
+    aboveLayerId: String?,
+    belowLayerId: String?,
+    isDraggable: Boolean,
 ) {
     val mapApplier = LocalMapApplier.current
     val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }

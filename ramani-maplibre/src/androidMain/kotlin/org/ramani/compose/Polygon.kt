@@ -1,7 +1,7 @@
 /*
  * This file is part of ramani-maps.
  *
- * Copyright (c) 2023 Roman Bapst & Jonas Vautherin.
+ * Copyright (c) 2026 Roman Bapst & Jonas Vautherin.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,14 +10,11 @@
 
 package org.ramani.compose
 
-import android.graphics.PointF
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.core.graphics.minus
-import androidx.core.graphics.plus
 import kotlin.math.atan2
 
 @Composable
@@ -27,12 +24,11 @@ private fun AzimuthCalculator(
     refPos: LatLng,
     onAzimuthChanged: (Float) -> Unit
 ) {
-    val mapApplier = LocalMapApplier.current
-    val projection = mapApplier.map.projection
+    val projection = LocalMapProjection.current
 
-    val localA = projection.toScreenLocation(posA.toMapLibre())
-    val localB = projection.toScreenLocation(posB.toMapLibre())
-    val localRef = projection.toScreenLocation(refPos.toMapLibre())
+    val localA = projection.toScreenLocation(posA)
+    val localB = projection.toScreenLocation(posB)
+    val localRef = projection.toScreenLocation(refPos)
 
     val diff = localB - localA
     val diffRef = localB - localRef
@@ -52,24 +48,25 @@ private fun VertexDragger(
         return
     }
 
-    val mapApplier = LocalMapApplier.current
-    val projection = mapApplier.map.projection
+    val projection = LocalMapProjection.current
 
-    var currentCenter = PointF()
+    var currentCenter = ScreenPoint()
 
-    vertices.forEach { currentCenter += projection.toScreenLocation(it.toMapLibre()) }
+    vertices.forEach { currentCenter = currentCenter + projection.toScreenLocation(it) }
 
-    currentCenter.x /= vertices.size
-    currentCenter.y /= vertices.size
+    currentCenter = ScreenPoint(
+        currentCenter.x / vertices.size,
+        currentCenter.y / vertices.size,
+    )
 
-    val newCenter = projection.toScreenLocation(draggedCenter.toMapLibre())
-    val draggedPixels: PointF = newCenter - currentCenter
+    val newCenter = projection.toScreenLocation(draggedCenter)
+    val draggedPixels = newCenter - currentCenter
 
     val draggedVertices = vertices.map { vertex ->
-        projection.fromScreenLocation(projection.toScreenLocation(vertex.toMapLibre()) + draggedPixels).toCommon()
+        projection.fromScreenLocation(projection.toScreenLocation(vertex) + draggedPixels)
     }
 
-    onCenterAndVerticesChanged(projection.fromScreenLocation(currentCenter).toCommon(), draggedVertices)
+    onCenterAndVerticesChanged(projection.fromScreenLocation(currentCenter), draggedVertices)
 }
 
 @Composable

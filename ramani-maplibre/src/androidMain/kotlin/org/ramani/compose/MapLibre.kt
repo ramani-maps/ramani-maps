@@ -161,7 +161,10 @@ fun MapLibre(
         mapView.newComposition(parentComposition, maplibreMap, loadedStyle) {
             @Suppress("UNCHECKED_CAST")
             val mapApplier = currentComposer.applier as MapApplier
-            CompositionLocalProvider(LocalMapApplier provides mapApplier) {
+            CompositionLocalProvider(
+                LocalMapApplier provides mapApplier,
+                LocalMapProjection provides MapProjectionAndroid(mapApplier.map.projection),
+            ) {
                 MapUpdater(
                     map = checkNotNull(currentMap.value),
                     style = loadedStyle,

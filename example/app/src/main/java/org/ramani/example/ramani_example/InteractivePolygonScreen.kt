@@ -18,9 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import org.maplibre.android.geometry.LatLng
 import org.ramani.compose.CameraPosition
 import org.ramani.compose.Circle
+import org.ramani.compose.LatLng
 import org.ramani.compose.MapLibre
 import org.ramani.compose.MapStyle
 import org.ramani.compose.Polygon

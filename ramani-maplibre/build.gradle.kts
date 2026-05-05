@@ -10,9 +10,10 @@ buildscript {
 }
 
 plugins {
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.kotlin.parcelize)
+
     alias(libs.plugins.jreleaser)
     `maven-publish`
 }
@@ -29,99 +30,90 @@ try {
     if (project.hasProperty("gpgPass")) keystoreProperties["gpgPass"] = property("gpgPass")
 }
 
-android {
-    namespace = "org.ramani.compose"
-    compileSdk = 36
-
-    defaultConfig {
+kotlin {
+    android {
+        namespace = "org.ramani.compose"
+        compileSdk = 36
         minSdk = 25
 
-        group = "org.ramani-maps"
-        version = "0.11.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        withHostTestBuilder {}
+        withDeviceTestBuilder {}
     }
 
-    testOptions {
-        targetSdk = 36
-    }
+    iosArm64()
+    iosSimulatorArm64()
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
+    sourceSets {
+        commonMain.dependencies {
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.androidx.compose.runtime)
+            implementation(libs.androidx.compose.runtime.saveable)
         }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
 
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-            withJavadocJar()
+        androidMain.dependencies {
+            implementation(libs.androidx.foundation)
+            implementation(libs.androidx.material)
+            implementation(libs.androidx.compose.ui)
+            implementation(libs.androidx.core.ktx)
+            implementation(libs.kotlin.stdlib)
+            implementation(libs.kotlinx.coroutines.android)
+
+            api(libs.maplibre.android.sdk)
+            api(libs.maplibre.android.plugin.annotation)
+            api(libs.okhttp)
+        }
+
+        val androidHostTest by getting {
+            dependencies {
+                implementation(libs.junit)
+            }
+        }
+
+        val androidDeviceTest by getting {
+            dependencies {
+                implementation(libs.androidx.test.runner)
+                implementation(libs.androidx.test.ext.junit)
+                implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.androidx.activity.compose)
+            }
         }
     }
 }
 
-dependencies {
-    implementation(libs.androidx.foundation)
-    implementation(libs.androidx.material)
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.kotlin.stdlib)
-    implementation(libs.kotlinx.coroutines.android)
-
-    api(libs.maplibre.android.sdk)
-    api(libs.maplibre.android.plugin.annotation)
-    api(libs.okhttp)
-
-    testImplementation(libs.junit)
-
-    androidTestImplementation(libs.androidx.test.runner)
-    androidTestImplementation(libs.androidx.test.ext.junit)
-    androidTestImplementation(libs.kotlinx.coroutines.test)
-    androidTestImplementation(libs.androidx.activity.compose)
-}
+group = "org.ramani-maps"
+version = "0.11.0"
 
 if (keystoreProperties.containsKey("centralUsername") && keystoreProperties.containsKey("centralPassword")) {
     publishing {
-        publications {
-            create<MavenPublication>("release") {
-                afterEvaluate {
-                    from(components["release"])
+        publications.withType<MavenPublication> {
+            pom {
+                name = "Ramani-Maplibre"
+                description = "A Compose Multiplatform library to manipulate MapLibre maps."
+                url = "https://github.com/ramani-maps/ramani-maps"
+
+                scm {
+                connection = "scm:git:https://github.com/ramani-maps/ramani-maps"
+                developerConnection = "scm:git:https://github.com/ramani-maps/ramani-maps"
+                url = "https://github.com/ramani-maps/ramani-maps"
                 }
 
-                pom {
-                    name = "Ramani-Maplibre"
-                    packaging = "aar"
-                    description = "An Android Compose library to manipulate MapLibre maps."
-                    url = "https://github.com/ramani-maps/ramani-maps"
-
-                    scm {
-                    connection = "scm:git:https://github.com/ramani-maps/ramani-maps"
-                    developerConnection = "scm:git:https://github.com/ramani-maps/ramani-maps"
-                    url = "https://github.com/ramani-maps/ramani-maps"
+                licenses {
+                    license {
+                        name = "Mozilla Public License 2.0"
+                        url = "https://spdx.org/licenses/MPL-2.0.html"
                     }
+                }
 
-                    licenses {
-                        license {
-                            name = "Mozilla Public License 2.0"
-                            url = "https://spdx.org/licenses/MPL-2.0.html"
-                        }
+                developers {
+                    developer {
+                        id = "romanbapst"
+                        name = "Roman Bapst"
+                        email = "bapstroman@gmail.com"
                     }
-
-                    developers {
-                        developer {
-                            id = "romanbapst"
-                            name = "Roman Bapst"
-                            email = "bapstroman@gmail.com"
-                        }
-                        developer {
-                            id = "jonasvautherin"
-                            name = "Jonas Vautherin"
-                            email = "dev@jonas.vautherin.ch"
-                        }
+                    developer {
+                        id = "jonasvautherin"
+                        name = "Jonas Vautherin"
+                        email = "dev@jonas.vautherin.ch"
                     }
                 }
             }

@@ -16,10 +16,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.location.modes.CameraMode
 import org.maplibre.android.location.modes.RenderMode
 import org.ramani.compose.CameraPosition
@@ -29,12 +29,13 @@ import org.ramani.compose.LocationStyling
 import org.ramani.compose.MapLibre
 import org.ramani.compose.rememberCameraPositionState
 import androidx.compose.ui.res.stringResource
+import org.ramani.compose.LatLng
 
 @Composable
 fun LocationScreen() {
-    val locationProperties = rememberSaveable { mutableStateOf(LocationRequestProperties()) }
+    val locationProperties = remember { mutableStateOf(LocationRequestProperties()) }
     val cameraPositionState = rememberCameraPositionState(CameraPosition(zoom = 14.0))
-    val userLocation = rememberSaveable { mutableStateOf(Location(null)) }
+    val userLocation = remember { mutableStateOf(Location(null)) }
     val cameraMode = rememberSaveable { mutableIntStateOf(CameraMode.TRACKING) }
     val renderMode = rememberSaveable { mutableIntStateOf(RenderMode.COMPASS) }
 

@@ -18,13 +18,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.style.expressions.Expression
 import org.maplibre.android.style.layers.CircleLayer
 import org.maplibre.android.style.layers.FillLayer
@@ -43,6 +43,7 @@ import org.ramani.compose.UiSettings
 import org.ramani.compose.rememberCameraPositionState
 import java.net.URI
 import androidx.compose.ui.res.stringResource
+import org.ramani.compose.LatLng
 
 private const val DEFAULT_STYLE_URL = "https://demotiles.maplibre.org/style.json"
 
@@ -57,7 +58,7 @@ fun CustomLayersScreen() {
     )
     val isDefaultStyle = rememberSaveable { mutableStateOf(true) }
     val styleUrl = rememberSaveable { mutableStateOf(DEFAULT_STYLE_URL) }
-    val uiSettings = rememberSaveable {
+    val uiSettings = remember {
         mutableStateOf(UiSettings(rotateGesturesEnabled = false))
     }
 

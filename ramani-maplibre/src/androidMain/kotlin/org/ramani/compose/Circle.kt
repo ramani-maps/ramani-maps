@@ -1,0 +1,93 @@
+/*
+ * This file is part of ramani-maps.
+ *
+ * Copyright (c) 2023 Roman Bapst & Jonas Vautherin.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+package org.ramani.compose
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ComposeNode
+import androidx.compose.runtime.remember
+import com.google.gson.JsonElement
+import com.google.gson.JsonNull
+import org.maplibre.android.plugins.annotation.CircleOptions
+
+@Composable
+fun Circle(
+    centerState: CenterState,
+    radius: Float,
+    isDraggable: Boolean = false,
+    color: String = "Yellow",
+    opacity: Float = 1.0f,
+    borderColor: String = "Black",
+    borderWidth: Float = 0.0F,
+    layerId: String? = null,
+    aboveLayerId: String? = null,
+    belowLayerId: String? = null,
+    data: JsonElement = JsonNull.INSTANCE,
+    onCenterDragged: (LatLng) -> Unit = {},
+    onDragFinished: (LatLng) -> Unit = {},
+    onClick: (JsonElement?) -> Unit = {},
+    onLongClick: (JsonElement?) -> Unit = {}
+) {
+    val mapApplier = LocalMapApplier.current
+    val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
+
+    ComposeNode<CircleNode, MapApplier>(factory = {
+        val circleManager = mapApplier.getOrCreateCircleManagerForLayerId(resolvedLayerId, aboveLayerId, belowLayerId)
+
+        val circleOptions = CircleOptions()
+            .withCircleRadius(radius)
+            .withLatLng(centerState.center.toMapLibre())
+            .withDraggable(isDraggable)
+            .withCircleStrokeColor(borderColor)
+            .withCircleStrokeWidth(borderWidth)
+            .withCircleOpacity(opacity)
+            .withData(data)
+
+        val circle = circleManager.create(circleOptions)
+
+        CircleNode(
+            circleManager,
+            circle,
+            onCircleDragged = {
+                centerState.updateCenterFromDrag(it.latLng.toCommon())
+                onCenterDragged(it.latLng.toCommon())
+            },
+            onCircleDragStopped = { onDragFinished(it.latLng.toCommon()) },
+            onCircleClicked = { onClick(it.data) },
+            onCircleLongClicked = { onLongClick(it.data) }
+        )
+    }, update = {
+        update(onCenterDragged) {
+            this.onCircleDragged = {
+                centerState.updateCenterFromDrag(it.latLng.toCommon())
+                onCenterDragged(it.latLng.toCommon())
+            }
+        }
+
+        update(onDragFinished) {
+            this.onCircleDragStopped = { onDragFinished(it.latLng.toCommon()) }
+        }
+
+        set(centerState.center) {
+            circle.latLng = centerState.center.toMapLibre()
+            circleManager.update(circle)
+        }
+
+        set(color) {
+            circle.circleColor = color
+            circleManager.update(circle)
+        }
+
+        set(radius) {
+            circle.circleRadius = radius
+            circleManager.update(circle)
+        }
+    })
+}

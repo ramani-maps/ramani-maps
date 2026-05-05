@@ -9,14 +9,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.plus
-import org.maplibre.android.geometry.LatLng
 import org.ramani.compose.CenterState
 import org.ramani.compose.Circle
 import org.ramani.compose.Fill
+import org.ramani.compose.LatLng
 import org.ramani.compose.MapApplier
 import org.ramani.compose.MapObserver
 import org.ramani.compose.Polyline
 import org.ramani.compose.Symbol
+import org.ramani.compose.toCommon
+import org.ramani.compose.toMapLibre
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -34,7 +36,7 @@ fun ProgressCircle(
 ) {
     val mapApplier = currentComposer.applier as MapApplier
     val proj = mapApplier.map.projection
-    val centerLocal = proj.toScreenLocation(center)
+    val centerLocal = proj.toScreenLocation(center.toMapLibre())
     val dpToPixel = with(LocalDensity.current) { 1.dp.toPx() }
 
     val recomposeState = remember { mutableStateOf(true) }
@@ -45,7 +47,7 @@ fun ProgressCircle(
             0.0f,
             -(radius + indicatorTextSize) * dpToPixel
         )
-    )
+    ).toCommon()
     val symbolCenterState = remember { CenterState(symbolCenter) }
     symbolCenterState.center = symbolCenter
 
@@ -83,7 +85,7 @@ fun ProgressCircle(
                     -radius * sin(it).toFloat() * dpToPixel,
                     -radius * cos(it).toFloat() * dpToPixel
                 )
-                proj.fromScreenLocation(pointLocal)
+                proj.fromScreenLocation(pointLocal).toCommon()
             }
 
             Polyline(

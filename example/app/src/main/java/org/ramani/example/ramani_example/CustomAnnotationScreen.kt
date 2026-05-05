@@ -7,8 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import org.maplibre.android.geometry.LatLng
 import org.ramani.compose.CameraPosition
+import org.ramani.compose.LatLng
 import org.ramani.compose.MapLibre
 import org.ramani.compose.MapObserver
 import org.ramani.compose.rememberCameraPositionState

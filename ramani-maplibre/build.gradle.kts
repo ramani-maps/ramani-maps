@@ -40,8 +40,44 @@ kotlin {
         withDeviceTestBuilder {}
     }
 
-    iosArm64()
-    iosSimulatorArm64()
+    val includeDir = project.file("libs/include").absolutePath
+
+    listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
+        val frameworkDir = when (target.name) {
+            "iosArm64" -> "iosArm64"
+            "iosSimulatorArm64" -> "iosSimulatorArm64"
+            else -> error("Unexpected target: ${target.name}")
+        }
+        val libPath = project.file("libs/$frameworkDir").absolutePath
+
+        target.compilations["main"].cinterops {
+            val MapLibre by creating {
+                defFile(project.file("src/nativeInterop/cinterop/MapLibre.def"))
+                compilerOpts("-I$includeDir")
+                extraOpts("-libraryPath", libPath)
+            }
+        }
+
+        target.binaries.all {
+            linkerOpts("-ObjC")
+            linkerOpts("-lbz2", "-lc++", "-lsqlite3", "-lz")
+            linkerOpts(
+                "-framework", "CoreGraphics",
+                "-framework", "CoreImage",
+                "-framework", "CoreLocation",
+                "-framework", "CoreText",
+                "-framework", "ImageIO",
+                "-framework", "Metal",
+                "-framework", "MetalKit",
+                "-framework", "MobileCoreServices",
+                "-framework", "QuartzCore",
+                "-framework", "Security",
+                "-framework", "SystemConfiguration",
+                "-framework", "UIKit",
+                "-framework", "WebKit",
+            )
+        }
+    }
 
     sourceSets {
         commonMain.dependencies {

@@ -10,10 +10,20 @@
 
 package org.ramani.compose
 
+import MapLibre.MLNPointFeature
+import MapLibre.MLNShapeSource
+import MapLibre.MLNSymbolStyleLayer
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ComposeNode
+import androidx.compose.runtime.remember
+import kotlinx.cinterop.ExperimentalForeignApi
+import platform.Foundation.NSExpression
+import platform.Foundation.NSNumber
+import platform.Foundation.NSUUID
 
 actual val DefaultMarkerImage: Any = Unit
 
+@OptIn(ExperimentalForeignApi::class)
 @Composable
 actual fun Symbol(
     centerState: CenterState,
@@ -40,5 +50,56 @@ actual fun Symbol(
     onClick: (Any?) -> Unit,
     onLongClick: (Any?) -> Unit,
 ) {
-    TODO("iOS implementation not yet available")
+    val mapApplier = LocalMapApplier.current
+    val resolvedLayerId = layerId ?: remember { NSUUID().UUIDString }
+    val sourceId = remember(resolvedLayerId) { "source-symbol-$resolvedLayerId" }
+
+    ComposeNode<SymbolNode, MapApplier>(factory = {
+        val feature = MLNPointFeature()
+        feature.setCoordinate(centerState.center.toCLLocationCoordinate2D())
+
+        val source = MLNShapeSource(identifier = sourceId, shape = feature, options = null)
+        val layer = MLNSymbolStyleLayer(identifier = resolvedLayerId, source = source)
+
+        text?.let {
+            layer.text = NSExpression.expressionForConstantValue(it)
+            layer.textColor = NSExpression.expressionForConstantValue(parseColor(textColor))
+            layer.textHaloColor = NSExpression.expressionForConstantValue(parseColor(textHaloColor))
+            layer.textHaloWidth = NSExpression.expressionForConstantValue(NSNumber(float = textHaloWidth))
+            layer.textFontSize = NSExpression.expressionForConstantValue(NSNumber(float = size))
+            layer.textAnchor = NSExpression.expressionForConstantValue(textAnchor)
+            layer.textJustification = NSExpression.expressionForConstantValue(textJustify)
+        }
+
+        imageRotation?.let {
+            layer.iconRotation = NSExpression.expressionForConstantValue(NSNumber(float = it))
+        }
+
+        layer.iconAllowsOverlap = NSExpression.expressionForConstantValue(true)
+
+        mapApplier.addSourceAndLayer(source, layer)
+
+        SymbolNode(mapApplier, sourceId, resolvedLayerId)
+    }, update = {
+        set(centerState.center) {
+            val feature = MLNPointFeature()
+            feature.setCoordinate(centerState.center.toCLLocationCoordinate2D())
+            (mapApplier.style?.sourceWithIdentifier(sourceId) as? MLNShapeSource)?.shape = feature
+        }
+
+        set(text) {
+            (mapApplier.style?.layerWithIdentifier(resolvedLayerId) as? MLNSymbolStyleLayer)
+                ?.text = NSExpression.expressionForConstantValue(text)
+        }
+
+        set(color) {
+            (mapApplier.style?.layerWithIdentifier(resolvedLayerId) as? MLNSymbolStyleLayer)
+                ?.iconColor = NSExpression.expressionForConstantValue(parseColor(color))
+        }
+
+        set(imageRotation) {
+            (mapApplier.style?.layerWithIdentifier(resolvedLayerId) as? MLNSymbolStyleLayer)
+                ?.iconRotation = NSExpression.expressionForConstantValue(imageRotation?.let { NSNumber(float = it) })
+        }
+    })
 }

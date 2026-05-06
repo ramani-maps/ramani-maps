@@ -1,5 +1,5 @@
 language = Objective-C
 headers = MapLibre/MapLibre.h
-headerFilter = MLN* Mapbox* NS*
+headerFilter = MapLibre/**
 
 staticLibraries = libMapLibre.a

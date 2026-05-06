@@ -11,6 +11,7 @@
 package org.ramani.compose
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ComposeNode
 
 @Composable
 actual fun MapObserver(
@@ -18,5 +19,15 @@ actual fun MapObserver(
     onMapScaled: () -> Unit,
     onMapRotated: (Double) -> Unit,
 ) {
-    TODO("iOS implementation not yet available")
+    ComposeNode<MapObserverNode, MapApplier>(factory = {
+        MapObserverNode(
+            onMapMoved = onMapMoved,
+            onMapScaled = onMapScaled,
+            onMapRotated = onMapRotated,
+        )
+    }, update = {
+        update(onMapMoved) { this.onMapMoved = onMapMoved }
+        update(onMapScaled) { this.onMapScaled = onMapScaled }
+        update(onMapRotated) { this.onMapRotated = onMapRotated }
+    })
 }

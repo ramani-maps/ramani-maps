@@ -3,3 +3,4 @@ headers = MapLibre/MapLibre.h
 headerFilter = MapLibre/**
 
 staticLibraries = libMapLibre.a
+linkerOpts = -ObjC -lbz2 -lc++ -lsqlite3 -lz -framework CoreGraphics -framework CoreImage -framework CoreLocation -framework CoreText -framework ImageIO -framework Metal -framework MetalKit -framework MobileCoreServices -framework QuartzCore -framework Security -framework SystemConfiguration -framework UIKit -framework WebKit

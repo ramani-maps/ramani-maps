@@ -73,6 +73,7 @@ fun MapLibre(
 
     UIKitView(
         factory = {
+            MapLibreInitializer.initialize()
             val styleUrl = when (val s = currentStyle) {
                 is MapStyle.Uri -> NSURL(string = s.uri)
                 is MapStyle.Json -> NSURL(string = s.json)

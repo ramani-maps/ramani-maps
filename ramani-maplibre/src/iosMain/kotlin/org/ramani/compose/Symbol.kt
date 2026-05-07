@@ -79,7 +79,15 @@ actual fun Symbol(
 
         mapApplier.addSourceAndLayer(source, layer)
 
-        SymbolNode(mapApplier, sourceId, resolvedLayerId)
+        SymbolNode(
+            mapApplier = mapApplier,
+            sourceId = sourceId,
+            layerId = resolvedLayerId,
+            isDraggable = isDraggable,
+            onSymbolDragged = onSymbolDragged,
+            onDragFinished = onDragFinished,
+            centerState = centerState,
+        )
     }, update = {
         set(centerState.center) {
             val feature = MLNPointFeature()
@@ -89,7 +97,7 @@ actual fun Symbol(
 
         set(text) {
             (mapApplier.style?.layerWithIdentifier(resolvedLayerId) as? MLNSymbolStyleLayer)
-                ?.text = NSExpression.expressionForConstantValue(text)
+                ?.text = NSExpression.expressionForConstantValue(text ?: "")
         }
 
         set(color) {
@@ -101,5 +109,9 @@ actual fun Symbol(
             (mapApplier.style?.layerWithIdentifier(resolvedLayerId) as? MLNSymbolStyleLayer)
                 ?.iconRotation = NSExpression.expressionForConstantValue(imageRotation?.let { NSNumber(float = it) })
         }
+
+        set(isDraggable) { this.isDraggable = isDraggable }
+        set(onSymbolDragged) { this.onSymbolDragged = onSymbolDragged }
+        set(onDragFinished) { this.onDragFinished = onDragFinished }
     })
 }

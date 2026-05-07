@@ -58,7 +58,15 @@ actual fun Circle(
 
         mapApplier.addSourceAndLayer(source, layer)
 
-        CircleNode(mapApplier, sourceId, resolvedLayerId)
+        CircleNode(
+            mapApplier = mapApplier,
+            sourceId = sourceId,
+            layerId = resolvedLayerId,
+            isDraggable = isDraggable,
+            onCenterDragged = onCenterDragged,
+            onDragFinished = onDragFinished,
+            centerState = centerState,
+        )
     }, update = {
         set(centerState.center) {
             val feature = MLNPointFeature()
@@ -80,5 +88,9 @@ actual fun Circle(
             (mapApplier.style?.layerWithIdentifier(resolvedLayerId) as? MLNCircleStyleLayer)
                 ?.circleOpacity = NSExpression.expressionForConstantValue(NSNumber(float = opacity))
         }
+
+        set(isDraggable) { this.isDraggable = isDraggable }
+        set(onCenterDragged) { this.onCenterDragged = onCenterDragged }
+        set(onDragFinished) { this.onDragFinished = onDragFinished }
     })
 }

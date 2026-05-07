@@ -122,6 +122,7 @@ fun MapLibre(
         }
 
         val mapApplier = MapApplier(mapView)
+        mapApplier.dragHandler = AnnotationDragHandler(mapView, mapApplier)
         newComposition(parentComposition, mapApplier) {
             @Suppress("UNCHECKED_CAST")
             val applier = currentComposer.applier as MapApplier

@@ -11,6 +11,7 @@
 package org.ramani.compose
 
 import MapLibre.MLNMapView
+import MapLibre.MLNPointFeature
 import MapLibre.MLNShapeSource
 import MapLibre.MLNStyleLayer
 import MapLibre.MLNStyle
@@ -28,6 +29,14 @@ interface MapNode {
     fun onCleared() {}
 }
 
+internal interface DraggableNode {
+    val isDraggable: Boolean
+    val layerId: String
+    val sourceId: String
+    fun handleDrag(newCenter: LatLng)
+    fun handleDragFinished(finalCenter: LatLng)
+}
+
 internal val LocalMapApplier = staticCompositionLocalOf<MapApplier> {
     error("MapApplier not provided. Map composables must be used inside a MapLibre { } block.")
 }
@@ -39,6 +48,9 @@ class MapApplier(
     val mapView: MLNMapView,
 ) : AbstractApplier<MapNode>(MapNodeRoot) {
     private val decorations = mutableListOf<MapNode>()
+
+    /** Retained to prevent GC — UIKit gesture recognizers hold weak target references. */
+    internal var dragHandler: AnnotationDragHandler? = null
 
     val style: MLNStyle? get() = mapView.style
 
@@ -54,6 +66,20 @@ class MapApplier(
             s.layerWithIdentifier(layerId)?.let { s.removeLayer(it) }
             s.sourceWithIdentifier(sourceId)?.let { s.removeSource(it) }
         }
+    }
+
+    internal fun draggableLayerIds(): Set<String> {
+        return decorations
+            .filterIsInstance<DraggableNode>()
+            .filter { it.isDraggable }
+            .map { it.layerId }
+            .toSet()
+    }
+
+    internal fun findDraggableNodeForLayerId(layerId: String): DraggableNode? {
+        return decorations
+            .filterIsInstance<DraggableNode>()
+            .firstOrNull { it.isDraggable && it.layerId == layerId }
     }
 
     override fun insertBottomUp(index: Int, instance: MapNode) {
@@ -90,31 +116,65 @@ internal fun newComposition(
     }
 }
 
+@OptIn(ExperimentalForeignApi::class)
 internal class CircleNode(
     val mapApplier: MapApplier,
-    val sourceId: String,
-    val layerId: String,
-) : MapNode {
+    override val sourceId: String,
+    override val layerId: String,
+    override var isDraggable: Boolean = false,
+    var onCenterDragged: ((LatLng) -> Unit)? = null,
+    var onDragFinished: ((LatLng) -> Unit)? = null,
+    var centerState: CenterState? = null,
+) : MapNode, DraggableNode {
     override fun onRemoved() {
         mapApplier.removeSourceAndLayer(sourceId, layerId)
     }
 
     override fun onCleared() {
         mapApplier.removeSourceAndLayer(sourceId, layerId)
+    }
+
+    override fun handleDrag(newCenter: LatLng) {
+        val feature = MLNPointFeature()
+        feature.setCoordinate(newCenter.toCLLocationCoordinate2D())
+        (mapApplier.style?.sourceWithIdentifier(sourceId) as? MLNShapeSource)?.shape = feature
+        centerState?.updateCenterFromDrag(newCenter)
+        onCenterDragged?.invoke(newCenter)
+    }
+
+    override fun handleDragFinished(finalCenter: LatLng) {
+        onDragFinished?.invoke(finalCenter)
     }
 }
 
+@OptIn(ExperimentalForeignApi::class)
 internal class SymbolNode(
     val mapApplier: MapApplier,
-    val sourceId: String,
-    val layerId: String,
-) : MapNode {
+    override val sourceId: String,
+    override val layerId: String,
+    override var isDraggable: Boolean = false,
+    var onSymbolDragged: ((LatLng) -> Unit)? = null,
+    var onDragFinished: ((LatLng) -> Unit)? = null,
+    var centerState: CenterState? = null,
+) : MapNode, DraggableNode {
     override fun onRemoved() {
         mapApplier.removeSourceAndLayer(sourceId, layerId)
     }
 
     override fun onCleared() {
         mapApplier.removeSourceAndLayer(sourceId, layerId)
+    }
+
+    override fun handleDrag(newCenter: LatLng) {
+        val feature = MLNPointFeature()
+        feature.setCoordinate(newCenter.toCLLocationCoordinate2D())
+        (mapApplier.style?.sourceWithIdentifier(sourceId) as? MLNShapeSource)?.shape = feature
+        centerState?.updateCenterFromDrag(newCenter)
+        onSymbolDragged?.invoke(newCenter)
+    }
+
+    override fun handleDragFinished(finalCenter: LatLng) {
+        onDragFinished?.invoke(finalCenter)
     }
 }
 

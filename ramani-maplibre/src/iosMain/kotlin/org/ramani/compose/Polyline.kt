@@ -66,7 +66,7 @@ actual fun Polyline(
             )
         }
 
-        mapApplier.addSourceAndLayer(source, layer)
+        mapApplier.addSourceAndLayer(source, layer, aboveLayerId, belowLayerId)
 
         PolyLineNode(mapApplier, sourceId, resolvedLayerId)
     }, update = {

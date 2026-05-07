@@ -56,7 +56,7 @@ actual fun Circle(
         layer.circleStrokeColor = NSExpression.expressionForConstantValue(parseColor(borderColor))
         layer.circleStrokeWidth = NSExpression.expressionForConstantValue(NSNumber(float = borderWidth))
 
-        mapApplier.addSourceAndLayer(source, layer)
+        mapApplier.addSourceAndLayer(source, layer, aboveLayerId, belowLayerId)
 
         CircleNode(
             mapApplier = mapApplier,

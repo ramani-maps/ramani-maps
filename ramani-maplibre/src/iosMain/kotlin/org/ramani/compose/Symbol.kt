@@ -20,8 +20,13 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSExpression
 import platform.Foundation.NSNumber
 import platform.Foundation.NSUUID
+import platform.UIKit.UIImage
 
-actual val DefaultMarkerImage: Any = Unit
+/**
+ * No built-in default marker on iOS. Pass a String (sprite name from the
+ * style) or a UIImage as imageId.
+ */
+actual val DefaultMarkerImage: Any = ""
 
 @OptIn(ExperimentalForeignApi::class)
 @Composable
@@ -61,12 +66,31 @@ actual fun Symbol(
         val source = MLNShapeSource(identifier = sourceId, shape = feature, options = null)
         val layer = MLNSymbolStyleLayer(identifier = resolvedLayerId, source = source)
 
+        // Image setup: imageId can be a String (sprite name) or UIImage
+        val imageName = when (imageId) {
+            is String -> imageId.takeIf { it.isNotEmpty() }
+            is UIImage -> {
+                val name = "ramani-symbol-$resolvedLayerId"
+                mapApplier.style?.setImage(imageId, forName = name)
+                name
+            }
+            else -> null
+        }
+        imageName?.let {
+            layer.iconImageName = NSExpression.expressionForConstantValue(it)
+            layer.iconScale = NSExpression.expressionForConstantValue(NSNumber(float = size))
+            layer.iconAnchor = NSExpression.expressionForConstantValue(imageAnchor)
+            layer.iconOffset = NSExpression.expressionForConstantValue(
+                imageOffset.map { NSNumber(float = it) }
+            )
+        }
+
         text?.let {
             layer.text = NSExpression.expressionForConstantValue(it)
             layer.textColor = NSExpression.expressionForConstantValue(parseColor(textColor))
             layer.textHaloColor = NSExpression.expressionForConstantValue(parseColor(textHaloColor))
             layer.textHaloWidth = NSExpression.expressionForConstantValue(NSNumber(float = textHaloWidth))
-            layer.textFontSize = NSExpression.expressionForConstantValue(NSNumber(float = size))
+            layer.textFontSize = NSExpression.expressionForConstantValue(NSNumber(float = size * 16f))
             layer.textAnchor = NSExpression.expressionForConstantValue(textAnchor)
             layer.textJustification = NSExpression.expressionForConstantValue(textJustify)
         }
@@ -76,8 +100,11 @@ actual fun Symbol(
         }
 
         layer.iconAllowsOverlap = NSExpression.expressionForConstantValue(true)
+        layer.textAllowsOverlap = NSExpression.expressionForConstantValue(true)
+        layer.iconIgnoresPlacement = NSExpression.expressionForConstantValue(true)
+        layer.textIgnoresPlacement = NSExpression.expressionForConstantValue(true)
 
-        mapApplier.addSourceAndLayer(source, layer)
+        mapApplier.addSourceAndLayer(source, layer, aboveLayerId, belowLayerId)
 
         SymbolNode(
             mapApplier = mapApplier,

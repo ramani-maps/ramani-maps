@@ -59,7 +59,7 @@ actual fun Fill(
         layer.fillColor = NSExpression.expressionForConstantValue(parseColor(fillColor))
         layer.fillOpacity = NSExpression.expressionForConstantValue(NSNumber(float = opacity))
 
-        mapApplier.addSourceAndLayer(source, layer)
+        mapApplier.addSourceAndLayer(source, layer, aboveLayerId, belowLayerId)
 
         FillNode(mapApplier, sourceId, resolvedLayerId)
     }, update = {

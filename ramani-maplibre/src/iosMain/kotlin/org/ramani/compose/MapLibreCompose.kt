@@ -54,10 +54,21 @@ class MapApplier(
 
     val style: MLNStyle? get() = mapView.style
 
-    fun addSourceAndLayer(source: MLNShapeSource, layer: MLNStyleLayer) {
+    fun addSourceAndLayer(
+        source: MLNShapeSource,
+        layer: MLNStyleLayer,
+        aboveLayerId: String? = null,
+        belowLayerId: String? = null,
+    ) {
         style?.let {
             it.addSource(source)
-            it.addLayer(layer)
+            val aboveLayer = aboveLayerId?.let { id -> it.layerWithIdentifier(id) }
+            val belowLayer = belowLayerId?.let { id -> it.layerWithIdentifier(id) }
+            when {
+                aboveLayer != null -> it.insertLayer(layer, aboveLayer = aboveLayer)
+                belowLayer != null -> it.insertLayer(layer, belowLayer = belowLayer)
+                else -> it.addLayer(layer)
+            }
         }
     }
 

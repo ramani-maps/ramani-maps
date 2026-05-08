@@ -85,6 +85,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.androidx.compose.runtime)
             implementation(libs.androidx.compose.runtime.saveable)
+            implementation(compose.ui)
         }
 
         androidMain.dependencies {
@@ -107,7 +108,6 @@ kotlin {
         }
 
         iosMain.dependencies {
-            implementation(compose.ui)
             implementation(compose.foundation)
         }
 

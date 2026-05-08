@@ -50,8 +50,8 @@ import org.maplibre.android.location.engine.LocationEngineCallback
 import org.maplibre.android.location.engine.LocationEngineDefault
 import org.maplibre.android.location.engine.LocationEngineRequest
 import org.maplibre.android.location.engine.LocationEngineResult
-import org.maplibre.android.location.modes.CameraMode
-import org.maplibre.android.location.modes.RenderMode
+import org.maplibre.android.location.modes.CameraMode as AndroidCameraMode
+import org.maplibre.android.location.modes.RenderMode as AndroidRenderMode
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapLibreMap.OnMoveListener
 import org.maplibre.android.maps.MapLibreMap.OnRotateListener
@@ -86,7 +86,99 @@ import org.maplibre.android.module.http.HttpRequestUtil
  * @param content The content of the map.
  */
 @Composable
-fun MapLibre(
+actual fun MapLibre(
+    modifier: Modifier,
+    style: MapStyle,
+    cameraPositionState: CameraPositionState,
+    uiSettings: UiSettings,
+    properties: MapProperties,
+    locationRequestProperties: LocationRequestProperties?,
+    locationStyling: LocationStyling,
+    userLocation: MutableState<UserLocation>?,
+    renderMode: RenderMode,
+    cameraMode: MutableState<CameraMode>,
+    onMapClick: (LatLng) -> Unit,
+    onMapLongClick: (LatLng) -> Unit,
+    content: (@Composable () -> Unit)?,
+) {
+    val androidUserLocation: MutableState<Location>? = userLocation?.let { commonState ->
+        remember {
+            object : MutableState<Location> {
+                override var value: Location
+                    get() = Location(null).apply {
+                        latitude = commonState.value.latitude
+                        longitude = commonState.value.longitude
+                        altitude = commonState.value.altitude
+                        bearing = commonState.value.bearing
+                    }
+                    set(loc) {
+                        commonState.value = UserLocation(
+                            latitude = loc.latitude,
+                            longitude = loc.longitude,
+                            altitude = loc.altitude,
+                            bearing = loc.bearing,
+                        )
+                    }
+
+                override fun component1(): Location = value
+                override fun component2(): (Location) -> Unit = { value = it }
+            }
+        }
+    }
+
+    val androidRenderMode = when (renderMode) {
+        RenderMode.NORMAL -> AndroidRenderMode.NORMAL
+        RenderMode.COMPASS -> AndroidRenderMode.COMPASS
+        RenderMode.GPS -> AndroidRenderMode.GPS
+    }
+
+    val androidCameraMode = remember {
+        mutableIntStateOf(cameraMode.value.toAndroidCameraMode())
+    }
+    // Sync common → android
+    LaunchedEffect(cameraMode.value) {
+        androidCameraMode.intValue = cameraMode.value.toAndroidCameraMode()
+    }
+    // Sync android → common
+    LaunchedEffect(androidCameraMode.intValue) {
+        cameraMode.value = androidCameraMode.intValue.toCommonCameraMode()
+    }
+
+    MapLibreInternal(
+        modifier = modifier,
+        style = style,
+        cameraPositionState = cameraPositionState,
+        uiSettings = uiSettings,
+        properties = properties,
+        locationRequestProperties = locationRequestProperties ?: LocationRequestProperties(),
+        locationStyling = locationStyling,
+        userLocation = androidUserLocation,
+        renderMode = androidRenderMode,
+        cameraMode = androidCameraMode,
+        onMapClick = onMapClick,
+        onMapLongClick = onMapLongClick,
+        content = content,
+    )
+}
+
+private fun CameraMode.toAndroidCameraMode(): Int = when (this) {
+    CameraMode.NONE -> AndroidCameraMode.NONE
+    CameraMode.TRACKING -> AndroidCameraMode.TRACKING
+    CameraMode.TRACKING_GPS -> AndroidCameraMode.TRACKING_GPS
+    CameraMode.TRACKING_COMPASS -> AndroidCameraMode.TRACKING_COMPASS
+    CameraMode.TRACKING_GPS_NORTH -> AndroidCameraMode.TRACKING_GPS_NORTH
+}
+
+private fun Int.toCommonCameraMode(): CameraMode = when (this) {
+    AndroidCameraMode.TRACKING -> CameraMode.TRACKING
+    AndroidCameraMode.TRACKING_GPS -> CameraMode.TRACKING_GPS
+    AndroidCameraMode.TRACKING_COMPASS -> CameraMode.TRACKING_COMPASS
+    AndroidCameraMode.TRACKING_GPS_NORTH -> CameraMode.TRACKING_GPS_NORTH
+    else -> CameraMode.NONE
+}
+
+@Composable
+internal fun MapLibreInternal(
     modifier: Modifier,
     style: MapStyle = MapStyle.Default,
     cameraPositionState: CameraPositionState = rememberCameraPositionState(),
@@ -97,8 +189,8 @@ fun MapLibre(
     locationStyling: LocationStyling = LocationStyling(),
     userLocation: MutableState<Location>? = null,
     mapView: MapView = rememberMapViewWithLifecycle(),
-    renderMode: Int = RenderMode.NORMAL,
-    cameraMode: MutableIntState = mutableIntStateOf(CameraMode.NONE),
+    renderMode: Int = AndroidRenderMode.NORMAL,
+    cameraMode: MutableIntState = mutableIntStateOf(AndroidCameraMode.NONE),
     httpClient: Call.Factory? = null,
     onMapClick: (LatLng) -> Unit = {},
     onMapLongClick: (LatLng) -> Unit = {},

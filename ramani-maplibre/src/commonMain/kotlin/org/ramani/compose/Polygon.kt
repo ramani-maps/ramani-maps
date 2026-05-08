@@ -11,11 +11,14 @@
 package org.ramani.compose
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import kotlin.math.atan2
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 @Composable
 private fun AzimuthCalculator(
@@ -74,7 +77,7 @@ private fun PolygonDragHandle(
     state: PolygonState,
     layerId: String,
     aboveLayerId: String,
-    imageId: Int? = null,
+    imageId: Any? = null,
 ) {
     val polygonDragHandleCoord = remember {
         CenterState(LatLng())
@@ -189,10 +192,11 @@ private fun PolygonDragHandle(
         })
 }
 
+@OptIn(ExperimentalUuidApi::class)
 @Composable
 fun Polygon(
     state: PolygonState,
-    draggerImageId: Int? = null,
+    draggerImageId: Any? = null,
     fillColor: String = "Transparent",
     borderWidth: Float = 1.0F,
     borderColor: String = "Black",
@@ -200,8 +204,8 @@ fun Polygon(
     layerId: String? = null,
     isDraggable: Boolean = false,
 ) {
-    val mapApplier = LocalMapApplier.current
-    val resolvedLayerId = layerId ?: remember { java.util.UUID.randomUUID().toString() }
+    val mapApplier = currentComposer.applier as BaseMapApplier
+    val resolvedLayerId = layerId ?: remember { Uuid.random().toString() }
 
     val visualTopLayerId = if (borderWidth > 0) "${resolvedLayerId}_border" else "${resolvedLayerId}_fill"
     val topLayerId = if (isDraggable) "${resolvedLayerId}_drag_handle" else visualTopLayerId

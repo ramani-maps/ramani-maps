@@ -80,8 +80,6 @@ class MapApplier(
     private val lineManagerByLayerId = mutableMapOf<String, LineManager>()
 
     private val namedLayerRegistry = mutableMapOf<String, AnnotationManager<*, *, *, *, *, *>>()
-
-    private val layerAliases = mutableMapOf<String, String>()
     private val pendingOrders = mutableListOf<PendingLayerOrder>()
     private val committedOrders = mutableListOf<PendingLayerOrder>()
 
@@ -216,10 +214,6 @@ class MapApplier(
             }
         }
         return null
-    }
-
-    fun registerLayerAlias(alias: String, targetLayerId: String) {
-        layerAliases[alias] = targetLayerId
     }
 
     fun getOrCreateCircleManagerForLayerId(
@@ -365,8 +359,8 @@ class MapApplier(
         val resolvedOrders = committedOrders.map { order ->
             PendingLayerOrder(
                 layerId = order.layerId,
-                aboveLayerId = order.aboveLayerId?.let { layerAliases[it] ?: it },
-                belowLayerId = order.belowLayerId?.let { layerAliases[it] ?: it }
+                aboveLayerId = order.aboveLayerId?.let { resolveLayerAlias(it) },
+                belowLayerId = order.belowLayerId?.let { resolveLayerAlias(it) }
             )
         }
 
@@ -398,7 +392,6 @@ class MapApplier(
 
     override fun onClear() {
         super.onClear()
-        layerAliases.clear()
         committedOrders.clear()
     }
 }

@@ -22,6 +22,13 @@ private object MapNodeRoot : MapNode
 
 abstract class BaseMapApplier : AbstractApplier<MapNode>(MapNodeRoot) {
     protected val decorations = mutableListOf<MapNode>()
+    private val layerAliases = mutableMapOf<String, String>()
+
+    fun registerLayerAlias(alias: String, targetLayerId: String) {
+        layerAliases[alias] = targetLayerId
+    }
+
+    fun resolveLayerAlias(alias: String): String = layerAliases[alias] ?: alias
 
     override fun insertBottomUp(index: Int, instance: MapNode) {
         // Ignored
@@ -38,6 +45,7 @@ abstract class BaseMapApplier : AbstractApplier<MapNode>(MapNodeRoot) {
     override fun onClear() {
         decorations.forEach { it.onCleared() }
         decorations.clear()
+        layerAliases.clear()
     }
 
     override fun remove(index: Int, count: Int) {

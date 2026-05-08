@@ -10,7 +10,6 @@
 
 package org.ramani.compose
 
-import androidx.compose.runtime.AbstractApplier
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Composition
 import androidx.compose.runtime.CompositionContext
@@ -39,6 +38,7 @@ import org.maplibre.android.plugins.annotation.SymbolManager
 import android.content.Context
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.maplibre.android.style.layers.Layer
+import org.maplibre.android.style.layers.SymbolLayer
 import org.maplibre.android.style.sources.Source
 import org.maplibre.android.utils.BitmapUtils
 import kotlin.coroutines.resume
@@ -64,88 +64,15 @@ internal suspend fun MapLibreMap.awaitStyle(styleBuilder: Style.Builder) =
         }
     }
 
-interface MapNode {
-    fun onAttached() {}
-    fun onRemoved() {}
-    fun onCleared() {}
-}
-
-internal data class PendingLayerOrder(
-    val layerId: String,
-    val aboveLayerId: String?,
-    val belowLayerId: String?
-)
-
-internal fun computeLayerOrder(
-    pendingOrders: List<PendingLayerOrder>,
-    registeredLayerIds: Set<String>,
-    declarationOrder: Map<String, Int>
-): List<String> {
-    // Collect every layer that participates in ordering (subjects + references).
-    val involvedLayerIds = mutableSetOf<String>()
-    for (order in pendingOrders) {
-        involvedLayerIds.add(order.layerId)
-        order.aboveLayerId?.let { involvedLayerIds.add(it) }
-        order.belowLayerId?.let { involvedLayerIds.add(it) }
-    }
-    involvedLayerIds.retainAll(registeredLayerIds)
-
-    // Build a DAG: edge A -> B means "A must be below B in the final stack".
-    val adj = involvedLayerIds.associateWith { mutableListOf<String>() }
-    val inDegree = involvedLayerIds.associateWithTo(mutableMapOf()) { 0 }
-
-    for (order in pendingOrders) {
-        val layerId = order.layerId
-        val above = order.aboveLayerId
-        val below = order.belowLayerId
-
-        if (above != null && above in involvedLayerIds && layerId in involvedLayerIds) {
-            adj[above]!!.add(layerId)
-            inDegree[layerId] = inDegree[layerId]!! + 1
-        }
-        if (below != null && below in involvedLayerIds && layerId in involvedLayerIds) {
-            adj[layerId]!!.add(below)
-            inDegree[below] = inDegree[below]!! + 1
-        }
-    }
-
-    // Kahn's algorithm with declaration-order tiebreaker: when several layers
-    // have no remaining dependencies the one declared earliest goes first
-    // (= lower in the layer stack), preserving compose-tree order for
-    // independent layers.
-    val queue = java.util.PriorityQueue<String>(compareBy { declarationOrder[it] ?: Int.MAX_VALUE })
-    for ((id, deg) in inDegree) {
-        if (deg == 0) queue.add(id)
-    }
-
-    val sortedOrder = mutableListOf<String>()
-    while (queue.isNotEmpty()) {
-        val current = queue.poll()
-        current?.let {
-            sortedOrder.add(current)
-            for (neighbor in adj[current]!!) {
-                val newDeg = inDegree[neighbor]!! - 1
-                inDegree[neighbor] = newDeg
-                if (newDeg == 0) queue.add(neighbor)
-            }
-        }
-    }
-
-    return sortedOrder
-}
-
 internal val LocalMapApplier = staticCompositionLocalOf<MapApplier> {
     error("MapApplier not provided. Map composables must be used inside a MapLibre { } block.")
 }
-
-private object MapNodeRoot : MapNode
 
 class MapApplier(
     val map: MapLibreMap,
     val mapView: MapView,
     val style: MutableState<Style?>
-) : AbstractApplier<MapNode>(MapNodeRoot) {
-    private val decorations = mutableListOf<MapNode>()
+) : BaseMapApplier() {
 
     private val circleManagerByLayerId = mutableMapOf<String, CircleManager>()
     private val fillManagerByLayerId = mutableMapOf<String, FillManager>()
@@ -276,6 +203,19 @@ class MapApplier(
         attachListeners?.invoke(manager)
 
         return manager
+    }
+
+    fun defaultFontNames(): Array<String>? {
+        val layers = style.value?.layers ?: return null
+        for (layer in layers) {
+            if (layer is SymbolLayer) {
+                val fonts = layer.textFont?.value
+                if (fonts != null && fonts.isNotEmpty()) {
+                    return fonts
+                }
+            }
+        }
+        return null
     }
 
     fun registerLayerAlias(alias: String, targetLayerId: String) {
@@ -456,29 +396,10 @@ class MapApplier(
         }
     }
 
-    override fun insertBottomUp(index: Int, instance: MapNode) {
-        // Ignored
-    }
-
-    override fun insertTopDown(index: Int, instance: MapNode) {
-        decorations.add(index, instance)
-        instance.onAttached()
-    }
-
-    override fun move(from: Int, to: Int, count: Int) {
-    }
-
     override fun onClear() {
-        decorations.forEach { it.onCleared() }
-        decorations.clear()
+        super.onClear()
         layerAliases.clear()
         committedOrders.clear()
-    }
-
-    override fun remove(index: Int, count: Int) {
-        val toRemove = decorations.subList(index, index + count)
-        toRemove.forEach { it.onRemoved() }
-        toRemove.clear()
     }
 }
 

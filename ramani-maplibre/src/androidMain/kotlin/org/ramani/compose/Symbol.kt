@@ -92,6 +92,9 @@ actual fun Symbol(
                 .withTextJustify(textJustify)
                 .withTextAnchor(textAnchor)
                 .withTextOffset(textOffset)
+            mapApplier.defaultFontNames()?.let { fonts ->
+                symbolOptions = symbolOptions.withTextFont(fonts)
+            }
         }
 
         val symbol = symbolManager.create(symbolOptions)

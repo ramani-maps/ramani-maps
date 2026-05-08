@@ -15,19 +15,13 @@ import MapLibre.MLNPointFeature
 import MapLibre.MLNShapeSource
 import MapLibre.MLNStyleLayer
 import MapLibre.MLNStyle
-import androidx.compose.runtime.AbstractApplier
+import MapLibre.MLNSymbolStyleLayer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Composition
 import androidx.compose.runtime.CompositionContext
 import androidx.compose.runtime.staticCompositionLocalOf
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.UIKit.UIColor
-
-interface MapNode {
-    fun onAttached() {}
-    fun onRemoved() {}
-    fun onCleared() {}
-}
 
 internal interface DraggableNode {
     val isDraggable: Boolean
@@ -41,16 +35,19 @@ internal val LocalMapApplier = staticCompositionLocalOf<MapApplier> {
     error("MapApplier not provided. Map composables must be used inside a MapLibre { } block.")
 }
 
-private object MapNodeRoot : MapNode
-
 @OptIn(ExperimentalForeignApi::class)
 class MapApplier(
     val mapView: MLNMapView,
-) : AbstractApplier<MapNode>(MapNodeRoot) {
-    private val decorations = mutableListOf<MapNode>()
+) : BaseMapApplier() {
 
     /** Retained to prevent GC — UIKit gesture recognizers hold weak target references. */
     internal var dragHandler: AnnotationDragHandler? = null
+
+    private val registeredLayerIds = mutableSetOf<String>()
+    private val pendingOrders = mutableListOf<PendingLayerOrder>()
+    private val committedOrders = mutableListOf<PendingLayerOrder>()
+    private var declarationCounter = 0
+    private val declarationOrder = mutableMapOf<String, Int>()
 
     val style: MLNStyle? get() = mapView.style
 
@@ -61,15 +58,39 @@ class MapApplier(
         belowLayerId: String? = null,
     ) {
         style?.let {
+            it.layerWithIdentifier(layer.identifier)?.let { existing ->
+                it.removeLayer(existing)
+            }
+            it.sourceWithIdentifier(source.identifier)?.let { existing ->
+                it.removeSource(existing)
+            }
             it.addSource(source)
-            val aboveLayer = aboveLayerId?.let { id -> it.layerWithIdentifier(id) }
-            val belowLayer = belowLayerId?.let { id -> it.layerWithIdentifier(id) }
-            when {
-                aboveLayer != null -> it.insertLayer(layer, aboveLayer = aboveLayer)
-                belowLayer != null -> it.insertLayer(layer, belowLayer = belowLayer)
-                else -> it.addLayer(layer)
+            it.addLayer(layer)
+        }
+
+        val layerId = layer.identifier
+        registeredLayerIds.add(layerId)
+        if (layerId !in declarationOrder) {
+            declarationOrder[layerId] = declarationCounter++
+        }
+
+        if (aboveLayerId != null || belowLayerId != null) {
+            pendingOrders.add(PendingLayerOrder(layerId, aboveLayerId, belowLayerId))
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun defaultFontNames(): List<String>? {
+        val layers = style?.layers as? List<MLNStyleLayer> ?: return null
+        for (layer in layers) {
+            if (layer is MLNSymbolStyleLayer) {
+                val fonts = layer.textFontNames?.expressionValueWithObject(null, context = null)
+                if (fonts is List<*> && fonts.isNotEmpty()) {
+                    return fonts as List<String>
+                }
             }
         }
+        return null
     }
 
     fun removeSourceAndLayer(sourceId: String, layerId: String) {
@@ -77,6 +98,49 @@ class MapApplier(
             s.layerWithIdentifier(layerId)?.let { s.removeLayer(it) }
             s.sourceWithIdentifier(sourceId)?.let { s.removeSource(it) }
         }
+        registeredLayerIds.remove(layerId)
+        declarationOrder.remove(layerId)
+    }
+
+    override fun onEndChanges() {
+        super.onEndChanges()
+        if (pendingOrders.isEmpty()) return
+
+        committedOrders.addAll(pendingOrders)
+        pendingOrders.clear()
+
+        applyLayerOrdering()
+    }
+
+    private fun applyLayerOrdering() {
+        val s = style ?: return
+        if (committedOrders.isEmpty()) return
+
+        val sortedOrder = computeLayerOrder(
+            pendingOrders = committedOrders,
+            registeredLayerIds = registeredLayerIds,
+            declarationOrder = declarationOrder
+        )
+
+        var previousLayerId: String? = null
+        for (layerId in sortedOrder) {
+            val layer = s.layerWithIdentifier(layerId) ?: continue
+            if (previousLayerId != null) {
+                s.removeLayer(layer)
+                val prev = s.layerWithIdentifier(previousLayerId) ?: continue
+                s.insertLayer(layer, aboveLayer = prev)
+            }
+            previousLayerId = layerId
+        }
+    }
+
+    override fun onClear() {
+        super.onClear()
+        registeredLayerIds.clear()
+        pendingOrders.clear()
+        committedOrders.clear()
+        declarationOrder.clear()
+        declarationCounter = 0
     }
 
     internal fun draggableLayerIds(): Set<String> {
@@ -93,28 +157,6 @@ class MapApplier(
             .firstOrNull { it.isDraggable && it.layerId == layerId }
     }
 
-    override fun insertBottomUp(index: Int, instance: MapNode) {
-        // Ignored
-    }
-
-    override fun insertTopDown(index: Int, instance: MapNode) {
-        decorations.add(index, instance)
-        instance.onAttached()
-    }
-
-    override fun move(from: Int, to: Int, count: Int) {
-    }
-
-    override fun onClear() {
-        decorations.forEach { it.onCleared() }
-        decorations.clear()
-    }
-
-    override fun remove(index: Int, count: Int) {
-        val toRemove = decorations.subList(index, index + count)
-        toRemove.forEach { it.onRemoved() }
-        toRemove.clear()
-    }
 }
 
 internal fun newComposition(

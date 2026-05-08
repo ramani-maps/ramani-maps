@@ -87,6 +87,9 @@ actual fun Symbol(
 
         text?.let {
             layer.text = NSExpression.expressionForConstantValue(it)
+            mapApplier.defaultFontNames()?.let { fonts ->
+                layer.textFontNames = NSExpression.expressionForConstantValue(fonts)
+            }
             layer.textColor = NSExpression.expressionForConstantValue(parseColor(textColor))
             layer.textHaloColor = NSExpression.expressionForConstantValue(parseColor(textHaloColor))
             layer.textHaloWidth = NSExpression.expressionForConstantValue(NSNumber(float = textHaloWidth))

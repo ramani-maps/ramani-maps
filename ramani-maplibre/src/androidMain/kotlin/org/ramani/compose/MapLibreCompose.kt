@@ -37,12 +37,9 @@ import org.maplibre.android.plugins.annotation.Symbol
 import org.maplibre.android.plugins.annotation.SymbolManager
 import android.content.Context
 import kotlinx.coroutines.suspendCancellableCoroutine
-import org.maplibre.android.style.layers.Layer
 import org.maplibre.android.style.layers.SymbolLayer
-import org.maplibre.android.style.sources.Source
 import org.maplibre.android.utils.BitmapUtils
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 internal fun MapView.newComposition(
     parent: CompositionContext,
@@ -105,9 +102,9 @@ class MapApplier(
     fun reattachStyleNodes() {
         decorations.forEach { node ->
             when (node) {
-                is SourceNode -> node.reattach()
-                is LayerNode -> node.reattach()
                 is ImageNode -> node.reattach()
+                is org.ramani.compose.style.SourceNode -> node.reattach()
+                is org.ramani.compose.style.LayerNode -> node.reattach()
             }
         }
     }
@@ -462,88 +459,6 @@ internal class MapObserverNode(
     var onMapRotated: (Double) -> Unit,
 ) : MapNode {
     override fun onRemoved() {
-    }
-}
-
-internal class SourceNode(
-    val style: MutableState<Style?>,
-    val factory: () -> Source,
-) : MapNode {
-    var source: Source? = null
-        private set
-    var onUpdate: ((Source) -> Unit)? = null
-
-    fun attach() {
-        source = factory()
-        style.value?.let { s ->
-            s.getSource(source!!.id)?.let { existing -> s.removeSource(existing) }
-            s.addSource(source!!)
-        }
-    }
-
-    override fun onAttached() {
-        // Source is added in attach(), called from the ComposeNode factory,
-        // to run during composition and preserve declaration order.
-    }
-
-    override fun onRemoved() {
-        source?.let { style.value?.removeSource(it) }
-        source = null
-    }
-
-    override fun onCleared() {
-        source?.let { style.value?.removeSource(it) }
-        source = null
-    }
-
-    fun reattach() {
-        try {
-            source = factory()
-            style.value?.addSource(source!!)
-        } catch (_: IllegalStateException) {
-            // Style is being replaced and will be re-added after the new style loads
-        }
-    }
-}
-
-internal class LayerNode(
-    val style: MutableState<Style?>,
-    val factory: () -> Layer,
-) : MapNode {
-    var layer: Layer? = null
-        private set
-    var onUpdate: ((Layer) -> Unit)? = null
-
-    fun attach() {
-        layer = factory()
-        style.value?.let { s ->
-            s.getLayer(layer!!.id)?.let { existing -> s.removeLayer(existing) }
-            s.addLayer(layer!!)
-        }
-    }
-
-    override fun onAttached() {
-        // Layer is added in attach(), called from the ComposeNode factory,
-        // to run during composition and preserve declaration order.
-    }
-
-    override fun onRemoved() {
-        layer?.let { style.value?.removeLayer(it) }
-        layer = null
-    }
-
-    override fun onCleared() {
-        layer?.let { style.value?.removeLayer(it) }
-        layer = null
-    }
-
-    fun reattach() {
-        try {
-            layer = factory()
-            style.value?.addLayer(layer!!)
-        } catch (_: IllegalStateException) {
-            // Style is being replaced and will be re-added after the new style loads
-        }
     }
 }
 

@@ -34,6 +34,7 @@ fun Symbol(
     aboveLayerId: String? = null,
     belowLayerId: String? = null,
     imageId: Int? = org.maplibre.android.R.drawable.maplibre_marker_icon_default,
+    sdf: Boolean = false,
     imageAnchor: String = ICON_ANCHOR_CENTER,
     imageOffset: Array<Float> = arrayOf(0f, 0f),
     imageRotation: Float? = null,
@@ -58,7 +59,7 @@ fun Symbol(
         try {
             val style = mapApplier.style.value
             if (style != null && style.getImage("$imageId") == null) {
-                style.addImage("$imageId", bitmap)
+                style.addImage("$imageId", bitmap, sdf)
             }
         } catch (_: IllegalStateException) {
             // Style is being replaced — image will be re-added after the new style loads

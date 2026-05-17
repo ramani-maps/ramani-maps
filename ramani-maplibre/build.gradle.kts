@@ -37,7 +37,7 @@ android {
         minSdk = 25
 
         group = "org.ramani-maps"
-        version = "0.11.0"
+        version = "0.12.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

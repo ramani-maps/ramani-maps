@@ -10,105 +10,72 @@
 
 package org.ramani.compose.style
 
+import MapLibre.expressionWithMLNJSONObject
+import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSExpression
 import platform.Foundation.NSNumber
 import platform.Foundation.NSPredicate
-import platform.UIKit.UIColor
 
 /**
  * Converts a common [Expression] to an [NSExpression] compatible with MapLibre iOS.
  *
- * MapLibre iOS uses NSExpression with custom MGL function names for style expressions.
- * See: https://maplibre.org/maplibre-native/ios/api/predicates-and-expressions.html
+ * Uses the JSON expression format via [NSExpression.expressionWithMLNJSONObject].
+ * See: https://maplibre.org/maplibre-style-spec/expressions/
  */
-internal fun Expression.toNSExpression(): NSExpression = when (this) {
-    is Expression.Const -> NSExpression.expressionForConstantValue(value.toNSValue())
-    is Expression.Get -> NSExpression.expressionForKeyPath(key)
-    is Expression.Has -> {
-        // 'has' is used as a filter, not as an expression value.
-        // When used within an expression context, we represent it as a function.
-        NSExpression.expressionForFunction(
-            "MGL_FUNCTION",
-            arguments = listOf(
-                NSExpression.expressionForConstantValue("has"),
-                NSExpression.expressionForConstantValue(key),
-            )
-        )
-    }
-    is Expression.Gt -> {
-        NSExpression.expressionForFunction(
-            "MGL_FUNCTION",
-            arguments = listOf(
-                NSExpression.expressionForConstantValue(">"),
-                lhs.toNSExpression(),
-                rhs.toNSExpression(),
-            )
-        )
-    }
-    is Expression.ToNumber -> {
-        NSExpression.expressionForFunction(
-            "castObject:toType:",
-            arguments = listOf(
-                expr.toNSExpression(),
-                NSExpression.expressionForConstantValue("NSNumber"),
-            )
-        )
-    }
-    is Expression.ExprToString -> {
-        NSExpression.expressionForFunction(
-            "stringValue",
-            arguments = listOf(expr.toNSExpression())
-        )
-    }
+@OptIn(ExperimentalForeignApi::class)
+internal fun Expression.toNSExpression(): NSExpression {
+    val json = toJsonObject()
+    return NSExpression.expressionWithMLNJSONObject(json)
+}
+
+/**
+ * Converts a common [Expression] to a JSON-compatible object matching the
+ * MapLibre Style Spec expression format.
+ *
+ * Returns nested List/Map/String/Number structures suitable for
+ * [NSExpression.expressionWithMLNJSONObject].
+ */
+private fun Expression.toJsonObject(): Any = when (this) {
+    is Expression.Const -> value.toJsonValue()
+    is Expression.Get -> listOf("get", key)
+    is Expression.Has -> listOf("has", key)
+    is Expression.Gt -> listOf(">", lhs.toJsonObject(), rhs.toJsonObject())
+    is Expression.ToNumber -> listOf("to-number", expr.toJsonObject())
+    is Expression.ExprToString -> listOf("to-string", expr.toJsonObject())
     is Expression.Interpolate -> {
-        val typeExpr = when (type) {
+        val curveType = when (type) {
             is Expression.InterpolationType.Exponential ->
-                NSExpression.expressionForConstantValue(
-                    mapOf("exponential" to type.base)
-                )
+                listOf("exponential", type.base)
         }
-        val stopsDict = stops.associate { stop ->
-            stop.input.toNSValue() to stop.output.toNSExpression()
+        val result = mutableListOf<Any>("interpolate", curveType, input.toJsonObject())
+        for (stop in stops) {
+            result.add(stop.input.toJsonValue())
+            result.add(stop.output.toJsonObject())
         }
-        NSExpression.expressionForFunction(
-            "mgl_interpolate:withCurveType:parameters:stops:",
-            arguments = listOf(
-                input.toNSExpression(),
-                typeExpr,
-                NSExpression.expressionForConstantValue(null),
-                NSExpression.expressionForConstantValue(stopsDict),
-            )
-        )
+        result
     }
-    is Expression.Rgb -> {
-        NSExpression.expressionForConstantValue(
-            UIColor(
-                red = r / 255.0,
-                green = g / 255.0,
-                blue = b / 255.0,
-                alpha = 1.0,
-            )
-        )
-    }
+    is Expression.Rgb -> listOf("rgb", r, g, b)
     is Expression.ColorInt -> {
-        val a = ((argb shr 24) and 0xFF) / 255.0
-        val r = ((argb shr 16) and 0xFF) / 255.0
-        val g = ((argb shr 8) and 0xFF) / 255.0
-        val b = (argb and 0xFF) / 255.0
-        NSExpression.expressionForConstantValue(UIColor(red = r, green = g, blue = b, alpha = a))
+        val a = ((argb shr 24) and 0xFF)
+        val r = ((argb shr 16) and 0xFF)
+        val g = ((argb shr 8) and 0xFF)
+        val b = (argb and 0xFF)
+        listOf("rgba", r, g, b, a / 255.0)
     }
     is Expression.SwitchCase -> {
-        val args = mutableListOf<NSExpression>()
+        val result = mutableListOf<Any>("case")
         for ((condition, output) in cases) {
-            args.add(condition.toNSExpression())
-            args.add(output.toNSExpression())
+            result.add(condition.toJsonObject())
+            result.add(output.toJsonObject())
         }
-        args.add(fallback.toNSExpression())
-        NSExpression.expressionForFunction(
-            "MGL_IF",
-            arguments = args,
-        )
+        result.add(fallback.toJsonObject())
+        result
     }
+}
+
+private fun Any.toJsonValue(): Any = when (this) {
+    is Int, is Long, is Float, is Double, is Boolean, is String -> this
+    else -> toString()
 }
 
 /**
@@ -129,14 +96,4 @@ internal fun Expression.toNSPredicate(): NSPredicate = when (this) {
     else -> {
         NSPredicate.predicateWithValue(true)
     }
-}
-
-private fun Any.toNSValue(): Any? = when (this) {
-    is Int -> NSNumber(int = this)
-    is Long -> NSNumber(long = this)
-    is Float -> NSNumber(float = this)
-    is Double -> NSNumber(double = this)
-    is Boolean -> NSNumber(bool = this)
-    is String -> this
-    else -> this
 }

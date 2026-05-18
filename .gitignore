@@ -10,3 +10,8 @@ captures
 .idea
 .kotlin
 ramani-maplibre/libs/
+
+**/*.xcuserstate
+**/xcuserdata/
+**/*.xcodeproj/project.xcworkspace/xcuserdata/
+**/*.xcworkspace/xcuserdata/

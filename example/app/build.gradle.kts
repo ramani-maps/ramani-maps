@@ -3,9 +3,10 @@ import java.io.IOException
 import java.util.Properties
 
 plugins {
+    id("org.jetbrains.kotlin.multiplatform")
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("org.jetbrains.compose")
 }
 
 // Load file "keystore.properties" where we keep our keys
@@ -17,48 +18,66 @@ try {
 } catch (_: IOException) {
 }
 
+val maplibreStyleUrl = keystoreProperties.getOrDefault(
+    "MAPLIBRE_STYLE_URL", "https://demotiles.maplibre.org/style.json"
+) as String
+val maptilerApiKey = keystoreProperties.getOrDefault("MAPTILER_API_KEY", "") as String
+val thunderforestApiKey = keystoreProperties.getOrDefault("THUNDERFOREST_API_KEY", "") as String
+
+kotlin {
+    androidTarget()
+
+    listOf(
+        iosArm64(),
+        iosSimulatorArm64(),
+    ).forEach { iosTarget ->
+        iosTarget.binaries.framework {
+            baseName = "ExampleApp"
+            isStatic = false
+        }
+    }
+
+    sourceSets {
+        commonMain.dependencies {
+            implementation(compose.runtime)
+            implementation(compose.foundation)
+            implementation("org.jetbrains.compose.material3:material3:1.9.0")
+            implementation(compose.ui)
+            implementation("org.ramani-maps:ramani-maplibre:0.11.0")
+        }
+
+        androidMain.dependencies {
+            implementation("androidx.activity:activity-compose:1.13.0")
+            implementation("androidx.core:core-ktx:1.18.0")
+        }
+    }
+}
+
+compose.resources {
+    generateResClass = never
+}
+
 android {
-    namespace = "org.ramani.example.ramani_example"
+    namespace = "org.ramani.example"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "org.ramani.example.interactive_polygon"
+        applicationId = "org.ramani.example"
         minSdk = 25
         targetSdk = 36
-
-        if (keystoreProperties.containsKey("MAPLIBRE_STYLE_URL")) {
-            resValue(
-                "string",
-                "maplibre_style_url",
-                keystoreProperties["MAPLIBRE_STYLE_URL"] as String
-            )
-        } else {
-            println("NOTE: MAPLIBRE_STYLE_URL is not present, so we will use the default (demo tiles)")
-            resValue("string", "maplibre_style_url", "https://demotiles.maplibre.org/style.json")
-        }
-
-        if (keystoreProperties.containsKey("MAPTILER_API_KEY")) {
-            resValue("string", "maptiler_api_key", keystoreProperties["MAPTILER_API_KEY"] as String)
-        } else {
-            println("NOTE: MAPTILER_API_KEY is not present, custom layers hillshades will not work")
-            resValue("string", "maptiler_api_key", "")
-        }
-
-        if (keystoreProperties.containsKey("THUNDERFOREST_API_KEY")) {
-            resValue(
-                "string",
-                "thunderforest_api_key",
-                keystoreProperties["THUNDERFOREST_API_KEY"] as String
-            )
-        } else {
-            println("NOTE: THUNDERFOREST_API_KEY is not present, custom layers contours will not work")
-            resValue("string", "thunderforest_api_key", "")
-        }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        buildConfigField("String", "MAPLIBRE_STYLE_URL", "\"$maplibreStyleUrl\"")
+        buildConfigField("String", "MAPTILER_API_KEY", "\"$maptilerApiKey\"")
+        buildConfigField("String", "THUNDERFOREST_API_KEY", "\"$thunderforestApiKey\"")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
@@ -81,21 +100,28 @@ android {
     }
 }
 
-dependencies {
-    implementation("androidx.core:core-ktx:1.18.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
-    implementation("androidx.activity:activity-compose:1.13.0")
-    implementation(platform("androidx.compose:compose-bom:2026.04.01"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3:1.4.0")
-    implementation("androidx.navigation:navigation-compose:2.8.9")
-    implementation("org.ramani-maps:ramani-maplibre:0.10.0")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.3.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2026.04.01"))
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+// Generate a Kotlin file with API keys for commonMain
+val generateApiKeys by tasks.registering {
+    val outputDir = layout.buildDirectory.dir("generated/apiKeys/kotlin")
+    outputs.dir(outputDir)
+
+    doLast {
+        val dir = outputDir.get().asFile.resolve("org/ramani/example")
+        dir.mkdirs()
+        dir.resolve("GeneratedApiKeys.kt").writeText(
+            """
+            package org.ramani.example
+
+            internal object ApiKeys {
+                const val MAPLIBRE_STYLE_URL = "$maplibreStyleUrl"
+                const val MAPTILER_API_KEY = "$maptilerApiKey"
+                const val THUNDERFOREST_API_KEY = "$thunderforestApiKey"
+            }
+            """.trimIndent()
+        )
+    }
+}
+
+kotlin.sourceSets.commonMain {
+    kotlin.srcDir(generateApiKeys.map { it.outputs.files.singleFile })
 }

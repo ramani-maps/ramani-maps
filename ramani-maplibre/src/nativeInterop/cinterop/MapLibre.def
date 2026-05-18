@@ -3,4 +3,8 @@ headers = MapLibre/MapLibre.h
 headerFilter = MapLibre/**
 
 staticLibraries = libMapLibre.a
-linkerOpts = -ObjC -lbz2 -lc++ -lsqlite3 -lz -framework CoreGraphics -framework CoreImage -framework CoreLocation -framework CoreText -framework ImageIO -framework Metal -framework MetalKit -framework MobileCoreServices -framework QuartzCore -framework Security -framework SystemConfiguration -framework UIKit -framework WebKit
+
+# -U _MTLIOErrorDomain and -U _MTLTensorDomain are required because libMapLibre.a (v6.26.0)
+# references Metal symbols introduced in iOS 16/18, which are not in Kotlin/Native SDK stubs.
+# Without these, ld fails with "undefined symbols" when linking the final framework.
+linkerOpts = -ObjC -lbz2 -lc++ -lsqlite3 -lz -framework CoreGraphics -framework CoreImage -framework CoreLocation -framework CoreText -framework ImageIO -framework Metal -framework MetalKit -framework MobileCoreServices -framework QuartzCore -framework Security -framework SystemConfiguration -framework UIKit -framework WebKit -U _MTLIOErrorDomain -U _MTLTensorDomain

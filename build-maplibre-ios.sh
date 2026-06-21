@@ -78,7 +78,7 @@ fi
     --cxxopt=-fvisibility-inlines-hidden \
     --//:renderer=metal \
     --ios_multi_cpus=sim_arm64,arm64 \
-    //platform/ios:MapLibre.static )
+    //platform/ios:MapLibre.static //platform/ios:resources )
 
 zip="$src/bazel-bin/platform/ios/MapLibre.static.xcframework.zip"
 [[ -f "$zip" ]] || { echo "xcframework not produced"; exit 1; }
@@ -93,7 +93,7 @@ cp "$extract/MapLibre.xcframework/ios-arm64/MapLibre.framework/MapLibre" \
 cp "$extract/MapLibre.xcframework/ios-arm64_x86_64-simulator/MapLibre.framework/MapLibre" \
    "$out_dir/iosSimulatorArm64/libMapLibre.a"
 
-# Headers and resources are arch-independent; take them from the device slice.
+# Headers are arch-independent; take them from the device slice.
 device_fw="$extract/MapLibre.xcframework/ios-arm64/MapLibre.framework"
 
 # Public headers (incl. the generated MapLibre.h umbrella) consumed by the
@@ -103,15 +103,21 @@ mkdir -p "$include_dir"
 find "$include_dir" -type f ! -name '.gitkeep' -delete
 cp -R "$device_fw/Headers/." "$include_dir/"
 
-# MapLibre's runtime resource bundle (localizations + Assets.car + Info.plist).
-# MLN_CUSTOM_COMBINED_BUNDLE=1 places these at the framework root. They are
-# packaged into the app via Compose resources and located at runtime by
-# MapLibreInitializer.kt. Clean stale resources first, keeping the .gitkeep.
+# MapLibre's runtime resource bundle (localizations + compiled Assets.car +
+# metal-cpp-ignores.txt). The MapLibre.static xcframework contains NO resources;
+# they are produced by the separate //platform/ios:resources target as
+# Mapbox.bundle. We copy its contents into the Compose resources dir, where they
+# are packaged into the app and located at runtime by MapLibreInitializer.kt.
+bundle_src="$(find "$src/bazel-bin/platform/ios" -maxdepth 2 -type d -name 'Mapbox.bundle' -print -quit)"
+if [[ -z "$bundle_src" ]]; then
+    echo "could not find Mapbox.bundle under $src/bazel-bin/platform/ios" >&2
+    find "$src/bazel-bin/platform/ios" -maxdepth 2 -name '*.bundle' >&2 || true
+    exit 1
+fi
 res_dir="$repo_root/ramani-maplibre/src/iosMain/composeResources/files"
 mkdir -p "$res_dir"
 find "$res_dir" -mindepth 1 -maxdepth 1 ! -name '.gitkeep' -exec rm -rf {} +
-cp -R "$device_fw/"*.lproj "$res_dir/"
-cp "$device_fw/Assets.car" "$device_fw/Info.plist" "$res_dir/"
+cp -R "$bundle_src/." "$res_dir/"
 
 # Wipe stale .orig backups so internalize re-snapshots the fresh archives.
 rm -f "$out_dir/iosArm64/libMapLibre.a.orig" \

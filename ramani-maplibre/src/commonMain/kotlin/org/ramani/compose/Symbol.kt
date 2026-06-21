@@ -29,6 +29,7 @@ expect fun Symbol(
     aboveLayerId: String? = null,
     belowLayerId: String? = null,
     imageId: Any? = DefaultMarkerImage,
+    sdf: Boolean = false,
     imageAnchor: String = "center",
     imageOffset: Array<Float> = arrayOf(0f, 0f),
     imageRotation: Float? = null,

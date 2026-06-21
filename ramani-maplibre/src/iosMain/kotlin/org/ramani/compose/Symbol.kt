@@ -39,6 +39,8 @@ actual fun Symbol(
     aboveLayerId: String?,
     belowLayerId: String?,
     imageId: Any?,
+    // TODO: SDF (tintable template) image rendering is not yet supported on iOS.
+    sdf: Boolean,
     imageAnchor: String,
     imageOffset: Array<Float>,
     imageRotation: Float?,

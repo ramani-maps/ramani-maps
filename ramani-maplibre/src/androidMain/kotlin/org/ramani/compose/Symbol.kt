@@ -32,6 +32,7 @@ actual fun Symbol(
     aboveLayerId: String?,
     belowLayerId: String?,
     imageId: Any?,
+    sdf: Boolean,
     imageAnchor: String,
     imageOffset: Array<Float>,
     imageRotation: Float?,
@@ -58,7 +59,7 @@ actual fun Symbol(
         try {
             val style = mapApplier.style.value
             if (style != null && style.getImage("$it") == null) {
-                style.addImage("$it", bitmap)
+                style.addImage("$it", bitmap, sdf)
             }
         } catch (_: IllegalStateException) {
             // Style is being replaced — image will be re-added after the new style loads

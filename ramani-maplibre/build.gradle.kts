@@ -1,34 +1,10 @@
-import java.util.Properties
-import java.io.FileInputStream
-import java.io.IOException
-
-buildscript {
-    dependencies {
-        // Needed for jreleaser for some reason
-        classpath("com.sun.activation:jakarta.activation:1.2.2")
-    }
-}
-
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.compose.multiplatform)
 
-    alias(libs.plugins.jreleaser)
-    `maven-publish`
-}
-
-// Load file "keystore.properties" where we keep our keys
-val keystorePropertiesFile = rootProject.file("keystore.properties")
-val keystoreProperties = Properties()
-
-try {
-    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-} catch (_: IOException) {
-    if (project.hasProperty("centralUsername")) keystoreProperties["centralUsername"] = property("centralUsername")
-    if (project.hasProperty("centralPassword")) keystoreProperties["centralPassword"] = property("centralPassword")
-    if (project.hasProperty("gpgPass")) keystoreProperties["gpgPass"] = property("gpgPass")
+    alias(libs.plugins.vanniktech.maven.publish)
 }
 
 kotlin {
@@ -125,91 +101,39 @@ kotlin {
 group = "org.ramani-maps"
 version = "0.11.0"
 
-if (keystoreProperties.containsKey("centralUsername") && keystoreProperties.containsKey("centralPassword")) {
-    publishing {
-        publications.withType<MavenPublication> {
-            pom {
-                name = "Ramani-Maplibre"
-                description = "A Compose Multiplatform library to manipulate MapLibre maps."
-                url = "https://github.com/ramani-maps/ramani-maps"
-
-                scm {
-                connection = "scm:git:https://github.com/ramani-maps/ramani-maps"
-                developerConnection = "scm:git:https://github.com/ramani-maps/ramani-maps"
-                url = "https://github.com/ramani-maps/ramani-maps"
-                }
-
-                licenses {
-                    license {
-                        name = "Mozilla Public License 2.0"
-                        url = "https://spdx.org/licenses/MPL-2.0.html"
-                    }
-                }
-
-                developers {
-                    developer {
-                        id = "romanbapst"
-                        name = "Roman Bapst"
-                        email = "bapstroman@gmail.com"
-                    }
-                    developer {
-                        id = "jonasvautherin"
-                        name = "Jonas Vautherin"
-                        email = "dev@jonas.vautherin.ch"
-                    }
-                }
-            }
-        }
-        repositories {
-            maven {
-               url = uri(layout.buildDirectory.dir("target/staging-deploy"))
-            }
-        }
+mavenPublishing {
+    publishToMavenCentral()
+    if (System.getenv("ORG_GRADLE_PROJECT_signingInMemoryKey") != null) {
+        signAllPublications()
     }
-
-    jreleaser {
-        signing {
-            setActive("ALWAYS")
-            pgp {
-                armored.set(true)
-                setMode("COMMAND")
-                keystoreProperties["gpgPass"]?.let {
-                    passphrase.set(it as String)
-                }
+    coordinates(group.toString(), "ramani-maplibre", version.toString())
+    pom {
+        name = "Ramani-Maplibre"
+        description = "A Compose Multiplatform library to manipulate MapLibre maps."
+        inceptionYear = "2023"
+        url = "https://github.com/ramani-maps/ramani-maps"
+        licenses {
+            license {
+                name = "Mozilla Public License 2.0"
+                url = "https://spdx.org/licenses/MPL-2.0.html"
             }
         }
-        deploy {
-            release {
-                github {
-                    skipRelease = true
-                    skipTag = true
-                }
+        developers {
+            developer {
+                id = "romanbapst"
+                name = "Roman Bapst"
+                email = "bapstroman@gmail.com"
             }
-            maven {
-                mavenCentral {
-                    create("sonatype") {
-                        verifyPom = false
-                        setActive("RELEASE")
-                        username = keystoreProperties["centralUsername"] as String
-                        password = keystoreProperties["centralPassword"] as String
-                        url = "https://central.sonatype.com/api/v1/publisher"
-                        stagingRepository("build/target/staging-deploy")
-                    }
-                }
-                nexus2 {
-                    create("snapshot-deploy") {
-                        verifyPom = false
-                        setActive("SNAPSHOT")
-                        snapshotUrl.set("https://central.sonatype.com/repository/maven-snapshots")
-                        url = "https://central.sonatype.com/repository/maven-snapshots"
-                        applyMavenCentralRules = true
-                        snapshotSupported = true
-                        username = keystoreProperties["centralUsername"] as String
-                        password = keystoreProperties["centralPassword"] as String
-                        stagingRepository("build/target/staging-deploy")
-                    }
-                }
+            developer {
+                id = "jonasvautherin"
+                name = "Jonas Vautherin"
+                email = "dev@jonas.vautherin.ch"
             }
+        }
+        scm {
+            connection = "scm:git:https://github.com/ramani-maps/ramani-maps"
+            developerConnection = "scm:git:https://github.com/ramani-maps/ramani-maps"
+            url = "https://github.com/ramani-maps/ramani-maps"
         }
     }
 }

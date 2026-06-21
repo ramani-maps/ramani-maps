@@ -21,6 +21,7 @@ import platform.Foundation.NSExpression
 import platform.Foundation.NSNumber
 import platform.Foundation.NSUUID
 import platform.UIKit.UIImage
+import platform.UIKit.UIImageRenderingMode
 
 /**
  * No built-in default marker on iOS. Pass a String (sprite name from the
@@ -39,7 +40,6 @@ actual fun Symbol(
     aboveLayerId: String?,
     belowLayerId: String?,
     imageId: Any?,
-    // TODO: SDF (tintable template) image rendering is not yet supported on iOS.
     sdf: Boolean,
     imageAnchor: String,
     imageOffset: Array<Float>,
@@ -73,7 +73,14 @@ actual fun Symbol(
             is String -> imageId.takeIf { it.isNotEmpty() }
             is UIImage -> {
                 val name = "ramani-symbol-$resolvedLayerId"
-                mapApplier.style?.setImage(imageId, forName = name)
+                // An SDF (tintable) image on iOS is an always-template UIImage;
+                // MapLibre then recolors it via the layer's iconColor.
+                val image = if (sdf) {
+                    imageId.imageWithRenderingMode(UIImageRenderingMode.UIImageRenderingModeAlwaysTemplate)
+                } else {
+                    imageId
+                }
+                mapApplier.style?.setImage(image, forName = name)
                 name
             }
             else -> null
@@ -85,6 +92,10 @@ actual fun Symbol(
             layer.iconOffset = NSExpression.expressionForConstantValue(
                 imageOffset.map { NSNumber(float = it) }
             )
+            // Tint for SDF/template icons (no effect on plain raster images).
+            if (color.isNotEmpty()) {
+                layer.iconColor = NSExpression.expressionForConstantValue(parseColor(color))
+            }
         }
 
         text?.let {

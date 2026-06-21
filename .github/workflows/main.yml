@@ -94,9 +94,9 @@ jobs:
           "$ANDROID_SDK_ROOT/platform-tools/adb" wait-for-device
           "$ANDROID_SDK_ROOT/platform-tools/adb" shell 'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 1; done'
           echo "Emulator ready"
-      - name: Run connected debug tests
+      - name: Run connected device tests
         working-directory: ./ramani-maplibre
-        run: ./gradlew connectedDebugAndroidTest
+        run: ./gradlew connectedAndroidDeviceTest
       - name: Stop emulator
         if: ${{ always() && steps.start_emulator.outcome != 'skipped' }}
         run: |

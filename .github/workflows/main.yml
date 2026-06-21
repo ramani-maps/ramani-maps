@@ -43,6 +43,42 @@ jobs:
         if: steps.archives.outputs.cache-hit != 'true'
         run: ./build-maplibre-ios.sh
 
+  ramani-maplibre-compile-ios:
+    name: Compile ramani-maplibre (iOS)
+    needs: [build-maplibre-ios]
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - name: Compute cache key
+        id: key
+        run: |
+          h=$(shasum -a 256 \
+                .maplibre-native-version \
+                maplibre-native-ios.patch \
+                build-maplibre-ios.sh \
+                internalize-libmaplibre.sh \
+              | shasum -a 256 | cut -d' ' -f1)
+          echo "key=maplibre-ios-$(uname -m)-$h" >> "$GITHUB_OUTPUT"
+      - name: Restore archives
+        uses: actions/cache@v4
+        with:
+          path: |
+            ramani-maplibre/libs/iosArm64/libMapLibre.a
+            ramani-maplibre/libs/iosSimulatorArm64/libMapLibre.a
+            ramani-maplibre/libs/include/MapLibre
+            ramani-maplibre/src/iosMain/composeResources/files
+          key: ${{ steps.key.outputs.key }}
+      - name: Compile and link iOS targets
+        working-directory: ./ramani-maplibre
+        run: ./gradlew compileKotlinIosArm64 compileKotlinIosSimulatorArm64 linkDebugTestIosSimulatorArm64
+
   ramani-maplibre-android:
     name: Build and test ramani-maplibre (Android)
     runs-on: ubuntu-24.04
@@ -104,7 +140,7 @@ jobs:
 
   ramani-maplibre-publish-release:
     name: Publish ramani-maplibre release (KMP)
-    needs: [build-maplibre-ios, ramani-maplibre-android]
+    needs: [build-maplibre-ios, ramani-maplibre-compile-ios, ramani-maplibre-android]
     if: ${{ github.event_name == 'release' && github.event.action == 'created' && startsWith(github.ref_name, 'maplibre') }}
     runs-on: macos-26
     env:
@@ -150,7 +186,7 @@ jobs:
 
   ramani-maplibre-publish-snapshot:
     name: Publish ramani-maplibre snapshot (KMP)
-    needs: [build-maplibre-ios, ramani-maplibre-android]
+    needs: [build-maplibre-ios, ramani-maplibre-compile-ios, ramani-maplibre-android]
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: macos-26
     env:

@@ -103,24 +103,37 @@ mkdir -p "$include_dir"
 find "$include_dir" -type f ! -name '.gitkeep' -delete
 cp -R "$device_fw/Headers/." "$include_dir/"
 
-# MapLibre's runtime resource bundle: the compiled localizations (*.lproj, as
-# binary .strings/.stringsdict) and the compiled asset catalog (Assets.car), plus
-# a tiny bundle-identity Info.plist. The MapLibre.static xcframework carries NO
-# resources, and the //platform/ios:resources target only assembles a full
-# Mapbox.bundle when linked into a framework/app, which we never build. But the
-# static-lib build leaves an intermediate Mapbox.bundle containing exactly the two
-# compiled artifacts we need (*.lproj + Assets.car). Info.plist is not produced
-# there, so we ship a vendored copy. These are packaged into the app and located
-# at runtime by MapLibreInitializer.kt.
+# MapLibre's runtime resource bundle has three parts, each from a different source
+# (verified by building //platform/ios:MapLibre.static and inspecting the result):
+#   - Assets.car: the compiled asset catalog. The static-lib build is the only
+#     thing that produces it, nested as xcassets/Assets.car inside an intermediate
+#     Mapbox.bundle. (The static xcframework itself ships NO resources, and
+#     //platform/ios:resources only materializes a full bundle when linked into a
+#     framework/app, which we never build.)
+#   - *.lproj: localizations. The static-lib build does NOT bundle these at all, so
+#     we take them straight from maplibre's source tree. They are plain
+#     .strings/.stringsdict, which NSBundle reads at runtime (text or compiled).
+#   - Info.plist: bundle identity; never produced by the static build, so vendored.
+# All three land flat in the Compose resources dir and are located at runtime by
+# MapLibreInitializer.kt.
+#
+# Assets.car is nested under xcassets/, so locate it recursively; pick the first
+# Mapbox.bundle that contains one.
 bundle_src=""
+assets_car=""
 while IFS= read -r cand; do
-    if [[ -f "$cand/Assets.car" ]]; then bundle_src="$cand"; break; fi
+    found="$(find "$cand" -type f -name 'Assets.car' -print -quit)"
+    if [[ -n "$found" ]]; then bundle_src="$cand"; assets_car="$found"; break; fi
 done < <(find "$src/bazel-bin/platform/ios" -type d -name 'Mapbox.bundle')
 if [[ -z "$bundle_src" ]]; then
-    echo "could not find a Mapbox.bundle (with Assets.car) under $src/bazel-bin/platform/ios" >&2
+    echo "could not find a Mapbox.bundle containing Assets.car under $src/bazel-bin/platform/ios" >&2
     find "$src/bazel-bin/platform/ios" -type d -name 'Mapbox.bundle' >&2 || true
     exit 1
 fi
+echo ">>> Assets.car from: $assets_car"
+
+lproj_src="$src/platform/ios/resources"
+[[ -d "$lproj_src" ]] || { echo "missing localization source $lproj_src"; exit 1; }
 
 vendored_plist="$repo_root/maplibre-ios-resources/Info.plist"
 [[ -f "$vendored_plist" ]] || { echo "missing vendored $vendored_plist"; exit 1; }
@@ -132,11 +145,21 @@ mkdir -p "$res_dir"
 chmod -R u+w "$res_dir"
 find "$res_dir" -mindepth 1 -maxdepth 1 ! -name '.gitkeep' -exec rm -rf {} +
 
-# Compiled localizations + asset catalog from the intermediate bundle, then the
-# vendored bundle-identity plist.
-find "$bundle_src" -type d -name '*.lproj' -exec cp -R {} "$res_dir/" \;
-cp "$bundle_src/Assets.car" "$res_dir/"
+# Assemble the flat runtime layout: Assets.car (built) + *.lproj (source) +
+# Info.plist (vendored), all at the resources root.
+cp "$assets_car" "$res_dir/Assets.car"
+find "$lproj_src" -maxdepth 1 -type d -name '*.lproj' -exec cp -R {} "$res_dir/" \;
 cp "$vendored_plist" "$res_dir/Info.plist"
+
+# Fail loudly (with the bundle's real tree) if the expected pieces didn't land,
+# rather than silently shipping an incomplete bundle.
+lproj_count="$(find "$res_dir" -maxdepth 1 -type d -name '*.lproj' | wc -l | tr -d ' ')"
+if [[ ! -f "$res_dir/Assets.car" || "$lproj_count" -eq 0 ]]; then
+    echo "resource assembly incomplete (Assets.car present: $([[ -f "$res_dir/Assets.car" ]] && echo yes || echo no), lproj dirs: $lproj_count)" >&2
+    echo "bundle tree was:" >&2
+    find "$bundle_src" >&2
+    exit 1
+fi
 
 # Bazel marks its outputs read-only; Compose's resource-prep tasks must recreate
 # these under build/, so restore write permission on the copied tree.

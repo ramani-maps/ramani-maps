@@ -103,21 +103,44 @@ mkdir -p "$include_dir"
 find "$include_dir" -type f ! -name '.gitkeep' -delete
 cp -R "$device_fw/Headers/." "$include_dir/"
 
-# MapLibre's runtime resource bundle (localizations + compiled Assets.car +
-# metal-cpp-ignores.txt). The MapLibre.static xcframework contains NO resources;
-# they are produced by the separate //platform/ios:resources target as
-# Mapbox.bundle. We copy its contents into the Compose resources dir, where they
-# are packaged into the app and located at runtime by MapLibreInitializer.kt.
-bundle_src="$(find "$src/bazel-bin/platform/ios" -maxdepth 2 -type d -name 'Mapbox.bundle' -print -quit)"
+# MapLibre's runtime resource bundle: the compiled localizations (*.lproj, as
+# binary .strings/.stringsdict) and the compiled asset catalog (Assets.car), plus
+# a tiny bundle-identity Info.plist. The MapLibre.static xcframework carries NO
+# resources, and the //platform/ios:resources target only assembles a full
+# Mapbox.bundle when linked into a framework/app, which we never build. But the
+# static-lib build leaves an intermediate Mapbox.bundle containing exactly the two
+# compiled artifacts we need (*.lproj + Assets.car). Info.plist is not produced
+# there, so we ship a vendored copy. These are packaged into the app and located
+# at runtime by MapLibreInitializer.kt.
+bundle_src=""
+while IFS= read -r cand; do
+    if [[ -f "$cand/Assets.car" ]]; then bundle_src="$cand"; break; fi
+done < <(find "$src/bazel-bin/platform/ios" -type d -name 'Mapbox.bundle')
 if [[ -z "$bundle_src" ]]; then
-    echo "could not find Mapbox.bundle under $src/bazel-bin/platform/ios" >&2
-    find "$src/bazel-bin/platform/ios" -maxdepth 2 -name '*.bundle' >&2 || true
+    echo "could not find a Mapbox.bundle (with Assets.car) under $src/bazel-bin/platform/ios" >&2
+    find "$src/bazel-bin/platform/ios" -type d -name 'Mapbox.bundle' >&2 || true
     exit 1
 fi
+
+vendored_plist="$repo_root/maplibre-ios-resources/Info.plist"
+[[ -f "$vendored_plist" ]] || { echo "missing vendored $vendored_plist"; exit 1; }
+
 res_dir="$repo_root/ramani-maplibre/src/iosMain/composeResources/files"
 mkdir -p "$res_dir"
+# Make writable first: bazel outputs are read-only, so a previous copy can leave
+# read-only dirs that rm -rf cannot clear.
+chmod -R u+w "$res_dir"
 find "$res_dir" -mindepth 1 -maxdepth 1 ! -name '.gitkeep' -exec rm -rf {} +
-cp -R "$bundle_src/." "$res_dir/"
+
+# Compiled localizations + asset catalog from the intermediate bundle, then the
+# vendored bundle-identity plist.
+find "$bundle_src" -type d -name '*.lproj' -exec cp -R {} "$res_dir/" \;
+cp "$bundle_src/Assets.car" "$res_dir/"
+cp "$vendored_plist" "$res_dir/Info.plist"
+
+# Bazel marks its outputs read-only; Compose's resource-prep tasks must recreate
+# these under build/, so restore write permission on the copied tree.
+chmod -R u+w "$res_dir"
 
 # Wipe stale .orig backups so internalize re-snapshots the fresh archives.
 rm -f "$out_dir/iosArm64/libMapLibre.a.orig" \

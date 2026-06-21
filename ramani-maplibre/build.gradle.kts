@@ -101,6 +101,14 @@ kotlin {
 group = "org.ramani-maps"
 version = "0.13.0-SNAPSHOT"
 
+// Workaround: Compose Multiplatform registers a resource-copy task for the
+// androidDeviceTest variant but (with the AGP KMP library plugin) never
+// configures its outputDirectory, failing connectedAndroidDeviceTest. There are
+// no Android Compose resources to copy (only iosMain has composeResources), so
+// disabling the task is safe.
+tasks.matching { it.name == "copyAndroidDeviceTestComposeResourcesToAndroidAssets" }
+    .configureEach { enabled = false }
+
 mavenPublishing {
     publishToMavenCentral()
     if (System.getenv("ORG_GRADLE_PROJECT_signingInMemoryKey") != null) {

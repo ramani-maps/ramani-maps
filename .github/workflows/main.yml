@@ -15,7 +15,7 @@ jobs:
     name: Build maplibre-native (iOS)
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Compute cache key
         id: key
@@ -30,7 +30,7 @@ jobs:
 
       - name: Restore archives
         id: archives
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ramani-maplibre/libs/iosArm64/libMapLibre.a
@@ -48,7 +48,7 @@ jobs:
     needs: [build-maplibre-ios]
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Set up JDK 21
@@ -67,7 +67,7 @@ jobs:
               | shasum -a 256 | cut -d' ' -f1)
           echo "key=maplibre-ios-$(uname -m)-$h" >> "$GITHUB_OUTPUT"
       - name: Restore archives
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ramani-maplibre/libs/iosArm64/libMapLibre.a
@@ -85,7 +85,7 @@ jobs:
     env:
       ANDROID_AVD_HOME: ${{ github.workspace }}/.android/avd
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Set up JDK 21
@@ -144,7 +144,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Set up JDK 21
@@ -163,7 +163,7 @@ jobs:
               | shasum -a 256 | cut -d' ' -f1)
           echo "key=maplibre-ios-$(uname -m)-$h" >> "$GITHUB_OUTPUT"
       - name: Restore archives
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ramani-maplibre/libs/iosArm64/libMapLibre.a
@@ -179,7 +179,7 @@ jobs:
           mkdir -p pr-artifacts/org
           cp -R ~/.m2/repository/org/ramani-maps pr-artifacts/org/
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ramani-maplibre-pr-${{ github.event.pull_request.number }}-${{ github.sha }}
           path: pr-artifacts
@@ -197,7 +197,7 @@ jobs:
       ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
       ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_KEY_CONTENTS }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Set up JDK 21
@@ -218,7 +218,7 @@ jobs:
           echo "key=maplibre-ios-$(uname -m)-$h" >> "$GITHUB_OUTPUT"
 
       - name: Restore archives
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ramani-maplibre/libs/iosArm64/libMapLibre.a
@@ -243,7 +243,7 @@ jobs:
       ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
       ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_KEY_CONTENTS }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -278,7 +278,7 @@ jobs:
 
       - name: Restore archives
         if: steps.check.outputs.is-snapshot == 'true'
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ramani-maplibre/libs/iosArm64/libMapLibre.a
@@ -296,7 +296,7 @@ jobs:
     name: "Build and test example"
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Set up JDK 21

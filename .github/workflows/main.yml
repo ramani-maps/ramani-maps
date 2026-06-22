@@ -138,6 +138,53 @@ jobs:
         run: |
           "$ANDROID_SDK_ROOT/platform-tools/adb" emu kill
 
+  ramani-maplibre-pr-artifact:
+    name: Build ramani-maplibre artifacts (PR)
+    needs: [build-maplibre-ios]
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - name: Compute cache key
+        id: key
+        run: |
+          h=$(shasum -a 256 \
+                .maplibre-native-version \
+                maplibre-native-ios.patch \
+                build-maplibre-ios.sh \
+                internalize-libmaplibre.sh \
+              | shasum -a 256 | cut -d' ' -f1)
+          echo "key=maplibre-ios-$(uname -m)-$h" >> "$GITHUB_OUTPUT"
+      - name: Restore archives
+        uses: actions/cache@v4
+        with:
+          path: |
+            ramani-maplibre/libs/iosArm64/libMapLibre.a
+            ramani-maplibre/libs/iosSimulatorArm64/libMapLibre.a
+            ramani-maplibre/libs/include/MapLibre
+            ramani-maplibre/src/iosMain/composeResources/files
+          key: ${{ steps.key.outputs.key }}
+      - name: Publish to local Maven repo
+        working-directory: ./ramani-maplibre
+        run: ./gradlew publishToMavenLocal --no-configuration-cache
+      - name: Collect artifacts
+        run: |
+          mkdir -p pr-artifacts/org
+          cp -R ~/.m2/repository/org/ramani-maps pr-artifacts/org/
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramani-maplibre-pr-${{ github.event.pull_request.number }}-${{ github.sha }}
+          path: pr-artifacts
+          retention-days: 14
+
   ramani-maplibre-publish-release:
     name: Publish ramani-maplibre release (KMP)
     needs: [build-maplibre-ios, ramani-maplibre-compile-ios, ramani-maplibre-android]

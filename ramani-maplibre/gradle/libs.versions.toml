@@ -1,39 +1,45 @@
 [versions]
 android-gradle-plugin = "9.1.1"
 androidx-core-ktx = "1.18.0"
-compose-ui = "1.11.0"
-jreleaser-plugin = "1.23.0"
-kotlin = "2.3.21"
-kotlin-parcelize = "2.3.21"
+compose-ui = "1.10.3"
+compose-multiplatform = "1.10.3"
+kotlin = "2.3.20"
+kotlin-parcelize = "2.3.20"
 kotlin-gradle-plugin = "2.3.20"
-kotlinx-coroutines-android = "1.10.2"
+kotlinx-coroutines = "1.10.2"
 maplibre-android-sdk = "13.0.2"
 maplibre-android-plugin-annotation = "3.0.2"
 junit = "4.13.2"
 okhttp = "5.3.2"
 androidx-test = "1.7.0"
 androidx-test-ext-junit = "1.3.0"
+vanniktech-maven-publish = "0.36.0"
 
 [libraries]
 android-gradle-plugin = { group = "com.android.tools.build", name = "gradle", version.ref = "android-gradle-plugin" }
+androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "compose-ui" }
+androidx-compose-runtime-saveable = { group = "androidx.compose.runtime", name = "runtime-saveable", version.ref = "compose-ui" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "compose-ui" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidx-core-ktx" }
 androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "compose-ui" }
 androidx-material = { group = "androidx.compose.material", name = "material", version.ref = "compose-ui" }
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
-kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinx-coroutines-android" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
 maplibre-android-sdk = { group = "org.maplibre.gl", name = "android-sdk", version.ref = "maplibre-android-sdk" }
 maplibre-android-plugin-annotation = { group = "org.maplibre.gl", name = "android-plugin-annotation-v9", version.ref = "maplibre-android-plugin-annotation" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidx-test" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
-kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinx-coroutines-android" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version = "1.9.3" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "android-gradle-plugin" }
+android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "android-gradle-plugin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin-gradle-plugin" }
-jreleaser = { id = "org.jreleaser", version.ref = "jreleaser-plugin" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin-gradle-plugin" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin-gradle-plugin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin-parcelize" }
+vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-maven-publish" }

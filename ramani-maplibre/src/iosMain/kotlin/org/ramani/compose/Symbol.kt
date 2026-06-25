@@ -1,0 +1,160 @@
+/*
+ * This file is part of ramani-maps.
+ *
+ * Copyright (c) 2026 Roman Bapst & Jonas Vautherin.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+package org.ramani.compose
+
+import MapLibre.MLNPointFeature
+import MapLibre.MLNShapeSource
+import MapLibre.MLNSymbolStyleLayer
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ComposeNode
+import androidx.compose.runtime.remember
+import kotlinx.cinterop.ExperimentalForeignApi
+import platform.Foundation.NSExpression
+import platform.Foundation.NSNumber
+import platform.Foundation.NSUUID
+import platform.UIKit.UIImage
+import platform.UIKit.UIImageRenderingMode
+
+/**
+ * No built-in default marker on iOS. Pass a String (sprite name from the
+ * style) or a UIImage as imageId.
+ */
+actual val DefaultMarkerImage: Any = ""
+
+@OptIn(ExperimentalForeignApi::class)
+@Composable
+actual fun Symbol(
+    centerState: CenterState,
+    size: Float,
+    color: String,
+    isDraggable: Boolean,
+    layerId: String?,
+    aboveLayerId: String?,
+    belowLayerId: String?,
+    imageId: Any?,
+    sdf: Boolean,
+    imageAnchor: String,
+    imageOffset: Array<Float>,
+    imageRotation: Float?,
+    text: String?,
+    textAnchor: String,
+    textJustify: String,
+    textOffset: Array<Float>,
+    textColor: String,
+    textHaloColor: String,
+    textHaloWidth: Float,
+    data: Any?,
+    onSymbolDragged: (LatLng) -> Unit,
+    onDragFinished: (LatLng) -> Unit,
+    onClick: (Any?) -> Unit,
+    onLongClick: (Any?) -> Unit,
+) {
+    val mapApplier = LocalMapApplier.current
+    val resolvedLayerId = layerId ?: remember { NSUUID().UUIDString }
+    val sourceId = remember(resolvedLayerId) { "source-symbol-$resolvedLayerId" }
+
+    ComposeNode<SymbolNode, MapApplier>(factory = {
+        val feature = MLNPointFeature()
+        feature.setCoordinate(centerState.center.toCLLocationCoordinate2D())
+
+        val source = MLNShapeSource(identifier = sourceId, shape = feature, options = null)
+        val layer = MLNSymbolStyleLayer(identifier = resolvedLayerId, source = source)
+
+        // Image setup: imageId can be a String (sprite name) or UIImage
+        val imageName = when (imageId) {
+            is String -> imageId.takeIf { it.isNotEmpty() }
+            is UIImage -> {
+                val name = "ramani-symbol-$resolvedLayerId"
+                // An SDF (tintable) image on iOS is an always-template UIImage;
+                // MapLibre then recolors it via the layer's iconColor.
+                val image = if (sdf) {
+                    imageId.imageWithRenderingMode(UIImageRenderingMode.UIImageRenderingModeAlwaysTemplate)
+                } else {
+                    imageId
+                }
+                mapApplier.style?.setImage(image, forName = name)
+                name
+            }
+            else -> null
+        }
+        imageName?.let {
+            layer.iconImageName = NSExpression.expressionForConstantValue(it)
+            layer.iconScale = NSExpression.expressionForConstantValue(NSNumber(float = size))
+            layer.iconAnchor = NSExpression.expressionForConstantValue(imageAnchor)
+            layer.iconOffset = NSExpression.expressionForConstantValue(
+                imageOffset.map { NSNumber(float = it) }
+            )
+            // Tint for SDF/template icons (no effect on plain raster images).
+            if (color.isNotEmpty()) {
+                layer.iconColor = NSExpression.expressionForConstantValue(parseColor(color))
+            }
+        }
+
+        text?.let {
+            layer.text = NSExpression.expressionForConstantValue(it)
+            mapApplier.defaultFontNames()?.let { fonts ->
+                layer.textFontNames = NSExpression.expressionForConstantValue(fonts)
+            }
+            layer.textColor = NSExpression.expressionForConstantValue(parseColor(textColor))
+            layer.textHaloColor = NSExpression.expressionForConstantValue(parseColor(textHaloColor))
+            layer.textHaloWidth = NSExpression.expressionForConstantValue(NSNumber(float = textHaloWidth))
+            layer.textFontSize = NSExpression.expressionForConstantValue(NSNumber(float = size * 16f))
+            layer.textAnchor = NSExpression.expressionForConstantValue(textAnchor)
+            layer.textJustification = NSExpression.expressionForConstantValue(textJustify)
+        }
+
+        imageRotation?.let {
+            layer.iconRotation = NSExpression.expressionForConstantValue(NSNumber(float = it))
+        }
+
+        layer.iconAllowsOverlap = NSExpression.expressionForConstantValue(true)
+        layer.textAllowsOverlap = NSExpression.expressionForConstantValue(true)
+        layer.iconIgnoresPlacement = NSExpression.expressionForConstantValue(true)
+        layer.textIgnoresPlacement = NSExpression.expressionForConstantValue(true)
+
+        mapApplier.addSourceAndLayer(source, layer, aboveLayerId, belowLayerId)
+
+        SymbolNode(
+            mapApplier = mapApplier,
+            sourceId = sourceId,
+            layerId = resolvedLayerId,
+            isDraggable = isDraggable,
+            onSymbolDragged = onSymbolDragged,
+            onDragFinished = onDragFinished,
+            centerState = centerState,
+        )
+    }, update = {
+        set(centerState.center) {
+            val feature = MLNPointFeature()
+            feature.setCoordinate(centerState.center.toCLLocationCoordinate2D())
+            (mapApplier.style?.sourceWithIdentifier(sourceId) as? MLNShapeSource)?.shape = feature
+        }
+
+        set(text) {
+            (mapApplier.style?.layerWithIdentifier(resolvedLayerId) as? MLNSymbolStyleLayer)
+                ?.text = NSExpression.expressionForConstantValue(text ?: "")
+        }
+
+        set(color) {
+            (mapApplier.style?.layerWithIdentifier(resolvedLayerId) as? MLNSymbolStyleLayer)
+                ?.iconColor = NSExpression.expressionForConstantValue(parseColor(color))
+        }
+
+        set(imageRotation) {
+            (mapApplier.style?.layerWithIdentifier(resolvedLayerId) as? MLNSymbolStyleLayer)
+                ?.iconRotation = NSExpression.expressionForConstantValue(imageRotation?.let { NSNumber(float = it) })
+        }
+
+        set(isDraggable) { this.isDraggable = isDraggable }
+        set(onSymbolDragged) { this.onSymbolDragged = onSymbolDragged }
+        set(onDragFinished) { this.onDragFinished = onDragFinished }
+    })
+}

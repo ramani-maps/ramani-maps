@@ -11,13 +11,81 @@ on:
     types: [created]
 
 jobs:
-  ramani-maplibre:
-    name: Build and test ramani-maplibre
+  build-maplibre-ios:
+    name: Build maplibre-native (iOS)
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Compute cache key
+        id: key
+        run: |
+          h=$(shasum -a 256 \
+                .maplibre-native-version \
+                maplibre-native-ios.patch \
+                build-maplibre-ios.sh \
+                internalize-libmaplibre.sh \
+              | shasum -a 256 | cut -d' ' -f1)
+          echo "key=maplibre-ios-$(uname -m)-$h" >> "$GITHUB_OUTPUT"
+
+      - name: Restore archives
+        id: archives
+        uses: actions/cache@v5
+        with:
+          path: |
+            ramani-maplibre/libs/iosArm64/libMapLibre.a
+            ramani-maplibre/libs/iosSimulatorArm64/libMapLibre.a
+            ramani-maplibre/libs/include/MapLibre
+            ramani-maplibre/src/iosMain/composeResources/files
+          key: ${{ steps.key.outputs.key }}
+
+      - name: Build
+        if: steps.archives.outputs.cache-hit != 'true'
+        run: ./build-maplibre-ios.sh
+
+  ramani-maplibre-compile-ios:
+    name: Compile ramani-maplibre (iOS)
+    needs: [build-maplibre-ios]
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - name: Compute cache key
+        id: key
+        run: |
+          h=$(shasum -a 256 \
+                .maplibre-native-version \
+                maplibre-native-ios.patch \
+                build-maplibre-ios.sh \
+                internalize-libmaplibre.sh \
+              | shasum -a 256 | cut -d' ' -f1)
+          echo "key=maplibre-ios-$(uname -m)-$h" >> "$GITHUB_OUTPUT"
+      - name: Restore archives
+        uses: actions/cache@v5
+        with:
+          path: |
+            ramani-maplibre/libs/iosArm64/libMapLibre.a
+            ramani-maplibre/libs/iosSimulatorArm64/libMapLibre.a
+            ramani-maplibre/libs/include/MapLibre
+            ramani-maplibre/src/iosMain/composeResources/files
+          key: ${{ steps.key.outputs.key }}
+      - name: Compile and link iOS targets
+        working-directory: ./ramani-maplibre
+        run: ./gradlew compileKotlinIosArm64 compileKotlinIosSimulatorArm64 linkDebugTestIosSimulatorArm64
+
+  ramani-maplibre-android:
+    name: Build and test ramani-maplibre (Android)
     runs-on: ubuntu-24.04
     env:
       ANDROID_AVD_HOME: ${{ github.workspace }}/.android/avd
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Set up JDK 21
@@ -27,9 +95,7 @@ jobs:
           distribution: 'temurin'
       - name: Build
         working-directory: ./ramani-maplibre
-        run: |
-            ./gradlew build
-            ./gradlew test
+        run: ./gradlew build
       - name: Enable KVM access
         run: |
           echo 'KERNEL=="kvm",GROUP="kvm",MODE="0666",OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -64,26 +130,173 @@ jobs:
           "$ANDROID_SDK_ROOT/platform-tools/adb" wait-for-device
           "$ANDROID_SDK_ROOT/platform-tools/adb" shell 'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 1; done'
           echo "Emulator ready"
-      - name: Run connected debug tests
+      - name: Run connected device tests
         working-directory: ./ramani-maplibre
-        run: ./gradlew connectedDebugAndroidTest
+        run: ./gradlew connectedAndroidDeviceTest
       - name: Stop emulator
         if: ${{ always() && steps.start_emulator.outcome != 'skipped' }}
         run: |
           "$ANDROID_SDK_ROOT/platform-tools/adb" emu kill
-      - name: Publish (Maven)
-        if: ${{ github.event_name == 'release' && github.event.action == 'created' && startsWith(github.ref_name, 'maplibre') }}
-        working-directory: ./ramani-maplibre
+
+  ramani-maplibre-pr-artifact:
+    name: Build ramani-maplibre artifacts (PR)
+    needs: [build-maplibre-ios]
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - name: Compute cache key
+        id: key
         run: |
-            echo -n "${{ secrets.MAVEN_SIGNING_KEY }}" | base64 --decode | gpg --import
-            ./gradlew -PcentralUsername=${{ secrets.CENTRAL_USERNAME }} -PcentralPassword=${{ secrets.CENTRAL_PASSWORD }} publish
-            ./gradlew -PcentralUsername=${{ secrets.CENTRAL_USERNAME }} -PcentralPassword=${{ secrets.CENTRAL_PASSWORD }} jreleaserDeploy
+          h=$(shasum -a 256 \
+                .maplibre-native-version \
+                maplibre-native-ios.patch \
+                build-maplibre-ios.sh \
+                internalize-libmaplibre.sh \
+              | shasum -a 256 | cut -d' ' -f1)
+          echo "key=maplibre-ios-$(uname -m)-$h" >> "$GITHUB_OUTPUT"
+      - name: Restore archives
+        uses: actions/cache@v5
+        with:
+          path: |
+            ramani-maplibre/libs/iosArm64/libMapLibre.a
+            ramani-maplibre/libs/iosSimulatorArm64/libMapLibre.a
+            ramani-maplibre/libs/include/MapLibre
+            ramani-maplibre/src/iosMain/composeResources/files
+          key: ${{ steps.key.outputs.key }}
+      - name: Publish to local Maven repo
+        working-directory: ./ramani-maplibre
+        run: ./gradlew publishToMavenLocal --no-configuration-cache
+      - name: Collect artifacts
+        run: |
+          mkdir -p pr-artifacts/org
+          cp -R ~/.m2/repository/org/ramani-maps pr-artifacts/org/
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: ramani-maplibre-pr-${{ github.event.pull_request.number }}-${{ github.sha }}
+          path: pr-artifacts
+          retention-days: 14
+
+  ramani-maplibre-publish-release:
+    name: Publish ramani-maplibre release (KMP)
+    needs: [build-maplibre-ios, ramani-maplibre-compile-ios, ramani-maplibre-android]
+    if: ${{ github.event_name == 'release' && github.event.action == 'created' && startsWith(github.ref_name, 'maplibre') }}
+    runs-on: macos-26
+    env:
+      ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.CENTRAL_USERNAME }}
+      ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.CENTRAL_PASSWORD }}
+      ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
+      ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
+      ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_KEY_CONTENTS }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Compute cache key
+        id: key
+        run: |
+          h=$(shasum -a 256 \
+                .maplibre-native-version \
+                maplibre-native-ios.patch \
+                build-maplibre-ios.sh \
+                internalize-libmaplibre.sh \
+              | shasum -a 256 | cut -d' ' -f1)
+          echo "key=maplibre-ios-$(uname -m)-$h" >> "$GITHUB_OUTPUT"
+
+      - name: Restore archives
+        uses: actions/cache@v5
+        with:
+          path: |
+            ramani-maplibre/libs/iosArm64/libMapLibre.a
+            ramani-maplibre/libs/iosSimulatorArm64/libMapLibre.a
+            ramani-maplibre/libs/include/MapLibre
+            ramani-maplibre/src/iosMain/composeResources/files
+          key: ${{ steps.key.outputs.key }}
+
+      - name: Publish to Maven Central
+        working-directory: ./ramani-maplibre
+        run: ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
+
+  ramani-maplibre-publish-snapshot:
+    name: Publish ramani-maplibre snapshot (KMP)
+    needs: [build-maplibre-ios, ramani-maplibre-compile-ios, ramani-maplibre-android]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: macos-26
+    env:
+      ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.CENTRAL_USERNAME }}
+      ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.CENTRAL_PASSWORD }}
+      ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
+      ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
+      ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_KEY_CONTENTS }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Check version is a snapshot
+        id: check
+        run: |
+          if grep -qE '^version = ".*-SNAPSHOT"' ramani-maplibre/build.gradle.kts; then
+            echo "is-snapshot=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is-snapshot=false" >> "$GITHUB_OUTPUT"
+            echo "version is not a -SNAPSHOT, skipping snapshot publish"
+          fi
+
+      - name: Set up JDK 21
+        if: steps.check.outputs.is-snapshot == 'true'
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Compute cache key
+        if: steps.check.outputs.is-snapshot == 'true'
+        id: key
+        run: |
+          h=$(shasum -a 256 \
+                .maplibre-native-version \
+                maplibre-native-ios.patch \
+                build-maplibre-ios.sh \
+                internalize-libmaplibre.sh \
+              | shasum -a 256 | cut -d' ' -f1)
+          echo "key=maplibre-ios-$(uname -m)-$h" >> "$GITHUB_OUTPUT"
+
+      - name: Restore archives
+        if: steps.check.outputs.is-snapshot == 'true'
+        uses: actions/cache@v5
+        with:
+          path: |
+            ramani-maplibre/libs/iosArm64/libMapLibre.a
+            ramani-maplibre/libs/iosSimulatorArm64/libMapLibre.a
+            ramani-maplibre/libs/include/MapLibre
+            ramani-maplibre/src/iosMain/composeResources/files
+          key: ${{ steps.key.outputs.key }}
+
+      - name: Publish snapshot to Maven Central
+        if: steps.check.outputs.is-snapshot == 'true'
+        working-directory: ./ramani-maplibre
+        run: ./gradlew publishToMavenCentral --no-configuration-cache
 
   example:
     name: "Build and test example"
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Set up JDK 21

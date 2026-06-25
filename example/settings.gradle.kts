@@ -17,6 +17,4 @@ dependencyResolutionManagement {
 rootProject.name = "RamaniExamples"
 include(":app")
 
-// Uncomment to use Ramani as a composite build (for dev purposes)
 includeBuild("../ramani-maplibre")
-

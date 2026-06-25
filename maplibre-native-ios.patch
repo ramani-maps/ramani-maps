@@ -1,0 +1,95 @@
+diff --git a/platform/BUILD.bazel b/platform/BUILD.bazel
+index 414d32c64937..332d1ca012a8 100644
+--- a/platform/BUILD.bazel
++++ b/platform/BUILD.bazel
+@@ -96,6 +96,7 @@ objc_library(
+     copts = CPP_FLAGS + MAPLIBRE_FLAGS + [
+         "-fcxx-modules",
+         "-fmodules",
++        "-DMLN_CUSTOM_COMBINED_BUNDLE=1",
+         "-Wno-c99-extensions",
+         "-Wno-gnu-zero-variadic-macro-arguments",
+         "-Wno-gnu-conditional-omitted-operand",
+@@ -149,6 +150,7 @@ objc_library(
+         "@platforms//os:macos": WARNING_FLAGS["macos"],
+     }) + MAPLIBRE_FLAGS + [
+         "-fmodules",
++        "-DMLN_CUSTOM_COMBINED_BUNDLE=1",
+         "-Wno-gnu-zero-variadic-macro-arguments",
+         "-Wno-variadic-macros",
+         "-Wno-gnu-conditional-omitted-operand",
+diff --git a/platform/darwin/src/MLNSettings.h b/platform/darwin/src/MLNSettings.h
+index 72a6289832b5..3eb9510213e9 100644
+--- a/platform/darwin/src/MLNSettings.h
++++ b/platform/darwin/src/MLNSettings.h
+@@ -57,6 +57,8 @@ MLN_EXPORT
+  */
+ + (void)useWellKnownTileServer:(MLNWellKnownTileServer)tileServer;
+ 
+++ (void)setCustomResourceBundle:(nullable NSBundle *)bundle;
++
+ @end
+ 
+ NS_ASSUME_NONNULL_END
+diff --git a/platform/darwin/src/MLNSettings.mm b/platform/darwin/src/MLNSettings.mm
+index 8c1f0026567e..8c89fafd94de 100644
+--- a/platform/darwin/src/MLNSettings.mm
++++ b/platform/darwin/src/MLNSettings.mm
+@@ -15,6 +15,16 @@
+ 
+ @implementation MLNSettings
+ 
++static NSBundle *_customResourceBundle = nil;
++
+++ (void)setCustomResourceBundle:(nullable NSBundle *)bundle {
++    _customResourceBundle = bundle;
++}
++
+++ (nullable NSBundle *)customResourceBundle {
++    return _customResourceBundle;
++}
++
+ // MARK: - Internal
+ 
+ - (instancetype)init {
+diff --git a/platform/darwin/src/MLNSettings_Private.h b/platform/darwin/src/MLNSettings_Private.h
+index fae2adff3b37..622ebf734a77 100644
+--- a/platform/darwin/src/MLNSettings_Private.h
++++ b/platform/darwin/src/MLNSettings_Private.h
+@@ -24,6 +24,8 @@ NS_ASSUME_NONNULL_BEGIN
+ /// called internally to signal tile server options changed
+ + (void)tileServerOptionsChanged;
+ 
+++ (nullable NSBundle *)customResourceBundle;
++
+ @end
+ 
+ NS_ASSUME_NONNULL_END
+diff --git a/platform/darwin/src/NSBundle+MLNAdditions.mm b/platform/darwin/src/NSBundle+MLNAdditions.mm
+index 82886e3edcd9..a51c4e7b6a3c 100644
+--- a/platform/darwin/src/NSBundle+MLNAdditions.mm
++++ b/platform/darwin/src/NSBundle+MLNAdditions.mm
+@@ -1,18 +1,21 @@
+ #import "NSBundle+MLNAdditions.h"
+ 
+ #import "MLNSettings.h"
++#import "MLNSettings_Private.h"
+ 
+ const MLNExceptionName MLNBundleNotFoundException = @"MLNBundleNotFoundException";
+ 
+ @implementation NSBundle (MLNAdditions)
+ 
+ + (instancetype)mgl_frameworkBundle {
++  if ([MLNSettings customResourceBundle]) {
++    return [MLNSettings customResourceBundle];
++  }
++
+   NSBundle *bundle = [self bundleForClass:[MLNSettings class]];
+ 
+ #ifndef MLN_CUSTOM_COMBINED_BUNDLE
+   if (![bundle.infoDictionary[@"CFBundlePackageType"] isEqualToString:@"FMWK"]) {
+-    // For static frameworks, the bundle is the containing application
+-    // bundle but the resources are in Mapbox.bundle.
+     NSString *bundlePath = [bundle pathForResource:@"Mapbox" ofType:@"bundle"];
+     if (bundlePath) {
+       bundle = [self bundleWithPath:bundlePath];

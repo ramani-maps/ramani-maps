@@ -43,7 +43,7 @@ kotlin {
             implementation(compose.foundation)
             implementation("org.jetbrains.compose.material3:material3:1.9.0")
             implementation(compose.ui)
-            implementation("org.ramani-maps:ramani-maplibre:0.11.0")
+            implementation("org.ramani-maps:ramani-maplibre:0.13.0-SNAPSHOT")
         }
 
         androidMain.dependencies {

@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.UIKitView
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
+import kotlinx.coroutines.awaitCancellation
 import platform.CoreGraphics.CGRectMake
 import platform.CoreLocation.CLLocationManager
 import platform.Foundation.NSURL
@@ -166,7 +167,7 @@ actual fun MapLibre(
 
         val mapApplier = MapApplier(mapView)
         mapApplier.dragHandler = AnnotationDragHandler(mapView, mapApplier)
-        newComposition(parentComposition, mapApplier) {
+        val composition = newComposition(parentComposition, mapApplier) {
             @Suppress("UNCHECKED_CAST")
             val applier = currentComposer.applier as MapApplier
             CompositionLocalProvider(
@@ -195,6 +196,17 @@ actual fun MapLibre(
                 })
                 currentContent?.invoke()
             }
+        }
+
+        try {
+            awaitCancellation()
+        } finally {
+            // A new composition is built every time the style finishes loading
+            // (styleLoaded flips). Dispose the previous one when the effect
+            // relaunches or leaves; otherwise each style swap leaks a live
+            // Composition and MapApplier bound to the same MLNMapView, and rapid
+            // swaps race them into a crash.
+            composition.dispose()
         }
     }
 }

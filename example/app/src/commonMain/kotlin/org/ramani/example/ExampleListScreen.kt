@@ -34,6 +34,7 @@ private val examples = listOf(
     Example("clusters", "Clusters", "GeoJSON clustering with earthquake data"),
     Example("custom-annotation", "Custom Annotation", "Progress circle built from primitives"),
     Example("custom-layers", "Custom Layers", "Vector, raster and GeoJSON layers"),
+    Example("feature-query", "Feature Query", "Tap to select POIs / places / peaks (swisstopo)"),
     Example("interactive-polygon", "Interactive Polygon", "Draggable polygon with vertex handles"),
     Example("location", "Location", "Device location tracking"),
 )

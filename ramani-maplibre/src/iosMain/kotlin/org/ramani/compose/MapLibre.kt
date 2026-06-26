@@ -25,6 +25,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCompositionContext
 import androidx.compose.runtime.rememberUpdatedState
@@ -170,10 +171,15 @@ actual fun MapLibre(
         val composition = newComposition(parentComposition, mapApplier) {
             @Suppress("UNCHECKED_CAST")
             val applier = currentComposer.applier as MapApplier
+            val iosProjection = remember(applier.mapView) { MapProjectionIos(applier.mapView) }
             CompositionLocalProvider(
                 LocalMapApplier provides applier,
-                LocalMapProjection provides MapProjectionIos(applier.mapView),
+                LocalMapProjection provides iosProjection,
             ) {
+                DisposableEffect(iosProjection) {
+                    cameraPositionState.setProjection(iosProjection)
+                    onDispose { cameraPositionState.setProjection(null) }
+                }
                 ComposeNode<MapPropertiesNode, MapApplier>(factory = {
                     MapPropertiesNode(
                         mapView = mapView,

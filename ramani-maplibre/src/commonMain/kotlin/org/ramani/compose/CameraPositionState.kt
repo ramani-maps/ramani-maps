@@ -52,6 +52,19 @@ data class CameraPosition(
 class CameraPositionState(initialPosition: CameraPosition = CameraPosition()) {
     private var _position by mutableStateOf(initialPosition)
 
+    private var _projection by mutableStateOf<MapProjection?>(null)
+
+    /**
+     * The map projection, providing screen ↔ coordinate conversion and
+     * [MapProjection.queryRenderedFeatures]. Null until the map is ready; reset to null when the
+     * map composable leaves the composition.
+     */
+    val projection: MapProjection? get() = _projection
+
+    internal fun setProjection(projection: MapProjection?) {
+        _projection = projection
+    }
+
     /**
      * The current camera position. Setting this triggers a camera animation on the map.
      * Reading this always returns the latest position, including gesture-driven updates.

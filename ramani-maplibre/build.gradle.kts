@@ -62,6 +62,10 @@ kotlin {
             implementation(libs.androidx.compose.runtime)
             implementation(libs.androidx.compose.runtime.saveable)
             implementation(compose.ui)
+
+            // Exposed in the public queryRenderedFeatures return type (GeoJSON Feature),
+            // so it must be `api`. Brings kotlinx-serialization-json (JsonObject) transitively.
+            api(libs.spatialk.geojson)
         }
 
         androidMain.dependencies {

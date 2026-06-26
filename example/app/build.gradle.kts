@@ -42,7 +42,9 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation("org.jetbrains.compose.material3:material3:1.9.0")
+            implementation(compose.materialIconsExtended)
             implementation(compose.ui)
+            implementation("org.jetbrains.compose.ui:ui-backhandler:1.10.3")
             implementation("org.ramani-maps:ramani-maplibre:0.13.0-SNAPSHOT")
         }
 

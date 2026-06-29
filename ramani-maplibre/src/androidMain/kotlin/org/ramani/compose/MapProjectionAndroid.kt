@@ -14,6 +14,8 @@ import android.graphics.PointF
 import android.graphics.RectF
 import kotlinx.serialization.json.JsonObject
 import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.android.style.layers.Property
+import org.maplibre.android.style.layers.PropertyFactory
 import org.maplibre.spatialk.geojson.Feature
 import org.maplibre.spatialk.geojson.Geometry
 
@@ -49,5 +51,12 @@ class MapProjectionAndroid(private val map: MapLibreMap) : MapProjection {
         // Round-trip through GeoJSON so the result is the canonical spatial-k Feature, identical
         // across platforms.
         return raw.map { Feature.fromJson(it.toJson()) }
+    }
+
+    override fun setLayerVisibility(layerId: String, visible: Boolean) {
+        val layer = map.style?.getLayer(layerId) ?: return
+        layer.setProperties(
+            PropertyFactory.visibility(if (visible) Property.VISIBLE else Property.NONE)
+        )
     }
 }

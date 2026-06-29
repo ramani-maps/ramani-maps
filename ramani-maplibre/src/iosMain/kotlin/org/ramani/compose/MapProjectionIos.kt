@@ -56,4 +56,9 @@ class MapProjectionIos(private val mapView: MLNMapView) : MapProjection {
             Feature.fromJson(json)
         }
     }
+
+    override fun setLayerVisibility(layerId: String, visible: Boolean) {
+        val layer = mapView.style?.layerWithIdentifier(layerId) ?: return
+        layer.visible = visible
+    }
 }

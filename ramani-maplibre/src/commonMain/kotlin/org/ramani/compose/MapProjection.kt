@@ -32,6 +32,8 @@ interface MapProjection {
         radiusPx: Float = 8f,
         layerIds: Set<String>? = null,
     ): List<Feature<Geometry, JsonObject?>>
+
+    fun setLayerVisibility(layerId: String, visible: Boolean)
 }
 
 val LocalMapProjection = staticCompositionLocalOf<MapProjection> {

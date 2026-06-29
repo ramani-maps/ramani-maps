@@ -69,7 +69,11 @@ actual fun MapLibre(
     val currentOnMapLongClick by rememberUpdatedState(onMapLongClick)
     val parentComposition = rememberCompositionContext()
 
-    val styleLoaded = remember { mutableStateOf(false) }
+    // Incremented every time a style finishes loading. A counter (rather than a boolean) is used
+    // because a JSON style loads synchronously: a boolean would flip false→true within the same
+    // frame and Compose would never observe the change, so the post-load effect wouldn't re-run on
+    // a swap to an offline (JSON) style and downstream state (layer visibility) wouldn't reapply.
+    val styleGeneration = remember { mutableStateOf(0) }
     val mapViewState = remember { mutableStateOf<MLNMapView?>(null) }
 
     // The last applied style, tracked so the map reloads only on a real change (by value).
@@ -101,7 +105,7 @@ actual fun MapLibre(
     val delegate = remember {
         object : NSObject(), MLNMapViewDelegateProtocol {
             override fun mapView(mapView: MLNMapView, didFinishLoadingStyle: MLNStyle) {
-                styleLoaded.value = true
+                styleGeneration.value = styleGeneration.value + 1
             }
 
             override fun mapViewRegionIsChanging(mapView: MLNMapView) {
@@ -159,9 +163,9 @@ actual fun MapLibre(
 
             mapView.delegate = delegate
             // A JSON style is parsed synchronously during init, so didFinishLoadingStyle fires
-            // before the delegate above is attached and is missed. Pick it up here; otherwise
-            // styleLoaded never flips for MapStyle.Json and the post-load composition never runs.
-            if (mapView.style != null) styleLoaded.value = true
+            // before the delegate above is attached and is missed. Pick it up here; otherwise the
+            // generation never advances for MapStyle.Json and the post-load composition never runs.
+            if (mapView.style != null) styleGeneration.value = styleGeneration.value + 1
             mapView.addGestureRecognizer(
                 UITapGestureRecognizer(gestureHandler, NSSelectorFromString("onTap:"))
             )
@@ -175,7 +179,8 @@ actual fun MapLibre(
         update = { mapView ->
             if (currentStyle != appliedStyle.value) {
                 appliedStyle.value = currentStyle
-                styleLoaded.value = false
+                // No need to reset a flag here: the new style's didFinishLoadingStyle advances
+                // styleGeneration, which re-runs the post-load effect and rebuilds the composition.
                 when (val s = currentStyle) {
                     is MapStyle.Uri -> mapView.styleURL = NSURL(string = s.uri)
                     is MapStyle.Json -> mapView.styleJSON = s.json
@@ -200,8 +205,8 @@ actual fun MapLibre(
 
     val mapView = mapViewState.value
 
-    LaunchedEffect(mapView, styleLoaded.value) {
-        if (mapView == null || !styleLoaded.value) return@LaunchedEffect
+    LaunchedEffect(mapView, styleGeneration.value) {
+        if (mapView == null || styleGeneration.value == 0) return@LaunchedEffect
 
         // Apply the camera once the style has loaded and the view has a real size, then unlock the
         // delegate's write-back. Uses the live position so a style swap (e.g. offline/online
@@ -260,7 +265,7 @@ actual fun MapLibre(
             awaitCancellation()
         } finally {
             // A new composition is built every time the style finishes loading
-            // (styleLoaded flips). Dispose the previous one when the effect
+            // (styleGeneration advances). Dispose the previous one when the effect
             // relaunches or leaves; otherwise each style swap leaks a live
             // Composition and MapApplier bound to the same MLNMapView, and rapid
             // swaps race them into a crash.

@@ -14,14 +14,16 @@ class MapProperties(
     val minZoom: Double? = null,
     val maxPitch: Double? = null,
     val minPitch: Double? = null,
-    val latLngBounds: LatLngBounds? = null
+    val latLngBounds: LatLngBounds? = null,
+    val online: Boolean? = null,
 ) {
     constructor(mapProperties: MapProperties) : this(
        maxZoom = mapProperties.maxZoom,
        minZoom = mapProperties.minZoom,
        maxPitch = mapProperties.maxPitch,
        minPitch = mapProperties.minPitch,
-       latLngBounds = mapProperties.latLngBounds
+       latLngBounds = mapProperties.latLngBounds,
+       online = mapProperties.online,
     )
 
     fun copy(
@@ -29,14 +31,16 @@ class MapProperties(
         minZoom: Double? = this.minZoom,
         maxPitch: Double? = this.maxPitch,
         minPitch: Double? = this.minPitch,
-        latLngBounds: LatLngBounds? = this.latLngBounds
+        latLngBounds: LatLngBounds? = this.latLngBounds,
+        online: Boolean? = this.online,
     ): MapProperties {
         return MapProperties(
             maxZoom = maxZoom,
             minZoom = minZoom,
             maxPitch = maxPitch,
             minPitch = minPitch,
-            latLngBounds = latLngBounds
+            latLngBounds = latLngBounds,
+            online = online,
         )
     }
 
@@ -48,7 +52,8 @@ class MapProperties(
             minZoom == other.minZoom &&
             maxPitch == other.maxPitch &&
             minPitch == other.minPitch &&
-            latLngBounds == other.latLngBounds
+            latLngBounds == other.latLngBounds &&
+            online == other.online
     }
 
     override fun hashCode(): Int {
@@ -57,6 +62,7 @@ class MapProperties(
         result = 31 * result + (maxPitch?.hashCode() ?: 0)
         result = 31 * result + (minPitch?.hashCode() ?: 0)
         result = 31 * result + (latLngBounds?.hashCode() ?: 0)
+        result = 31 * result + (online?.hashCode() ?: 0)
         return result
     }
 }

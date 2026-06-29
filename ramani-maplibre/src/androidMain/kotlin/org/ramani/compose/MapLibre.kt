@@ -38,6 +38,7 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.viewinterop.AndroidView
 import okhttp3.Call
 import okhttp3.OkHttpClient
+import org.maplibre.android.MapLibre as MapLibreSdk
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.gestures.MoveGestureDetector
 import org.maplibre.android.gestures.RotateGestureDetector
@@ -335,6 +336,7 @@ private fun MapLibreMap.applyProperties(properties: MapProperties) {
     properties.maxPitch?.let { this.setMaxPitchPreference(it) }
     properties.minPitch?.let { this.setMinPitchPreference(it) }
     properties.latLngBounds?.let { this.setLatLngBoundsForCameraTarget(it.toMapLibre()) }
+    MapLibreSdk.setConnected(properties.online)
 }
 
 private fun MapLibreMap.setupLocation(

@@ -32,11 +32,16 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.UIKitView
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.ObjCAction
 import kotlinx.cinterop.useContents
 import kotlinx.coroutines.awaitCancellation
 import platform.CoreGraphics.CGRectMake
 import platform.CoreLocation.CLLocationManager
+import platform.Foundation.NSSelectorFromString
 import platform.Foundation.NSURL
+import platform.UIKit.UIGestureRecognizerStateBegan
+import platform.UIKit.UILongPressGestureRecognizer
+import platform.UIKit.UITapGestureRecognizer
 import platform.darwin.NSObject
 
 @OptIn(ExperimentalForeignApi::class)
@@ -60,10 +65,38 @@ actual fun MapLibre(
     val currentContent by rememberUpdatedState(content)
     val currentLocationRequestProperties by rememberUpdatedState(locationRequestProperties)
     val currentCameraMode by rememberUpdatedState(cameraMode.value)
+    val currentOnMapClick by rememberUpdatedState(onMapClick)
+    val currentOnMapLongClick by rememberUpdatedState(onMapLongClick)
     val parentComposition = rememberCompositionContext()
 
     val styleLoaded = remember { mutableStateOf(false) }
     val mapViewState = remember { mutableStateOf<MLNMapView?>(null) }
+
+    // The last applied style, tracked so the map reloads only on a real change (by value).
+    val appliedStyle = remember { mutableStateOf<MapStyle?>(null) }
+
+    // Gates the delegate's camera write-back until the initial camera has been applied, so the
+    // world-view position during the first layout can't overwrite cameraPositionState.
+    val cameraInitialized = remember { mutableStateOf(false) }
+
+    val gestureHandler = remember {
+        object : NSObject() {
+            @ObjCAction
+            fun onTap(recognizer: UITapGestureRecognizer) {
+                val map = recognizer.view as? MLNMapView ?: return
+                val coord = map.convertPoint(recognizer.locationInView(map), toCoordinateFromView = map)
+                currentOnMapClick(coord.toCommon())
+            }
+
+            @ObjCAction
+            fun onLongPress(recognizer: UILongPressGestureRecognizer) {
+                if (recognizer.state != UIGestureRecognizerStateBegan) return
+                val map = recognizer.view as? MLNMapView ?: return
+                val coord = map.convertPoint(recognizer.locationInView(map), toCoordinateFromView = map)
+                currentOnMapLongClick(coord.toCommon())
+            }
+        }
+    }
 
     val delegate = remember {
         object : NSObject(), MLNMapViewDelegateProtocol {
@@ -72,6 +105,7 @@ actual fun MapLibre(
             }
 
             override fun mapViewRegionIsChanging(mapView: MLNMapView) {
+                if (!cameraInitialized.value) return
                 cameraPositionState.updatePositionFromMap(
                     target = mapView.centerCoordinate.toCommon(),
                     zoom = mapView.zoomLevel,
@@ -80,6 +114,7 @@ actual fun MapLibre(
             }
 
             override fun mapView(mapView: MLNMapView, regionDidChangeAnimated: Boolean) {
+                if (!cameraInitialized.value) return
                 cameraPositionState.updatePositionFromMap(
                     target = mapView.centerCoordinate.toCommon(),
                     zoom = mapView.zoomLevel,
@@ -105,31 +140,45 @@ actual fun MapLibre(
     UIKitView(
         factory = {
             MapLibreInitializer.initialize()
-            val styleUrl = when (val s = currentStyle) {
-                is MapStyle.Uri -> NSURL(string = s.uri)
-                is MapStyle.Json -> NSURL(string = s.json)
+            val frame = CGRectMake(0.0, 0.0, 0.0, 0.0)
+            val mapView = when (val s = currentStyle) {
+                is MapStyle.Uri -> MLNMapView(frame = frame, styleURL = NSURL(string = s.uri))
+                is MapStyle.Json -> MLNMapView(frame = frame, styleJSON = s.json)
             }
-            val mapView = MLNMapView(frame = CGRectMake(0.0, 0.0, 0.0, 0.0), styleURL = styleUrl)
+            appliedStyle.value = currentStyle
+
+            // Start the map at the requested position so the first frame isn't the world view.
+            // The camera write-back stays gated (see cameraInitialized) until the post-style-load
+            // effect re-applies and unlocks it.
+            val initial = cameraPositionState.position
+            initial.target?.let {
+                mapView.setCenterCoordinate(it.toCLLocationCoordinate2D(), animated = false)
+            }
+            initial.zoom?.let { mapView.setZoomLevel(it, animated = false) }
+            initial.bearing?.let { mapView.setDirection(it, animated = false) }
+
             mapView.delegate = delegate
+            // A JSON style is parsed synchronously during init, so didFinishLoadingStyle fires
+            // before the delegate above is attached and is missed. Pick it up here; otherwise
+            // styleLoaded never flips for MapStyle.Json and the post-load composition never runs.
+            if (mapView.style != null) styleLoaded.value = true
+            mapView.addGestureRecognizer(
+                UITapGestureRecognizer(gestureHandler, NSSelectorFromString("onTap:"))
+            )
+            mapView.addGestureRecognizer(
+                UILongPressGestureRecognizer(gestureHandler, NSSelectorFromString("onLongPress:"))
+            )
             mapViewState.value = mapView
             mapView
         },
         modifier = modifier,
         update = { mapView ->
-            when (val s = currentStyle) {
-                is MapStyle.Uri -> {
-                    val newUrl = NSURL(string = s.uri)
-                    if (mapView.styleURL.absoluteString != newUrl.absoluteString) {
-                        styleLoaded.value = false
-                        mapView.styleURL = newUrl
-                    }
-                }
-                is MapStyle.Json -> {
-                    val newUrl = NSURL(string = s.json)
-                    if (mapView.styleURL.absoluteString != newUrl.absoluteString) {
-                        styleLoaded.value = false
-                        mapView.styleURL = newUrl
-                    }
+            if (currentStyle != appliedStyle.value) {
+                appliedStyle.value = currentStyle
+                styleLoaded.value = false
+                when (val s = currentStyle) {
+                    is MapStyle.Uri -> mapView.styleURL = NSURL(string = s.uri)
+                    is MapStyle.Json -> mapView.styleJSON = s.json
                 }
             }
 
@@ -154,7 +203,9 @@ actual fun MapLibre(
     LaunchedEffect(mapView, styleLoaded.value) {
         if (mapView == null || !styleLoaded.value) return@LaunchedEffect
 
-        // Apply initial camera position
+        // Apply the camera once the style has loaded and the view has a real size, then unlock the
+        // delegate's write-back. Uses the live position so a style swap (e.g. offline/online
+        // toggle) preserves where the user currently is rather than snapping back to the start.
         val pos = cameraPositionState.position
         pos.target?.let {
             mapView.setCenterCoordinate(it.toCLLocationCoordinate2D(), animated = false)
@@ -165,6 +216,7 @@ actual fun MapLibre(
         pos.bearing?.let {
             mapView.setDirection(it, animated = false)
         }
+        cameraInitialized.value = true
 
         val mapApplier = MapApplier(mapView)
         mapApplier.dragHandler = AnnotationDragHandler(mapView, mapApplier)

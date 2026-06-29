@@ -11,10 +11,27 @@
 package org.ramani.compose
 
 import androidx.compose.runtime.staticCompositionLocalOf
+import kotlinx.serialization.json.JsonObject
+import org.maplibre.spatialk.geojson.Feature
+import org.maplibre.spatialk.geojson.Geometry
 
 interface MapProjection {
     fun toScreenLocation(latLng: LatLng): ScreenPoint
+
     fun fromScreenLocation(point: ScreenPoint): LatLng
+
+    /**
+     * Returns the rendered features at [point] (in screen pixels), sorted by render order with the
+     * feature drawn in front first. The query is widened to a square of half-size [radiusPx] around
+     * the point to give finger-tap tolerance.
+     *
+     * @param layerIds if non-null, restricts the query to features in these style layers.
+     */
+    fun queryRenderedFeatures(
+        point: ScreenPoint,
+        radiusPx: Float = 8f,
+        layerIds: Set<String>? = null,
+    ): List<Feature<Geometry, JsonObject?>>
 }
 
 val LocalMapProjection = staticCompositionLocalOf<MapProjection> {

@@ -45,6 +45,7 @@ fun ExampleNavHost() {
         "clusters" -> MapScreenScaffold(onBack = goHome) { ClustersScreen() }
         "custom-annotation" -> MapScreenScaffold(onBack = goHome) { CustomAnnotationScreen() }
         "custom-layers" -> MapScreenScaffold(onBack = goHome) { CustomLayersScreen() }
+        "feature-query" -> MapScreenScaffold(onBack = goHome) { FeatureQueryScreen() }
         "interactive-polygon" -> MapScreenScaffold(onBack = goHome) { InteractivePolygonScreen() }
         "location" -> MapScreenScaffold(onBack = goHome) { LocationScreen() }
     }

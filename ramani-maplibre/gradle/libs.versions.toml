@@ -9,6 +9,7 @@ kotlin-gradle-plugin = "2.3.20"
 kotlinx-coroutines = "1.10.2"
 maplibre-android-sdk = "13.0.2"
 maplibre-android-plugin-annotation = "3.0.2"
+spatialk = "0.7.0"
 junit = "4.13.2"
 okhttp = "5.3.2"
 androidx-test = "1.7.0"
@@ -28,6 +29,7 @@ kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
 maplibre-android-sdk = { group = "org.maplibre.gl", name = "android-sdk", version.ref = "maplibre-android-sdk" }
 maplibre-android-plugin-annotation = { group = "org.maplibre.gl", name = "android-plugin-annotation-v9", version.ref = "maplibre-android-plugin-annotation" }
+spatialk-geojson = { group = "org.maplibre.spatialk", name = "geojson", version.ref = "spatialk" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidx-test" }

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
@@ -253,10 +254,15 @@ internal fun MapLibreInternal(
         mapView.newComposition(parentComposition, maplibreMap, loadedStyle) {
             @Suppress("UNCHECKED_CAST")
             val mapApplier = currentComposer.applier as MapApplier
+            val androidProjection = remember(mapApplier.map) { MapProjectionAndroid(mapApplier.map) }
             CompositionLocalProvider(
                 LocalMapApplier provides mapApplier,
-                LocalMapProjection provides MapProjectionAndroid(mapApplier.map.projection),
+                LocalMapProjection provides androidProjection,
             ) {
+                DisposableEffect(androidProjection) {
+                    cameraPositionState.setProjection(androidProjection)
+                    onDispose { cameraPositionState.setProjection(null) }
+                }
                 MapUpdater(
                     map = checkNotNull(currentMap.value),
                     style = loadedStyle,

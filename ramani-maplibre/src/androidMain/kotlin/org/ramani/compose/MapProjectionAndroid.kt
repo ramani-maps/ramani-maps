@@ -10,16 +10,44 @@
 
 package org.ramani.compose
 
-import org.maplibre.android.maps.Projection
+import android.graphics.PointF
+import android.graphics.RectF
+import kotlinx.serialization.json.JsonObject
+import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.spatialk.geojson.Feature
+import org.maplibre.spatialk.geojson.Geometry
 
-class MapProjectionAndroid(private val projection: Projection) : MapProjection {
+class MapProjectionAndroid(private val map: MapLibreMap) : MapProjection {
+    private val projection get() = map.projection
+
     override fun toScreenLocation(latLng: LatLng): ScreenPoint {
         val point = projection.toScreenLocation(latLng.toMapLibre())
         return ScreenPoint(point.x, point.y)
     }
 
     override fun fromScreenLocation(point: ScreenPoint): LatLng {
-        val latLng = projection.fromScreenLocation(android.graphics.PointF(point.x, point.y))
+        val latLng = projection.fromScreenLocation(PointF(point.x, point.y))
         return latLng.toCommon()
+    }
+
+    override fun queryRenderedFeatures(
+        point: ScreenPoint,
+        radiusPx: Float,
+        layerIds: Set<String>?,
+    ): List<Feature<Geometry, JsonObject?>> {
+        val rect = RectF(
+            point.x - radiusPx,
+            point.y - radiusPx,
+            point.x + radiusPx,
+            point.y + radiusPx,
+        )
+        val raw = if (layerIds == null) {
+            map.queryRenderedFeatures(rect)
+        } else {
+            map.queryRenderedFeatures(rect, *layerIds.toTypedArray())
+        }
+        // Round-trip through GeoJSON so the result is the canonical spatial-k Feature, identical
+        // across platforms.
+        return raw.map { Feature.fromJson(it.toJson()) }
     }
 }

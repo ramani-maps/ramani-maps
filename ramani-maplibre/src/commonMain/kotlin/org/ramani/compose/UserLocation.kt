@@ -15,4 +15,6 @@ data class UserLocation(
     val longitude: Double = 0.0,
     val altitude: Double = 0.0,
     val bearing: Float = 0f,
+    /** Horizontal accuracy radius in meters, or null when the fix doesn't report one. */
+    val accuracy: Float? = null,
 )

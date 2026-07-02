@@ -150,6 +150,8 @@ actual fun MapLibre(
                             longitude = longitude,
                             altitude = loc.altitude,
                             bearing = loc.course.toFloat(),
+                            // CLLocation reports a negative horizontalAccuracy for an invalid fix.
+                            accuracy = loc.horizontalAccuracy.takeIf { it >= 0 }?.toFloat(),
                         )
                     }
                 }

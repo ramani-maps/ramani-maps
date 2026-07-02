@@ -10,6 +10,7 @@
 
 package org.ramani.compose
 
+import MapLibre.MLNMapCamera
 import MapLibre.MLNMapView
 import MapLibre.MLNMapViewDelegateProtocol
 import MapLibre.MLNStyle
@@ -64,6 +65,7 @@ actual fun MapLibre(
     val currentStyle by rememberUpdatedState(style)
     val currentContent by rememberUpdatedState(content)
     val currentLocationRequestProperties by rememberUpdatedState(locationRequestProperties)
+    val currentProperties by rememberUpdatedState(properties)
     val currentCameraMode by rememberUpdatedState(cameraMode.value)
     val currentOnMapClick by rememberUpdatedState(onMapClick)
     val currentOnMapLongClick by rememberUpdatedState(onMapLongClick)
@@ -106,6 +108,20 @@ actual fun MapLibre(
         object : NSObject(), MLNMapViewDelegateProtocol {
             override fun mapView(mapView: MLNMapView, didFinishLoadingStyle: MLNStyle) {
                 styleGeneration.value = styleGeneration.value + 1
+            }
+
+            // Gesture-driven counterpart of Android's setLatLngBoundsForCameraTarget: reject any
+            // gesture that would move the camera target outside latLngBounds.
+            override fun mapView(
+                mapView: MLNMapView,
+                shouldChangeFromCamera: MLNMapCamera,
+                toCamera: MLNMapCamera,
+            ): Boolean {
+                val bounds = currentProperties.latLngBounds ?: return true
+                return toCamera.centerCoordinate.useContents {
+                    latitude in bounds.southwest.latitude..bounds.northeast.latitude &&
+                        longitude in bounds.southwest.longitude..bounds.northeast.longitude
+                }
             }
 
             override fun mapViewRegionIsChanging(mapView: MLNMapView) {
@@ -177,6 +193,9 @@ actual fun MapLibre(
         },
         modifier = modifier,
         update = { mapView ->
+            currentProperties.minZoom?.let { mapView.minimumZoomLevel = it }
+            currentProperties.maxZoom?.let { mapView.maximumZoomLevel = it }
+
             if (currentStyle != appliedStyle.value) {
                 appliedStyle.value = currentStyle
                 // No need to reset a flag here: the new style's didFinishLoadingStyle advances
@@ -246,15 +265,16 @@ actual fun MapLibre(
                     update(cameraPositionState.moveGeneration) {
                         val cameraPosition = cameraPositionState.position
                         val animated = cameraPosition.motionType != CameraMotionType.INSTANT
-                        cameraPosition.target?.let {
-                            mapView.setCenterCoordinate(it.toCLLocationCoordinate2D(), animated = animated)
-                        }
-                        cameraPosition.zoom?.let {
-                            mapView.setZoomLevel(it, animated = animated)
-                        }
-                        cameraPosition.bearing?.let {
-                            mapView.setDirection(it, animated = animated)
-                        }
+                        // Apply centre, zoom and bearing in a single camera update. Issuing separate
+                        // animated setCenterCoordinate/setZoomLevel calls races two animations: from a
+                        // zoomed-out view the zoom starts before the centre has moved, so the map zooms
+                        // into the wrong place. One combined call keeps them in sync.
+                        mapView.setCenterCoordinate(
+                            (cameraPosition.target?.toCLLocationCoordinate2D() ?: mapView.centerCoordinate),
+                            zoomLevel = cameraPosition.zoom ?: mapView.zoomLevel,
+                            direction = cameraPosition.bearing ?: mapView.direction,
+                            animated = animated,
+                        )
                     }
                 })
                 currentContent?.invoke()

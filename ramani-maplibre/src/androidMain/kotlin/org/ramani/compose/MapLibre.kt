@@ -255,7 +255,12 @@ internal fun MapLibreInternal(
         mapView.newComposition(parentComposition, maplibreMap, loadedStyle) {
             @Suppress("UNCHECKED_CAST")
             val mapApplier = currentComposer.applier as MapApplier
-            val androidProjection = remember(mapApplier.map) { MapProjectionAndroid(mapApplier.map) }
+            // Re-key on the loaded style so the projection is recreated on every style (re)load.
+            // Consumers observing cameraPositionState.projection (e.g. to reapply layer visibility)
+            // then re-run once the new style is ready, instead of silently operating on stale state.
+            val androidProjection = remember(mapApplier.map, loadedStyle.value) {
+                MapProjectionAndroid(mapApplier.map)
+            }
             CompositionLocalProvider(
                 LocalMapApplier provides mapApplier,
                 LocalMapProjection provides androidProjection,

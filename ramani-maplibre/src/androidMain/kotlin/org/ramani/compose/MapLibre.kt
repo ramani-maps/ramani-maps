@@ -112,6 +112,7 @@ actual fun MapLibre(
                         longitude = commonState.value.longitude
                         altitude = commonState.value.altitude
                         bearing = commonState.value.bearing
+                        commonState.value.accuracy?.let { accuracy = it }
                     }
                     set(loc) {
                         commonState.value = UserLocation(
@@ -119,6 +120,7 @@ actual fun MapLibre(
                             longitude = loc.longitude,
                             altitude = loc.altitude,
                             bearing = loc.bearing,
+                            accuracy = if (loc.hasAccuracy()) loc.accuracy else null,
                         )
                     }
 

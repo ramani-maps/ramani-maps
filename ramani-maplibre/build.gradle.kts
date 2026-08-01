@@ -103,7 +103,12 @@ kotlin {
 }
 
 group = "org.ramani-maps"
-version = "0.13.0-SNAPSHOT"
+
+// Used for local builds and for the snapshot publishing from main. The release
+// CI job overrides it with -PVERSION=x.y.z[-SNAPSHOT], extracted from the
+// release tag (maplibre-x.y.z[-SNAPSHOT]).
+val fallbackVersion = "0.13.0-SNAPSHOT"
+version = project.findProperty("VERSION")?.toString() ?: fallbackVersion
 
 // Workaround: Compose Multiplatform registers a resource-copy task for the
 // androidDeviceTest variant but (with the AGP KMP library plugin) never

@@ -188,7 +188,7 @@ jobs:
   ramani-maplibre-publish-release:
     name: Publish ramani-maplibre release (KMP)
     needs: [build-maplibre-ios, ramani-maplibre-compile-ios, ramani-maplibre-android]
-    if: ${{ github.event_name == 'release' && github.event.action == 'created' && startsWith(github.ref_name, 'maplibre') }}
+    if: ${{ github.event_name == 'release' && github.event.action == 'created' && startsWith(github.ref_name, 'maplibre-') }}
     runs-on: macos-26
     env:
       ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.CENTRAL_USERNAME }}
@@ -197,6 +197,19 @@ jobs:
       ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
       ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_KEY_CONTENTS }}
     steps:
+      # The tag encodes the version: maplibre-x.y.z or maplibre-x.y.z-SNAPSHOT.
+      - name: Extract version from tag
+        id: version
+        run: |
+          tag_name="${{ github.ref_name }}"
+          version="${tag_name#maplibre-}"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?$ ]]; then
+            echo "ERROR: tag '$tag_name' is invalid, expected maplibre-x.y.z or maplibre-x.y.z-SNAPSHOT"
+            exit 1
+          fi
+          echo "Publishing version ${version}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v7
         with:
           submodules: recursive
@@ -227,9 +240,11 @@ jobs:
             ramani-maplibre/src/iosMain/composeResources/files
           key: ${{ steps.key.outputs.key }}
 
+      # For a -SNAPSHOT version the plugin uploads to the snapshot repository and
+      # the release part is a no-op, so the same task works for both cases.
       - name: Publish to Maven Central
         working-directory: ./ramani-maplibre
-        run: ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
+        run: ./gradlew publishAndReleaseToMavenCentral -PVERSION=${{ steps.version.outputs.version }} --no-configuration-cache
 
   ramani-maplibre-publish-snapshot:
     name: Publish ramani-maplibre snapshot (KMP)
@@ -247,10 +262,12 @@ jobs:
         with:
           submodules: recursive
 
+      # No -PVERSION here: pushes to main publish the fallback version declared
+      # in build.gradle.kts, and only if it is a snapshot.
       - name: Check version is a snapshot
         id: check
         run: |
-          if grep -qE '^version = ".*-SNAPSHOT"' ramani-maplibre/build.gradle.kts; then
+          if grep -qE '^val fallbackVersion = ".*-SNAPSHOT"' ramani-maplibre/build.gradle.kts; then
             echo "is-snapshot=true" >> "$GITHUB_OUTPUT"
           else
             echo "is-snapshot=false" >> "$GITHUB_OUTPUT"

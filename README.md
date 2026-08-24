@@ -1,3 +1,12 @@
+# Retiring Ramani-Maps.
+
+We started Ramani-Maps at a time where there were no other MapLibre/Mapbox compose libraries.
+Later [maplibre-compose](https://github.com/maplibre/maplibre-compose) was created and became
+the official compose implementation for MapLibre. As such, it has more contributors and more
+activity, to the point where it doesn't seem reasonable to keep maintaining Ramani-Maps.
+
+Ramani-Maps will therefore be archived.
+
 # Ramani-Maps
 
 An Android Compose library to manipulate maps.
